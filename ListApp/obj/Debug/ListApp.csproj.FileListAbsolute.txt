@@ -1,0 +1,14 @@
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\bin\Debug\ListApp.exe.config
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\bin\Debug\ListApp.exe
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\bin\Debug\ListApp.pdb
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.csprojResolveAssemblyReference.cache
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\MainWindow.g.cs
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\App.g.cs
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp_MarkupCompile.cache
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp_MarkupCompile.lref
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\MainWindow.baml
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.g.resources
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.Properties.Resources.resources
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.csproj.GenerateResource.Cache
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.exe
+c:\users\matt\documents\visual studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.pdb
