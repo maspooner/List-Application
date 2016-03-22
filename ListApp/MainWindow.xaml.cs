@@ -14,10 +14,19 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace ListApp {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
+	public class CodeControl : DependencyObject {
+		public static readonly DependencyProperty CodeProperty = DependencyProperty.Register("Code", typeof(string), typeof(CodeControl), 
+			new PropertyMetadata("default", OnCodeChange));
+		public string Code {
+			get { return (string) GetValue(CodeProperty); }
+			set { SetValue(CodeProperty, value); }
+		}
+		public static void OnCodeChange(DependencyObject source, DependencyPropertyChangedEventArgs e) {
+			Console.WriteLine("CHANGE");
+		}
+	}
 	public partial class MainWindow : Window {
+		
 		public MainWindow() {
 			InitializeComponent();
 		}

@@ -7,6 +7,15 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <StackPanel>
+            <Label Content="{Binding Text, ElementName=textBox}"/>
+            <TextBox x:Name="textBox"/>
+            <Button>
+                <Button.Content>
+                    <TextBox x:Name="buttonBox" Text="aa"/>
+                </Button.Content>
+            </Button>
+            <Label Content="{Binding Text, ElementName=buttonBox}"/>
+        </StackPanel>
     </Grid>
 </Window>
