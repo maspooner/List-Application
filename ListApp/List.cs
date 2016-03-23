@@ -18,6 +18,7 @@ namespace ListApp {
 			items = new List<ListItem>();
 		}
 		public MList(SerializationInfo info, StreamingContext context) {
+			name = info.GetValue("name", typeof(string)) as string;
 			items = info.GetValue("items", typeof(List<ListItem>)) as List<ListItem>;
 		}
 		//methods
@@ -30,6 +31,7 @@ namespace ListApp {
 			return GetEnumerator();
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
+			info.AddValue("name", name);
 			info.AddValue("items", items);
 		}
 	}
