@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 
 
 namespace ListApp {
+	enum ItemType { BASIC, DATE, IMAGE }
 	[Serializable]
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
 		//members
