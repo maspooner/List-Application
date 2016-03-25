@@ -12,41 +12,38 @@ namespace ListApp {
 		//members
 		private string name;
 		private List<ListItem> items;
-		private List<string> fieldTemplate;
-		private List<ItemType> typeTemplate;
+		private ItemTemplate template;
 		//constructors
 		internal MList(string name) {
 			this.name = name;
 			items = new List<ListItem>();
-			fieldTemplate = new List<string>();
-			typeTemplate = new List<ItemType>();
+			template = new ItemTemplate();
 		}
 		public MList(SerializationInfo info, StreamingContext context) {
 			name = info.GetValue("name", typeof(string)) as string;
 			items = info.GetValue("items", typeof(List<ListItem>)) as List<ListItem>;
-			fieldTemplate = info.GetValue("fieldTemplate", typeof(List<string>)) as List<string>;
-			typeTemplate = info.GetValue("typeTemplate", typeof(List<ItemType>)) as List<ItemType>;
+			template = info.GetValue("template", typeof(ItemTemplate)) as ItemTemplate;
 		}
+		//properties
+		internal string Name { get { return name; } }
 		//methods
 		public void AddToTemplate(string fieldName, ItemType type) {
-			fieldTemplate.Add(fieldName);
-			typeTemplate.Add(type);
-			//TODO add to items
-			throw new NotImplementedException();
+			template.Add(fieldName, type);
 		}
 		public void DeleteFromTemplate(int i) {
-			fieldTemplate.RemoveAt(i);
-			typeTemplate.RemoveAt(i);
-			//TODO remove from items
-			throw new NotImplementedException();
+			template.Remove(i);
 		}
-		public void ResolveFieldFields() {
-			throw new NotImplementedException();
+		internal void ResolveFieldFields() {
+			foreach(ListItem li in items) {
+				li.ChangeTemplate(template);
+			}
 		}
-		public void Add(ListItem li, int i) {
-			items.Insert(i, li);
+		internal ListItem Add(string name) {
+			ListItem li = new ListItem(name, template);
+            items.Add(li);
+			return li;
 		}
-		public void Delete(int i) {
+		internal void Delete(int i) {
 			items.RemoveAt(i);
 		}
 		public IEnumerator<ListItem> GetEnumerator() {
@@ -60,24 +57,24 @@ namespace ListApp {
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("name", name);
 			info.AddValue("items", items);
-            info.AddValue("typeTemplate", typeTemplate);
-			info.AddValue("fieldTemplate", fieldTemplate);
+            info.AddValue("template", template);
 		}
 	}
 	[Serializable]
-	class ListItem : ISerializable {
+	class ListItem : IEnumerable<ListItemField>, ISerializable {
 		//members
 		private string name;
 		private List<ListItemField> fields;
 		//constructors
-		internal ListItem(string name, List<string> fieldNames, List<ItemType> template) {
+		internal ListItem(string name, ItemTemplate template) {
 			this.name = name;
 			fields = new List<ListItemField>();
-			for(int i = 0; i < fieldNames.Count; i++) {
-				switch (template[i]) {
-					case ItemType.BASIC: fields.Add(new BasicField(fieldNames[i], null)); break;
-					case ItemType.DATE: fields.Add(new DateField(fieldNames[i], DateTime.MinValue)); break;
-					case ItemType.IMAGE: fields.Add(new ImageField(fieldNames[i], null)); break;
+			for(int i = 0; i < template.Count; i++) {
+				string n = template.FieldAt(i);
+				switch (template.TypeAt(i)) {
+					case ItemType.BASIC: fields.Add(new BasicField(n, null)); break;
+					case ItemType.DATE: fields.Add(new DateField(n, DateTime.MinValue)); break;
+					case ItemType.IMAGE: fields.Add(new ImageField(n, null)); break;
 				}
 			}
 		}
@@ -85,13 +82,71 @@ namespace ListApp {
 			name = info.GetValue("name", typeof(string)) as string;
 			fields = info.GetValue("fields", typeof(List<ListItemField>)) as List<ListItemField>;
 		}
+		//properties
+		internal string Name { get { return name; } }
 		//methods
-		public void UpdateTemplate(List<ItemType> template) {
+		internal void SetFieldData(string fieldName, object value) {
+			ListItemField lif = fields.Find(x => x.Name.Equals(fieldName));
+			if(lif == null) {
+				throw new InvalidOperationException();
+			}
+			else {
+				lif.SetValue(value);
+			}
+		}
+		internal void ChangeTemplate(ItemTemplate template) {
+
 			throw new NotImplementedException();
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("name", name);
 			info.AddValue("fields", fields);
+		}
+		public IEnumerator<ListItemField> GetEnumerator() {
+			foreach (ListItemField lif in fields) {
+				yield return lif;
+			}
+		}
+		IEnumerator IEnumerable.GetEnumerator() {
+			return GetEnumerator();
+		}
+	}
+	[Serializable]
+	class ItemTemplate : ISerializable {
+		//members
+		private List<string> fields;
+		private List<ItemType> types;
+		//constructors
+		internal ItemTemplate() {
+			fields = new List<string>();
+			types = new List<ItemType>();
+		}
+		public ItemTemplate(SerializationInfo info, StreamingContext context) {
+			fields = info.GetValue("fields", typeof(List<string>)) as List<string>;
+			types = info.GetValue("types", typeof(List<ItemType>)) as List<ItemType>;
+		}
+		//properties
+		internal int Count {
+			get { return fields.Count; }
+		}
+		//methods
+		internal string FieldAt(int i) {
+			return fields[i];
+		}
+		internal ItemType TypeAt(int i) {
+			return types[i];
+		}
+		internal void Add(string field, ItemType it) {
+			fields.Add(field);
+			types.Add(it);
+		}
+		internal void Remove(int i) {
+			fields.RemoveAt(i);
+			types.RemoveAt(i);
+		}
+		public void GetObjectData(SerializationInfo info, StreamingContext context) {
+			info.AddValue("fields", fields);
+			info.AddValue("types", types);
 		}
 	}
 	class ListIndex {

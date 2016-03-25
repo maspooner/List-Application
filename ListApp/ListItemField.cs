@@ -19,8 +19,11 @@ namespace ListApp {
 		public ListItemField(SerializationInfo info, StreamingContext context) {
 			fieldName = info.GetValue("fieldName", typeof(string)) as string;
 		}
+		//properties
+		internal string Name { get { return fieldName; } }
 		//methods
 		public abstract int CompareTo(ListItemField other);
+		public abstract void SetValue(object obj);
 		public abstract object GetValue();
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("fieldName", fieldName);
@@ -45,6 +48,9 @@ namespace ListApp {
 		public override object GetValue() {
 			return value;
 		}
+		public override void SetValue(object obj) {
+			value = obj as string;
+		}
 	}
 	[Serializable]
 	class DateField : ListItemField {
@@ -64,14 +70,17 @@ namespace ListApp {
 		public override object GetValue() {
 			return value;
 		}
+		public override void SetValue(object obj) {
+			value = (DateTime)obj;
+		}
 	}
 	[Serializable]
 	class ImageField : ListItemField {
 		//members
 		private Image value;
 		//constructors
-		internal ImageField(string fieldName, string fileName) : base(fieldName) {
-			value = Image.FromFile(fileName); //TODO change file size when caching
+		internal ImageField(string fieldName, Image img) : base(fieldName) {
+			value = img; //TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			value = info.GetValue("value", typeof(Image)) as Image;
@@ -82,6 +91,9 @@ namespace ListApp {
 		}
 		public override object GetValue() {
 			return value;
+		}
+		public override void SetValue(object obj) {
+			value = obj as Image;
 		}
 	}
 }
