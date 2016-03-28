@@ -46,6 +46,12 @@ namespace ListApp {
 		internal void Delete(int i) {
 			items.RemoveAt(i);
 		}
+		internal void Reorder(int oi, int ni) {
+			int ani = ni > oi ? ni - 1 : ni;
+			ListItem li = items[oi];
+			items.RemoveAt(oi);
+			items.Insert(ani, li);
+		}
 		public IEnumerator<ListItem> GetEnumerator() {
 			foreach (ListItem li in items) {
 				yield return li;
