@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ListApp {
 	[Serializable]
@@ -27,11 +24,14 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		//methods
-		public void AddToTemplate(string fieldName, ItemType type) {
+		internal void AddToTemplate(string fieldName, ItemType type) {
 			template.Add(fieldName, type);
 		}
-		public void DeleteFromTemplate(int i) {
+		internal void DeleteFromTemplate(int i) {
 			template.Remove(i);
+		}
+		internal void ReorderTemplate(int oi, int ni) {
+			template.Reorder(oi, ni);
 		}
 		internal void ResolveFieldFields() {
 			foreach(ListItem li in items) {
@@ -71,11 +71,7 @@ namespace ListApp {
 			fields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
 				string n = template.FieldAt(i);
-				switch (template.TypeAt(i)) {
-					case ItemType.BASIC: fields.Add(new BasicField(n, null)); break;
-					case ItemType.DATE: fields.Add(new DateField(n, DateTime.MinValue)); break;
-					case ItemType.IMAGE: fields.Add(new ImageField(n, null)); break;
-				}
+				fields.Add(CreateField(template.FieldAt(i), template.TypeAt(i)));
 			}
 		}
 		public ListItem(SerializationInfo info, StreamingContext context) {
@@ -85,6 +81,14 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		//methods
+		private ListItemField CreateField(string fn, ItemType it) {
+			switch (it) {
+				case ItemType.BASIC: return new BasicField(fn, null);
+				case ItemType.DATE: return new DateField(fn, DateTime.MinValue);
+				case ItemType.IMAGE: return new ImageField(fn, null);
+			}
+			return null;
+		}
 		internal void SetFieldData(string fieldName, object value) {
 			ListItemField lif = fields.Find(x => x.Name.Equals(fieldName));
 			if(lif == null) {
@@ -95,8 +99,12 @@ namespace ListApp {
 			}
 		}
 		internal void ChangeTemplate(ItemTemplate template) {
-
-			throw new NotImplementedException();
+			List<ListItemField> newFields = new List<ListItemField>();
+			for(int i = 0; i < template.Count; i++) {
+				ListItemField match = fields.Find(x => x.Name.Equals(template.FieldAt(i)));
+				newFields.Add(match != null ? match : CreateField(template.FieldAt(i), template.TypeAt(i)));
+			}
+			this.fields = newFields;
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("name", name);
@@ -143,6 +151,15 @@ namespace ListApp {
 		internal void Remove(int i) {
 			fields.RemoveAt(i);
 			types.RemoveAt(i);
+		}
+		internal void Reorder(int oi, int ni) {
+			int ani = ni > oi ? ni - 1 : ni;
+			string field = fields[oi];
+			ItemType type = types[oi];
+			fields.RemoveAt(oi);
+			types.RemoveAt(oi);
+			fields.Insert(ani, field);
+			types.Insert(ani, type);
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("fields", fields);
