@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 
 
 namespace ListApp {
-	enum ItemType { BASIC, DATE, IMAGE }
+	enum ItemType { BASIC, DATE, IMAGE, ENUM }
 	[Serializable]
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
 		//members
@@ -94,6 +94,31 @@ namespace ListApp {
 		}
 		public override void SetValue(object obj) {
 			value = obj as Image;
+		}
+	}
+	[Serializable]
+	class EnumField : ListItemField {
+		//members
+		private int value;
+		//constructors
+		internal EnumField(string fieldName, int value) : base(fieldName) {
+			this.value = value;
+		}
+		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) {
+			value = (int)info.GetValue("value", typeof(int));
+		}
+		//methods
+		public string GetSelectedValue(object metadata) {
+			return (metadata as string[])[value];
+		}
+		public override int CompareTo(ListItemField other) {
+			return other is EnumField ? value - (other as EnumField).value : -1;
+		}
+		public override object GetValue() {
+			return value;
+		}
+		public override void SetValue(object obj) {
+			value = (int)obj;
 		}
 	}
 }

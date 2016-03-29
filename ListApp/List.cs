@@ -9,29 +9,32 @@ namespace ListApp {
 		//members
 		private string name;
 		private List<ListItem> items;
-		private ItemTemplate template;
+		private List<ItemTemplateItem> template;
 		//constructors
 		internal MList(string name) {
 			this.name = name;
 			items = new List<ListItem>();
-			template = new ItemTemplate();
+			template = new List<ItemTemplateItem>();
 		}
 		public MList(SerializationInfo info, StreamingContext context) {
 			name = info.GetValue("name", typeof(string)) as string;
 			items = info.GetValue("items", typeof(List<ListItem>)) as List<ListItem>;
-			template = info.GetValue("template", typeof(ItemTemplate)) as ItemTemplate;
+			template = info.GetValue("template", typeof(List<ItemTemplateItem>)) as List<ItemTemplateItem>;
 		}
 		//properties
 		internal string Name { get { return name; } }
 		//methods
-		internal void AddToTemplate(string fieldName, ItemType type) {
-			template.Add(fieldName, type);
+		internal void AddToTemplate(string fieldName, ItemType type, object metadata) {
+			template.Add(new ItemTemplateItem(fieldName, type, metadata));
 		}
 		internal void DeleteFromTemplate(int i) {
-			template.Remove(i);
+			template.RemoveAt(i);
 		}
 		internal void ReorderTemplate(int oi, int ni) {
-			template.Reorder(oi, ni);
+			int ani = ni > oi ? ni - 1 : ni;
+			ItemTemplateItem item = template[oi];
+			template.RemoveAt(oi);
+			template.Insert(ani, item);
 		}
 		internal void ResolveFieldFields() {
 			foreach(ListItem li in items) {
@@ -46,11 +49,16 @@ namespace ListApp {
 		internal void Delete(int i) {
 			items.RemoveAt(i);
 		}
-		internal void Reorder(int oi, int ni) {
-			int ani = ni > oi ? ni - 1 : ni;
-			ListItem li = items[oi];
-			items.RemoveAt(oi);
-			items.Insert(ani, li);
+		internal void SetMetadata(string fieldName, object metadata) {
+			ItemTemplateItem iti = template.Find(x => x.Name.Equals(fieldName));
+			if (iti == null) {
+				throw new InvalidOperationException();
+			}
+			else {
+				iti.Metadata = metadata;
+				//TODO adjust affected fields
+				throw new NotImplementedException();
+			}
 		}
 		public IEnumerator<ListItem> GetEnumerator() {
 			foreach (ListItem li in items) {
@@ -72,12 +80,12 @@ namespace ListApp {
 		private string name;
 		private List<ListItemField> fields;
 		//constructors
-		internal ListItem(string name, ItemTemplate template) {
+		internal ListItem(string name, List<ItemTemplateItem> template) {
 			this.name = name;
 			fields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
-				string n = template.FieldAt(i);
-				fields.Add(CreateField(template.FieldAt(i), template.TypeAt(i)));
+				string n = template[i].Name;
+				fields.Add(CreateField(template[i]));
 			}
 		}
 		public ListItem(SerializationInfo info, StreamingContext context) {
@@ -87,13 +95,14 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		//methods
-		private ListItemField CreateField(string fn, ItemType it) {
-			switch (it) {
-				case ItemType.BASIC: return new BasicField(fn, null);
-				case ItemType.DATE: return new DateField(fn, DateTime.MinValue);
-				case ItemType.IMAGE: return new ImageField(fn, null);
+		private ListItemField CreateField(ItemTemplateItem item) {
+			switch (item.Type) {
+				case ItemType.BASIC: return new BasicField(item.Name, null);
+				case ItemType.DATE: return new DateField(item.Name, DateTime.MinValue);
+				case ItemType.IMAGE: return new ImageField(item.Name, null);
+				case ItemType.ENUM: return new EnumField(item.Name, 0);
+				default: return null;
 			}
-			return null;
 		}
 		internal void SetFieldData(string fieldName, object value) {
 			ListItemField lif = fields.Find(x => x.Name.Equals(fieldName));
@@ -104,11 +113,11 @@ namespace ListApp {
 				lif.SetValue(value);
 			}
 		}
-		internal void ChangeTemplate(ItemTemplate template) {
+		internal void ChangeTemplate(List<ItemTemplateItem> template) {
 			List<ListItemField> newFields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
-				ListItemField match = fields.Find(x => x.Name.Equals(template.FieldAt(i)));
-				newFields.Add(match != null ? match : CreateField(template.FieldAt(i), template.TypeAt(i)));
+				ListItemField match = fields.Find(x => x.Name.Equals(template[i].Name));
+				newFields.Add(match != null ? match : CreateField(template[i]));
 			}
 			this.fields = newFields;
 		}
@@ -126,50 +135,34 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class ItemTemplate : ISerializable {
+	class ItemTemplateItem : ISerializable {
 		//members
-		private List<string> fields;
-		private List<ItemType> types;
+		private string field;
+		private ItemType type;
+		private object metadata;
 		//constructors
-		internal ItemTemplate() {
-			fields = new List<string>();
-			types = new List<ItemType>();
+		internal ItemTemplateItem(string field, ItemType type, object metadata) {
+			this.field = field;
+			this.type = type;
+			this.metadata = metadata;
 		}
-		public ItemTemplate(SerializationInfo info, StreamingContext context) {
-			fields = info.GetValue("fields", typeof(List<string>)) as List<string>;
-			types = info.GetValue("types", typeof(List<ItemType>)) as List<ItemType>;
+		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
+			field = info.GetValue("field", typeof(string)) as string;
+			type = (ItemType) info.GetValue("type", typeof(ItemType));
+			metadata = info.GetValue("metadata", typeof(object));
 		}
 		//properties
-		internal int Count {
-			get { return fields.Count; }
+		internal string Name { get { return field; } }
+		internal ItemType Type { get { return type; } }
+		internal object Metadata {
+			get { return metadata; }
+			set { this.metadata = value; }
 		}
 		//methods
-		internal string FieldAt(int i) {
-			return fields[i];
-		}
-		internal ItemType TypeAt(int i) {
-			return types[i];
-		}
-		internal void Add(string field, ItemType it) {
-			fields.Add(field);
-			types.Add(it);
-		}
-		internal void Remove(int i) {
-			fields.RemoveAt(i);
-			types.RemoveAt(i);
-		}
-		internal void Reorder(int oi, int ni) {
-			int ani = ni > oi ? ni - 1 : ni;
-			string field = fields[oi];
-			ItemType type = types[oi];
-			fields.RemoveAt(oi);
-			types.RemoveAt(oi);
-			fields.Insert(ani, field);
-			types.Insert(ani, type);
-		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("fields", fields);
-			info.AddValue("types", types);
+			info.AddValue("field", field);
+			info.AddValue("type", type);
+			info.AddValue("metadata", metadata);
 		}
 	}
 	class ListIndex {

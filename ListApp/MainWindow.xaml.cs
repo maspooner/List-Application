@@ -13,12 +13,12 @@ namespace ListApp {
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
-			LoadLists();
-			
+			//LoadLists();
+			lists = new List<MList>();
 			MList list1 = new MList("group a");
-			list1.AddToTemplate("notes", ItemType.BASIC);
-			list1.AddToTemplate("date", ItemType.DATE);
-			list1.AddToTemplate("img", ItemType.IMAGE);
+			list1.AddToTemplate("notes", ItemType.BASIC, null);
+			list1.AddToTemplate("date", ItemType.DATE, null);
+			list1.AddToTemplate("img", ItemType.IMAGE, null);
 			ListItem li1a = list1.Add("1a");
 			li1a.SetFieldData("notes", "There are many things here");
 			li1a.SetFieldData("date", DateTime.Now);
@@ -31,9 +31,10 @@ namespace ListApp {
 
 			PrintLists();
 			list1.DeleteFromTemplate(0);
-			list1.AddToTemplate("title", ItemType.BASIC);
-			list1.ReorderTemplate(0, 2);
+			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
+			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
 			list1.ResolveFieldFields();
+			li2a.SetFieldData("status", 1);
 			PrintLists();
 			SaveLists();
 		}
