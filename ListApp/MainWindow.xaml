@@ -7,15 +7,17 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <StackPanel>
-            <Label Content="{Binding Text, ElementName=textBox}"/>
-            <TextBox x:Name="textBox"/>
-            <Button>
-                <Button.Content>
-                    <TextBox x:Name="buttonBox" Text="aa"/>
-                </Button.Content>
-            </Button>
-            <Label Content="{Binding Text, ElementName=buttonBox}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Name="leftPanel" Grid.Column="0">
+			
+        </StackPanel>
+        <GridSplitter Grid.Column="1"  HorizontalAlignment="Stretch"/>
+        <StackPanel Name="rightPanel" Grid.Column="2">
+            
         </StackPanel>
     </Grid>
 </Window>

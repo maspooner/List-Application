@@ -57,7 +57,6 @@ namespace ListApp {
 			else {
 				iti.Metadata = metadata;
 				//TODO adjust affected fields
-				throw new NotImplementedException();
 			}
 		}
 		public IEnumerator<ListItem> GetEnumerator() {
@@ -156,7 +155,7 @@ namespace ListApp {
 		internal ItemType Type { get { return type; } }
 		internal object Metadata {
 			get { return metadata; }
-			set { this.metadata = value; }
+			set { metadata = value; }
 		}
 		//methods
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
