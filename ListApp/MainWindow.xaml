@@ -5,19 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="ListApp" Height="480" Width="720" MinHeight="240" MinWidth="360">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="5"/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="*" MinWidth="100"/>
+            <ColumnDefinition Width="3"/>
+            <ColumnDefinition Width="*" MinWidth="200"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Name="leftPanel" Grid.Column="0">
-			
-        </StackPanel>
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Name="leftPanel"/>
+        </ScrollViewer>
         <GridSplitter Grid.Column="1"  HorizontalAlignment="Stretch"/>
-        <StackPanel Name="rightPanel" Grid.Column="2">
-            
-        </StackPanel>
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Name="rightPanel"/>
+        </ScrollViewer>
     </Grid>
 </Window>

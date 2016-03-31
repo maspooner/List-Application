@@ -23,7 +23,9 @@ namespace ListApp {
 		}
 		//properties
 		internal string Name { get { return name; } }
+		internal int Count { get { return items.Count; } }
 		//methods
+		internal ListItem this[int i] { get { return items[i]; } }
 		internal void AddToTemplate(string fieldName, ItemType type, object metadata) {
 			template.Add(new ItemTemplateItem(fieldName, type, metadata));
 		}
