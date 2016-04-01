@@ -21,37 +21,29 @@ namespace ListApp {
 			MList list1 = new MList("group a");
 			list1.AddToTemplate("notes", ItemType.BASIC, null);
 			list1.AddToTemplate("date", ItemType.DATE, null);
-			list1.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1a = list1.Add("1a");
-			li1a.SetFieldData("notes", "There are many things here");
-			li1a.SetFieldData("date", DateTime.Now);
-			li1a.SetFieldData("img", new Image());
-			ListItem li2a = list1.Add("2a");
+			ListItem li1a = list1.Add(new object[] {"There are many things here", DateTime.Now });
+			ListItem li2a = list1.Add(new object[] {"More notes", DateTime.Today });
 			li2a.SetFieldData("notes", "More notes");
 			li2a.SetFieldData("date", DateTime.Today);
-			li2a.SetFieldData("img", new Image());
 			lists.Add(list1);
 
 			MList list2 = new MList("group b");
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add("1b");
-			li1b.SetFieldData("notes", "There are many things here");
-			li1b.SetFieldData("date", DateTime.Now);
-			li1b.SetFieldData("img", new Image());
-			ListItem li2b = list2.Add("2b");
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Image() });
+			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
 			li2b.SetFieldData("img", new Image());
 			lists.Add(list2);
 
-			PrintLists();
-			list1.DeleteFromTemplate(0);
-			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
-			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
-			list1.ResolveFieldFields();
-			li2a.SetFieldData("status", 1);
+			//PrintLists();
+			//list1.DeleteFromTemplate(0);
+			//list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
+			//list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
+			//list1.ResolveFieldFields();
+			//li2a.SetFieldData("status", 1);
 
 			for (int i = 0; i < lists.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
@@ -65,9 +57,9 @@ namespace ListApp {
 			foreach (MList m in lists) {
 				Console.WriteLine(m.Name);
 				foreach (ListItem li in m) {
-					Console.WriteLine("\t" + li.Name);
+					Console.WriteLine();
 					foreach (ListItemField lif in li) {
-						Console.WriteLine("\t\t" + lif.Name + ": " + lif.GetValue());
+						Console.WriteLine("\t" + lif.Name + ": " + lif.GetValue());
 					}
 				}
 			}
@@ -96,23 +88,52 @@ namespace ListApp {
 			l.MouseUp += ListNameLabel_MouseUp;
 			return l;
 		}
-		private Label CreateListItemLabel(ListItem item, int i) {
-			Label l = new Label();
-			l.Name = "listItem_" + i;
-			l.Content = item.Name;
-			return l;
+		private void AddListItemRow(MList list, int i) {
+			//TODO test
+			ListItem item = list[i];
+			listItemGrid.RowDefinitions.Add(new RowDefinition());
+			//rest of fields
+			for (int j = 0; j < item.Count; j++) {
+				ListItemField lif = item[j];
+				UIElement uie;
+				if(lif is ImageField) {
+					uie = lif.GetValue() as Image;
+				}
+				else if (lif is EnumField) {
+					uie = new Label();
+					(uie as Label).Content = (lif as EnumField).GetSelectedValue(list.Template.Find(x => lif.Name.Equals(x.Name)).Metadata);
+				}
+				else {
+					uie = new Label();
+					(uie as Label).Content = lif.GetValue();
+				}
+				uie.SetValue(Grid.RowProperty, i + 1);
+				uie.SetValue(Grid.ColumnProperty, j);
+				listItemGrid.Children.Add(uie);
+			}
 		}
 		//WPF
 		private void ListNameLabel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
 			Label l = sender as Label;
 			int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
             if (shownList != listID) {
-				rightPanel.Children.Clear();
 				MList list = lists[listID];
-				for (int i = 0; i < list.Count; i++) {
-					rightPanel.Children.Add(CreateListItemLabel(list[i], i));
+				listTitleLabel.Content = list.Name;
+				listItemGrid.Children.Clear();
+
+				//add new
+				listItemGrid.RowDefinitions.Add(new RowDefinition());
+				for (int i = 0; i < list.Template.Count; i++) {
+					Label title = new Label();
+					title.SetValue(Grid.RowProperty, 0);
+					title.SetValue(Grid.ColumnProperty, i);
+					title.Content = list.Template[i].Name;
+					listItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
+					listItemGrid.Children.Add(title);
 				}
-				Console.WriteLine(l.Name + '.');
+				for (int i = 0; i < list.Count; i++) {
+					AddListItemRow(list, i);
+				}
 				shownList = listID;
 			}
 			

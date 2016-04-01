@@ -17,7 +17,12 @@
         </ScrollViewer>
         <GridSplitter Grid.Column="1"  HorizontalAlignment="Stretch"/>
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="rightPanel"/>
+            <StackPanel Name="rightPanel">
+                <DockPanel Name="listTitlePanel">
+                    <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
+				</DockPanel>
+                <Grid Name="listItemGrid"/>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Window>

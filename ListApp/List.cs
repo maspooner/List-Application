@@ -24,8 +24,9 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		internal int Count { get { return items.Count; } }
-		//methods
 		internal ListItem this[int i] { get { return items[i]; } }
+		internal List<ItemTemplateItem> Template { get { return template; } }
+		//methods
 		internal void AddToTemplate(string fieldName, ItemType type, object metadata) {
 			template.Add(new ItemTemplateItem(fieldName, type, metadata));
 		}
@@ -43,9 +44,17 @@ namespace ListApp {
 				li.ChangeTemplate(template);
 			}
 		}
-		internal ListItem Add(string name) {
-			ListItem li = new ListItem(name, template);
+		internal ListItem Add() {
+			ListItem li = new ListItem(template);
             items.Add(li);
+			return li;
+		}
+		internal ListItem Add(object[] data) {
+			ListItem li = new ListItem(template);
+			for(int i = 0; i < template.Count; i++) {
+				li[i].SetValue(data[i]);
+			}
+			items.Add(li);
 			return li;
 		}
 		internal void Delete(int i) {
@@ -78,11 +87,9 @@ namespace ListApp {
 	[Serializable]
 	class ListItem : IEnumerable<ListItemField>, ISerializable {
 		//members
-		private string name;
 		private List<ListItemField> fields;
 		//constructors
-		internal ListItem(string name, List<ItemTemplateItem> template) {
-			this.name = name;
+		internal ListItem(List<ItemTemplateItem> template) {
 			fields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
 				string n = template[i].Name;
@@ -90,11 +97,11 @@ namespace ListApp {
 			}
 		}
 		public ListItem(SerializationInfo info, StreamingContext context) {
-			name = info.GetValue("name", typeof(string)) as string;
 			fields = info.GetValue("fields", typeof(List<ListItemField>)) as List<ListItemField>;
 		}
 		//properties
-		internal string Name { get { return name; } }
+		internal ListItemField this[int i] { get { return fields[i]; } }
+		internal int Count { get { return fields.Count; } }
 		//methods
 		private ListItemField CreateField(ItemTemplateItem item) {
 			switch (item.Type) {
@@ -123,7 +130,6 @@ namespace ListApp {
 			this.fields = newFields;
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("name", name);
 			info.AddValue("fields", fields);
 		}
 		public IEnumerator<ListItemField> GetEnumerator() {
