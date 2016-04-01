@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
-
+using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	enum ItemType { BASIC, DATE, IMAGE, ENUM }
@@ -77,23 +74,49 @@ namespace ListApp {
 	[Serializable]
 	class ImageField : ListItemField {
 		//members
-		private Image value;
+		[NonSerialized]
+		private BitmapImage value;
 		//constructors
-		internal ImageField(string fieldName, Image img) : base(fieldName) {
+		internal ImageField(string fieldName, BitmapImage img) : base(fieldName) {
 			value = img; //TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetValue("value", typeof(Image)) as Image;
+			//TODO convert to bytes
+			byte[] imageBytes = (byte[])info.GetValue("value", typeof(byte[]));
+			BitmapImage bi = null;
+			if (imageBytes != null) {
+				using (MemoryStream ms = new MemoryStream(imageBytes)) {
+					BitmapImage tempBit = new BitmapImage();
+					tempBit.BeginInit();
+					tempBit.CacheOption = BitmapCacheOption.OnLoad;
+					tempBit.StreamSource = ms;
+					tempBit.EndInit();
+					bi = tempBit;
+				}
+			}
 		}
 		//methods
+		internal BitmapImage GetBitmap() {
+			return value;
+		}
 		public override int CompareTo(ListItemField other) {
 			return 0;
 		}
 		public override object GetValue() {
-			return value;
+			byte[] imageBytes = null;
+			if(value != null) {
+				using(MemoryStream ms = new MemoryStream()) {
+					PngBitmapEncoder pngbe = new PngBitmapEncoder();
+					BitmapFrame frame = BitmapFrame.Create(value); //TODO exception here
+					pngbe.Frames.Add(frame);
+					pngbe.Save(ms);
+					imageBytes = ms.ToArray();
+				}
+			}
+			return imageBytes;
 		}
 		public override void SetValue(object obj) {
-			value = obj as Image;
+			value = obj as BitmapImage;
 		}
 	}
 	[Serializable]

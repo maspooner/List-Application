@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	public partial class MainWindow : Window {
@@ -14,10 +16,10 @@ namespace ListApp {
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
+			LoadImages();
 			//LoadLists();
 			lists = new List<MList>();
 			shownList = -1;
-
 			MList list1 = new MList("group a");
 			list1.AddToTemplate("notes", ItemType.BASIC, null);
 			list1.AddToTemplate("date", ItemType.DATE, null);
@@ -31,11 +33,11 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Image() });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new BitmapImage() });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Image());
+			li2b.SetFieldData("img", new BitmapImage());
 			lists.Add(list2);
 
 			//PrintLists();
@@ -53,6 +55,19 @@ namespace ListApp {
 			SaveLists();
 		}
 		//methods
+		private void LoadImages() {
+			addImage.Source = ConvertToWPFImage(Properties.Resources.addIcon);
+		}
+		private BitmapImage ConvertToWPFImage(Bitmap b) {
+			MemoryStream ms = new MemoryStream();
+			b.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+			ms.Position = 0;
+			BitmapImage bi = new BitmapImage();
+			bi.BeginInit();
+			bi.StreamSource = ms;
+			bi.EndInit();
+			return bi;
+		}
 		private void PrintLists() {
 			foreach (MList m in lists) {
 				Console.WriteLine(m.Name);
@@ -97,7 +112,8 @@ namespace ListApp {
 				ListItemField lif = item[j];
 				UIElement uie;
 				if(lif is ImageField) {
-					uie = lif.GetValue() as Image;
+					uie = new System.Windows.Controls.Image();
+					(uie as System.Windows.Controls.Image).Source = (lif as ImageField).GetBitmap();
 				}
 				else if (lif is EnumField) {
 					uie = new Label();

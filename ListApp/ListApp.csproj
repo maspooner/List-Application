@@ -69,7 +69,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Constants.cs" />
     <Compile Include="List.cs" />
     <Compile Include="ListItemField.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -103,6 +102,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\addIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\addIcon.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

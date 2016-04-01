@@ -20,7 +20,8 @@
             <StackPanel Name="rightPanel">
                 <DockPanel Name="listTitlePanel">
                     <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-				</DockPanel>
+                    <Image Name="addImage"/>
+                </DockPanel>
                 <Grid Name="listItemGrid"/>
             </StackPanel>
         </ScrollViewer>
