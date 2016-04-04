@@ -5,12 +5,13 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	public partial class MainWindow : Window {
 		//members
-		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\lists.bin"; //TODO adjustable
+		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		private List<MList> lists;
 		private int shownList;
 		//constructors
@@ -33,18 +34,19 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new BitmapImage() });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")) });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new BitmapImage());
+			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")));
 			lists.Add(list2);
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
 			//list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
 			//list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
-			//list1.ResolveFieldFields();
+			list2.ReorderTemplate(2, 0);
+			list2.ResolveFieldFields();
 			//li2a.SetFieldData("status", 1);
 
 			for (int i = 0; i < lists.Count; i++) {
@@ -80,14 +82,14 @@ namespace ListApp {
 			}
 		}
 		public void SaveLists() {
-			Stream stream = File.Open(FILE_PATH, FileMode.Create);
+			Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Create);
 			BinaryFormatter bformatter = new BinaryFormatter();
 			bformatter.Serialize(stream, lists);
 			stream.Close();
 		}
 		public void LoadLists() {
 			if (new FileInfo(FILE_PATH).Exists) {
-				Stream stream = File.Open(FILE_PATH, FileMode.Open);
+				Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Open);
 				BinaryFormatter bformatter = new BinaryFormatter();
 				lists = (List<MList>)bformatter.Deserialize(stream);
 				stream.Close();
@@ -112,8 +114,12 @@ namespace ListApp {
 				ListItemField lif = item[j];
 				UIElement uie;
 				if(lif is ImageField) {
-					uie = new System.Windows.Controls.Image();
-					(uie as System.Windows.Controls.Image).Source = (lif as ImageField).GetBitmap();
+					Console.WriteLine("img");
+					System.Windows.Controls.Image img = new System.Windows.Controls.Image();
+					img.BeginInit();
+					img.Source = (lif as ImageField).GetBitmap(); //TODO doesn't work, image seems to load properly, perhaps out of columns
+					img.EndInit();
+					uie = img;
 				}
 				else if (lif is EnumField) {
 					uie = new Label();
@@ -136,7 +142,8 @@ namespace ListApp {
 				MList list = lists[listID];
 				listTitleLabel.Content = list.Name;
 				listItemGrid.Children.Clear();
-
+				listItemGrid.ColumnDefinitions.Clear();
+				listItemGrid.RowDefinitions.Clear();
 				//add new
 				listItemGrid.RowDefinitions.Add(new RowDefinition());
 				for (int i = 0; i < list.Template.Count; i++) {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
@@ -75,7 +76,7 @@ namespace ListApp {
 	class ImageField : ListItemField {
 		//members
 		[NonSerialized]
-		private BitmapImage value;
+		private Bitmap value;
 		//constructors
 		internal ImageField(string fieldName, BitmapImage img) : base(fieldName) {
 			value = img; //TODO change file size when caching
@@ -89,6 +90,7 @@ namespace ListApp {
 					BitmapImage tempBit = new BitmapImage();
 					tempBit.BeginInit();
 					tempBit.CacheOption = BitmapCacheOption.OnLoad;
+					tempBit.CreateOptions = BitmapCreateOptions.None;
 					tempBit.StreamSource = ms;
 					tempBit.EndInit();
 					bi = tempBit;
@@ -107,7 +109,7 @@ namespace ListApp {
 			if(value != null) {
 				using(MemoryStream ms = new MemoryStream()) {
 					PngBitmapEncoder pngbe = new PngBitmapEncoder();
-					BitmapFrame frame = BitmapFrame.Create(value); //TODO exception here
+					BitmapFrame frame = BitmapFrame.Create(value);
 					pngbe.Frames.Add(frame);
 					pngbe.Save(ms);
 					imageBytes = ms.ToArray();
