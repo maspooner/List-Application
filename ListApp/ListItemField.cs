@@ -33,8 +33,8 @@ namespace ListApp {
 		//members
 		private string value;
 		//constructors
-		internal BasicField(string fieldName, string value) : base(fieldName){
-			this.value = value;
+		internal BasicField(string fieldName) : base(fieldName){
+			value = null;
 		}
 		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			value = info.GetValue("value", typeof(string)) as string;
@@ -55,8 +55,8 @@ namespace ListApp {
 		//members
 		private DateTime value;
 		//constructors
-		internal DateField(string fieldName, DateTime value) : base(fieldName) {
-			this.value = value;
+		internal DateField(string fieldName) : base(fieldName) {
+			value = DateTime.MinValue;
 		}
 		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			value = (DateTime) info.GetValue("value", typeof(DateTime));
@@ -78,8 +78,8 @@ namespace ListApp {
 		[NonSerialized]
 		private BitmapImage value;
 		//constructors
-		internal ImageField(string fieldName, Bitmap bit) : base(fieldName) {
-			value = new Bitmap(bit, new Size(300, 100)).ConvertToWPFImage();
+		internal ImageField(string fieldName) : base(fieldName) {
+			value = null;
 			//TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
@@ -111,7 +111,7 @@ namespace ListApp {
 			return imageBytes;
 		}
 		public override void SetValue(object obj) {
-			value = obj as Bitmap;
+			value = new Bitmap(obj as Bitmap, new Size(300, 100)).ConvertToWPFImage(); //TODO adjustable
 		}
 	}
 	[Serializable]
@@ -119,8 +119,8 @@ namespace ListApp {
 		//members
 		private int value;
 		//constructors
-		internal EnumField(string fieldName, int value) : base(fieldName) {
-			this.value = value;
+		internal EnumField(string fieldName) : base(fieldName) {
+			value = 0;
 		}
 		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			value = (int)info.GetValue("value", typeof(int));

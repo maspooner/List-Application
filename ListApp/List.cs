@@ -105,10 +105,10 @@ namespace ListApp {
 		//methods
 		private ListItemField CreateField(ItemTemplateItem item) {
 			switch (item.Type) {
-				case ItemType.BASIC: return new BasicField(item.Name, null);
-				case ItemType.DATE: return new DateField(item.Name, DateTime.MinValue);
-				case ItemType.IMAGE: return new ImageField(item.Name, null);
-				case ItemType.ENUM: return new EnumField(item.Name, 0);
+				case ItemType.BASIC: return new BasicField(item.Name);
+				case ItemType.DATE: return new DateField(item.Name);
+				case ItemType.IMAGE: return new ImageField(item.Name);
+				case ItemType.ENUM: return new EnumField(item.Name);
 				default: return null;
 			}
 		}

@@ -17,8 +17,8 @@ namespace ListApp {
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
-			//LoadImages();
-			LoadTestLists();
+			LoadImages();
+			//LoadTestLists();
 			LoadLists();
 			for (int i = 0; i < lists.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
