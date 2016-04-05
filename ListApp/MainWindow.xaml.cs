@@ -18,14 +18,23 @@ namespace ListApp {
 		public MainWindow() {
 			InitializeComponent();
 			LoadImages();
-			//LoadLists();
+			//LoadTestLists();
+			LoadLists();
+			for (int i = 0; i < lists.Count; i++) {
+				leftPanel.Children.Add(CreateListLabel(lists[i], i));
+			}
+			PrintLists();
+			SaveLists();
+		}
+		//test methods
+		private void LoadTestLists() {
 			lists = new List<MList>();
 			shownList = -1;
 			MList list1 = new MList("group a");
 			list1.AddToTemplate("notes", ItemType.BASIC, null);
 			list1.AddToTemplate("date", ItemType.DATE, null);
-			ListItem li1a = list1.Add(new object[] {"There are many things here", DateTime.Now });
-			ListItem li2a = list1.Add(new object[] {"More notes", DateTime.Today });
+			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now });
+			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today });
 			li2a.SetFieldData("notes", "More notes");
 			li2a.SetFieldData("date", DateTime.Today);
 			lists.Add(list1);
@@ -34,41 +43,24 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, ConvertToWPFImage(new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png"))) });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png")).ConvertToWPFImage() });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", ConvertToWPFImage(new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png"))));
+			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png")).ConvertToWPFImage());
 			lists.Add(list2);
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
 			//list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
 			//list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
-			list2.ReorderTemplate(2, 0);
-			list2.ResolveFieldFields();
+			//list2.ReorderTemplate(2, 0);
+			//list2.ResolveFieldFields();
 			//li2a.SetFieldData("status", 1);
-
-			for (int i = 0; i < lists.Count; i++) {
-				leftPanel.Children.Add(CreateListLabel(lists[i], i));
-			}
-
-			PrintLists();
-			SaveLists();
 		}
 		//methods
 		private void LoadImages() {
-			addImage.Source = ConvertToWPFImage(Properties.Resources.addIcon);
-		}
-		private BitmapImage ConvertToWPFImage(Bitmap b) {
-			MemoryStream ms = new MemoryStream();
-			b.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-			ms.Position = 0;
-			BitmapImage bi = new BitmapImage();
-			bi.BeginInit();
-			bi.StreamSource = ms;
-			bi.EndInit();
-			return bi;
+			addImage.Source = Properties.Resources.addIcon.ConvertToWPFImage();
 		}
 		private void PrintLists() {
 			foreach (MList m in lists) {
@@ -88,7 +80,7 @@ namespace ListApp {
 			stream.Close();
 		}
 		public void LoadLists() {
-			if (new FileInfo(FILE_PATH).Exists) {
+			if (new FileInfo(FILE_PATH + "lists.bin").Exists) {
 				Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Open);
 				BinaryFormatter bformatter = new BinaryFormatter();
 				lists = (List<MList>)bformatter.Deserialize(stream);
@@ -106,7 +98,6 @@ namespace ListApp {
 			return l;
 		}
 		private void AddListItemRow(MList list, int i) {
-			//TODO test
 			ListItem item = list[i];
 			listItemGrid.RowDefinitions.Add(new RowDefinition());
 			//rest of fields
@@ -117,7 +108,7 @@ namespace ListApp {
 					Console.WriteLine("img");
 					System.Windows.Controls.Image img = new System.Windows.Controls.Image();
 					img.BeginInit();
-					img.Source = (lif as ImageField).GetBitmap(); //TODO doesn't work, image seems to load properly, perhaps out of columns
+					img.Source = (lif as ImageField).GetBitmap();
 					img.EndInit();
 					uie = img;
 				}

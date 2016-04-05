@@ -82,18 +82,10 @@ namespace ListApp {
 			value = img; //TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			//TODO convert to bytes
 			byte[] imageBytes = (byte[])info.GetValue("value", typeof(byte[]));
-			BitmapImage bi = null;
 			if (imageBytes != null) {
 				using (MemoryStream ms = new MemoryStream(imageBytes)) {
-					BitmapImage tempBit = new BitmapImage();
-					tempBit.BeginInit();
-					tempBit.CacheOption = BitmapCacheOption.OnLoad;
-					tempBit.CreateOptions = BitmapCreateOptions.None;
-					tempBit.StreamSource = ms;
-					tempBit.EndInit();
-					bi = tempBit;
+					value = new Bitmap(ms).ConvertToWPFImage();
 				}
 			}
 		}
