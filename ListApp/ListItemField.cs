@@ -76,7 +76,7 @@ namespace ListApp {
 	class ImageField : ListItemField {
 		//members
 		[NonSerialized]
-		private Bitmap value;
+		private BitmapImage value;
 		//constructors
 		internal ImageField(string fieldName, BitmapImage img) : base(fieldName) {
 			value = img; //TODO change file size when caching

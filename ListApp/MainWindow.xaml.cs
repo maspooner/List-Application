@@ -34,11 +34,11 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")) });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, ConvertToWPFImage(new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png"))) });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")));
+			li2b.SetFieldData("img", ConvertToWPFImage(new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.png"))));
 			lists.Add(list2);
 
 			//PrintLists();
