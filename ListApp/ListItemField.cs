@@ -78,8 +78,9 @@ namespace ListApp {
 		[NonSerialized]
 		private BitmapImage value;
 		//constructors
-		internal ImageField(string fieldName, BitmapImage img) : base(fieldName) {
-			value = img; //TODO change file size when caching
+		internal ImageField(string fieldName, Bitmap bit) : base(fieldName) {
+			value = new Bitmap(bit, new Size(300, 100)).ConvertToWPFImage();
+			//TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			byte[] imageBytes = (byte[])info.GetValue("value", typeof(byte[]));
@@ -110,7 +111,7 @@ namespace ListApp {
 			return imageBytes;
 		}
 		public override void SetValue(object obj) {
-			value = obj as BitmapImage;
+			value = obj as Bitmap;
 		}
 	}
 	[Serializable]
