@@ -14,10 +14,13 @@ namespace ListApp {
 		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		private List<MList> lists;
 		private int shownList;
+		private AddItemDialog addItemDialog;
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
 			LoadImages();
+			addItemDialog = new AddItemDialog(this);
+			shownList = -1;
 			//LoadTestLists();
 			LoadLists();
 			for (int i = 0; i < lists.Count; i++) {
@@ -126,6 +129,16 @@ namespace ListApp {
 			}
 		}
 		//WPF
+		private void AddImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+			ListItem li = addItemDialog.ShowAndGetItem(lists[shownList].Template);
+			Console.WriteLine("closed");
+			if(li == null) {
+
+			}
+			else {
+
+			}
+		}
 		private void ListNameLabel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
 			Label l = sender as Label;
 			int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));

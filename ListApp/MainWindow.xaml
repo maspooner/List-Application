@@ -20,7 +20,7 @@
             <StackPanel Name="rightPanel">
                 <DockPanel Name="listTitlePanel">
                     <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-                    <Image Name="addImage" Height="20"/>
+                    <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
                 </DockPanel>
                 <Grid Name="listItemGrid"/>
             </StackPanel>
