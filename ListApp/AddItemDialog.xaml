@@ -6,8 +6,11 @@
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
         Title="AddItemDialog" Height="300" Width="300" ResizeMode="NoResize">
-    <StackPanel>
-        <Button Click="ConfirmButton_Click">OK</Button>
-        <Button IsCancel="True">Cancel</Button>
-	</StackPanel>
+    <ScrollViewer>
+        <StackPanel>
+            <StackPanel Name="contentPanel"/>
+            <Button Click="ConfirmButton_Click">OK</Button>
+            <Button IsCancel="True" IsDefault="True">Cancel</Button>
+        </StackPanel>
+    </ScrollViewer>
 </Window>
