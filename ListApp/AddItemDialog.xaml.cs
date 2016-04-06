@@ -5,12 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace ListApp {
 	public partial class AddItemDialog : Window {
@@ -47,20 +41,27 @@ namespace ListApp {
 				UIElement uie = null;
 				switch (iti.Type) {
 					case ItemType.BASIC:
-					case ItemType.DATE:
-						uie = new TextBlock();
+						uie = new TextBox();
 						if(li != null) {
-							(uie as TextBlock).Text = li[i].GetValue().ToString();
+							(uie as TextBox).Text = li[i].GetValue().ToString();
 						}
+						break;
+					case ItemType.DATE:
+						DatePicker dp = new DatePicker();
+						dp.SelectedDate = li == null ? DateTime.Today : (DateTime)li[i].GetValue();
+						uie = dp;
 						break;
 					case ItemType.ENUM:
 						ComboBox cb = new ComboBox();
 						cb.ItemsSource = iti.Metadata as string[];
-						cb.SelectedIndex = 0;
+						cb.SelectedIndex = li == null ? 0 : (int)li[i].GetValue();
 						uie = cb;
 						break;
 					case ItemType.IMAGE:
-
+						uie = new Image();
+						if(li != null) {
+							(uie as Image).Source = (li[i] as ImageField).GetBitmap();
+						}
 						break;
 				}
 				uie.SetValue(NameProperty, iti.Name + "_ui");
@@ -68,31 +69,52 @@ namespace ListApp {
 					case ItemType.BASIC:
 					case ItemType.DATE:
 					case ItemType.ENUM:
-						StackPanel sp = new StackPanel();
-						sp.Orientation = Orientation.Horizontal;
+						DockPanel dp = new DockPanel();
 						Label l = new Label();
 						l.Content = iti.Name + ": ";
-						sp.Children.Add(l);
-						sp.Children.Add(uie);
-						contentPanel.Children.Add(sp);
+						dp.Children.Add(l);
+						DockPanel.SetDock(l, Dock.Left);
+						dp.Children.Add(uie);
+						DockPanel.SetDock(uie, Dock.Right);
+						contentPanel.Children.Add(dp);
 						break;
 					case ItemType.IMAGE:
-
+						//TODO format
 
 						break;
 				}
 			}
 		}
 		private bool IsValidInput() {
-			//TODO perform validation
 			foreach(UIElement uie in contentPanel.Children) {
-
+				if(uie is DockPanel) {
+					UIElement comp = (uie as DockPanel).Children[1];
+					if(comp is TextBox) {
+						if ((comp as TextBox).Text.Equals("")) {
+							return false;
+						}
+					}
+					else if(comp is DatePicker) {
+						if((comp as DatePicker).SelectedDate == null) {
+							return false;
+						}
+					}
+					//combo box don't care
+				}
+				else { //image
+					//TODO
+				}
 			}
+			return true;
 		}
 		//WPF
 		private void ConfirmButton_Click(object sender, RoutedEventArgs e) {
-			
-			DialogResult = IsValidInput();
+			if (IsValidInput()) {
+				DialogResult = true;
+			}
+			else {
+
+			}
 		}
 	}
 }
