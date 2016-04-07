@@ -14,15 +14,13 @@ namespace ListApp {
 		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		private List<MList> lists;
 		private int shownList;
-		private AddItemDialog addItemDialog;
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
 			LoadImages();
-			addItemDialog = new AddItemDialog(this);
 			shownList = -1;
-			//LoadTestLists();
-			LoadLists();
+			LoadTestLists();
+			//LoadLists();
 			for (int i = 0; i < lists.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
 			}
@@ -55,8 +53,10 @@ namespace ListApp {
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
-			//list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
-			//list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
+			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
+			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
+			list1.ResolveFieldFields();
+			li1a.SetFieldData("status", 1);
 			//list2.ReorderTemplate(2, 0);
 			//list2.ResolveFieldFields();
 			//li2a.SetFieldData("status", 1);
@@ -130,13 +130,12 @@ namespace ListApp {
 		}
 		//WPF
 		private void AddImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
-			ListItem li = addItemDialog.ShowAndGetItem(lists[shownList].Template);
+			ListItem li = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
 			Console.WriteLine("closed");
-			if(li == null) {
-
-			}
-			else {
-
+			if(li != null) {
+				//TODO
+				//lists[shownList].Add(li);
+				//AddListItemRow(lists[shownList], i);
 			}
 		}
 		private void ListNameLabel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
