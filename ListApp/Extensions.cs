@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	static class Extensions {
-		internal static BitmapImage ConvertToWPFImage(this Bitmap b) {
+		internal static BitmapImage ConvertToBitmapImage(this Bitmap b) {
 			MemoryStream ms = new MemoryStream();
 			b.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
 			ms.Position = 0;

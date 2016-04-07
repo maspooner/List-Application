@@ -80,13 +80,12 @@ namespace ListApp {
 		//constructors
 		internal ImageField(string fieldName) : base(fieldName) {
 			value = null;
-			//TODO change file size when caching
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			byte[] imageBytes = (byte[])info.GetValue("value", typeof(byte[]));
 			if (imageBytes != null) {
 				using (MemoryStream ms = new MemoryStream(imageBytes)) {
-					value = new Bitmap(ms).ConvertToWPFImage();
+					value = new Bitmap(ms).ConvertToBitmapImage();
 				}
 			}
 		}

@@ -100,7 +100,6 @@ namespace ListApp {
 						contentPanel.Children.Add(dp);
 						break;
 					case ItemType.IMAGE:
-						//TODO format
 						Button browse = new Button();
 						browse.Content = "Browse...";
 						browse.Click += BrowseButton_Click;
@@ -173,7 +172,7 @@ namespace ListApp {
 				Bitmap b = new Bitmap(Bitmap.FromFile(ofd.FileName) as Bitmap, new System.Drawing.Size(300, 100)); //TODO adjustable
 				string fieldName = bb.Name.Substring(0, bb.Name.Length - 3);
                 CImage img = register[fieldName + "_ui"] as CImage;
-				img.Source = b.ConvertToWPFImage();
+				img.Source = b.ConvertToBitmapImage();
 				Label lab = register[fieldName + "_lab"] as Label;
 				lab.Content = ofd.FileName.Substring(ofd.FileName.LastIndexOf('\\'));
 			}

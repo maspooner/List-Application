@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -14,6 +15,7 @@ namespace ListApp {
 		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		private List<MList> lists;
 		private int shownList;
+		private ContextMenu itemsMenu;
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
@@ -24,6 +26,11 @@ namespace ListApp {
 			for (int i = 0; i < lists.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
 			}
+			itemsMenu = new ContextMenu();
+			itemsMenu.Items.Add("Edit");
+			itemsMenu.Items.Add("Reorder");
+			itemsMenu.Items.Add("Delete");
+			itemsMenu.CommandBindings.Add(n) //TODO commands
 			PrintLists();
 			SaveLists();
 		}
@@ -44,11 +51,11 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToWPFImage() });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToBitmapImage() });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToWPFImage());
+			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToBitmapImage());
 			lists.Add(list2);
 
 			//PrintLists();
@@ -63,7 +70,8 @@ namespace ListApp {
 		}
 		//methods
 		private void LoadImages() {
-			addImage.Source = Properties.Resources.addIcon.ConvertToWPFImage();
+			addImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
+			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
 		}
 		private void PrintLists() {
 			foreach (MList m in lists) {
@@ -106,35 +114,32 @@ namespace ListApp {
 			//rest of fields
 			for (int j = 0; j < item.Count; j++) {
 				ListItemField lif = item[j];
-				UIElement uie;
+				FrameworkElement fe;
 				if(lif is ImageField) {
-					Console.WriteLine("img");
 					System.Windows.Controls.Image img = new System.Windows.Controls.Image();
 					img.BeginInit();
 					img.Source = (lif as ImageField).GetBitmap();
 					img.EndInit();
-					uie = img;
+					fe = img;
 				}
 				else if (lif is EnumField) {
-					uie = new Label();
-					(uie as Label).Content = (lif as EnumField).GetSelectedValue(list.Template.Find(x => lif.Name.Equals(x.Name)).Metadata);
+					fe = new Label();
+					(fe as Label).Content = (lif as EnumField).GetSelectedValue(list.Template.Find(x => lif.Name.Equals(x.Name)).Metadata);
 				}
 				else {
-					uie = new Label();
-					(uie as Label).Content = lif.GetValue();
+					fe = new Label();
+					(fe as Label).Content = lif.GetValue();
 				}
-				uie.SetValue(Grid.RowProperty, i + 1);
-				uie.SetValue(Grid.ColumnProperty, j);
-				listItemGrid.Children.Add(uie);
+				fe.SetValue(Grid.RowProperty, i + 1);
+				fe.SetValue(Grid.ColumnProperty, j);
+				fe.ContextMenu = itemsMenu;
+				listItemGrid.Children.Add(fe);
 			}
 		}
 		//WPF
 		private void AddImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
 			object[] data = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
-			Console.WriteLine("closed");
 			if(data != null) {
-				//TODO
-				Console.WriteLine(data);
 				MList l = lists[shownList];
 				ListItem li = l.Add();
 				for(int i = 0; i < l.Template.Count; i++) {
@@ -167,7 +172,12 @@ namespace ListApp {
 				}
 				shownList = listID;
 			}
-			
+		}
+		private void GeneralOptionImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+			//TODO
+		}
+		private void ListOptionImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+			//TODO
 		}
 	}
 }

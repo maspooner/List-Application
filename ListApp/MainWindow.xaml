@@ -13,7 +13,12 @@
             <ColumnDefinition Width="*" MinWidth="200"/>
         </Grid.ColumnDefinitions>
         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="leftPanel"/>
+            <StackPanel Name="leftPanel">
+                <DockPanel>
+                    <Label DockPanel.Dock="Left">Lists</Label>
+                    <Image Name="generalOptionsImage" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
+                </DockPanel>
+            </StackPanel>
         </ScrollViewer>
         <GridSplitter Grid.Column="1"  HorizontalAlignment="Stretch"/>
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
@@ -21,6 +26,7 @@
                 <DockPanel Name="listTitlePanel">
                     <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
                     <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
+                    <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
                 </DockPanel>
                 <Grid Name="listItemGrid"/>
             </StackPanel>
