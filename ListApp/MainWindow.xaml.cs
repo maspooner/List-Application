@@ -44,11 +44,11 @@ namespace ListApp {
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")) });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToWPFImage() });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")));
+			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToWPFImage());
 			lists.Add(list2);
 
 			//PrintLists();
@@ -130,12 +130,17 @@ namespace ListApp {
 		}
 		//WPF
 		private void AddImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
-			ListItem li = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
+			object[] data = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
 			Console.WriteLine("closed");
-			if(li != null) {
+			if(data != null) {
 				//TODO
-				//lists[shownList].Add(li);
-				//AddListItemRow(lists[shownList], i);
+				Console.WriteLine(data);
+				MList l = lists[shownList];
+				ListItem li = l.Add();
+				for(int i = 0; i < l.Template.Count; i++) {
+					li.SetFieldData(l.Template[i].Name, data[i]);
+				}
+				AddListItemRow(lists[shownList], l.Count - 1);
 			}
 		}
 		private void ListNameLabel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {

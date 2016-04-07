@@ -111,7 +111,7 @@ namespace ListApp {
 			return imageBytes;
 		}
 		public override void SetValue(object obj) {
-			value = new Bitmap(obj as Bitmap, new Size(300, 100)).ConvertToWPFImage(); //TODO adjustable
+			value = obj as BitmapImage;
 		}
 	}
 	[Serializable]

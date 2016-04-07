@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	public partial class AddItemDialog : Window {
@@ -21,7 +22,7 @@ namespace ListApp {
 			InitializeComponent();
 		}
 		//methods
-		internal ListItem ShowAndGetItem(List<ItemTemplateItem> template, ListItem li = null) {
+		internal object[] ShowAndGetItem(List<ItemTemplateItem> template, ListItem li = null) {
 			Owner = mainWindow;
 			CreateElements(template, li);
 			ShowDialog();
@@ -29,10 +30,26 @@ namespace ListApp {
 			if (DialogResult.Value) {
 				Console.WriteLine("OK");
 				//TODO implement
-				foreach(ItemTemplateItem iti in template) {
-					object field = FindName(iti.Name + "_ui");
+				object[] data = new object[template.Count];
+				for(int i = 0; i < template.Count; i++) {
+					ItemTemplateItem iti = template[i];
+					FrameworkElement field = register[iti.Name + "_ui"];
+					switch (iti.Type) {
+						case ItemType.BASIC:
+							data[i] = (field as TextBox).Text;
+							break;
+						case ItemType.DATE:
+							data[i] = (field as DatePicker).SelectedDate;
+							break;
+						case ItemType.ENUM:
+							data[i] = (field as ComboBox).SelectedIndex;
+							break;
+						case ItemType.IMAGE:
+							data[i] = (field as CImage).Source as System.Windows.Media.Imaging.BitmapImage;
+							break;
+					}
 				}
-				return null;
+				return data;
 			}
 			else {
 				return null;
@@ -62,9 +79,9 @@ namespace ListApp {
 						fe = cb;
 						break;
 					case ItemType.IMAGE:
-						fe = new System.Windows.Controls.Image();
+						fe = new CImage();
 						if(li != null) {
-							(fe as System.Windows.Controls.Image).Source = (li[i] as ImageField).GetBitmap();
+							(fe as CImage).Source = (li[i] as ImageField).GetBitmap();
 						}
 						break;
 				}
@@ -119,23 +136,21 @@ namespace ListApp {
 			}
 		}
 		private bool IsValidInput() {
-			foreach(UIElement uie in contentPanel.Children) {
-				if(uie is DockPanel) {
-					UIElement comp = (uie as DockPanel).Children[1];
-					if(comp is TextBox) {
-						if ((comp as TextBox).Text.Equals("")) {
-							return false;
-						}
+			foreach (FrameworkElement fe in register.Values) {
+				if (fe is TextBox) {
+					if ((fe as TextBox).Text.Equals("")) {
+						return false;
 					}
-					else if(comp is DatePicker) {
-						if((comp as DatePicker).SelectedDate == null) {
-							return false;
-						}
-					}
-					//combo box don't care
 				}
-				else { //image
-					//TODO
+				else if (fe is DatePicker) {
+					if ((fe as DatePicker).SelectedDate == null) {
+						return false;
+					}
+				}
+				else if (fe is CImage) {
+					if((fe as CImage).Source == null) {
+						return false;
+					}
 				}
 			}
 			return true;
@@ -146,7 +161,7 @@ namespace ListApp {
 				DialogResult = true;
 			}
 			else {
-
+				//TODO highlight missing fields
 			}
 		}
 		private void BrowseButton_Click(object sender, RoutedEventArgs e) {
@@ -155,9 +170,9 @@ namespace ListApp {
 			ofd.DefaultExt = ".png";
 			ofd.Filter = "Image Files|*.jpeg;*.png;*.jpg;*.gif|JPEG Files (*.jpeg)|*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif";
 			if(ofd.ShowDialog() == true) {
-				Bitmap b = Bitmap.FromFile(ofd.FileName) as Bitmap;
+				Bitmap b = new Bitmap(Bitmap.FromFile(ofd.FileName) as Bitmap, new System.Drawing.Size(300, 100)); //TODO adjustable
 				string fieldName = bb.Name.Substring(0, bb.Name.Length - 3);
-                System.Windows.Controls.Image img = register[fieldName + "_ui"] as System.Windows.Controls.Image;
+                CImage img = register[fieldName + "_ui"] as CImage;
 				img.Source = b.ConvertToWPFImage();
 				Label lab = register[fieldName + "_lab"] as Label;
 				lab.Content = ofd.FileName.Substring(ofd.FileName.LastIndexOf('\\'));
@@ -166,7 +181,7 @@ namespace ListApp {
 		private void ClearButton_Click(object sender, RoutedEventArgs e) {
 			Button cb = sender as Button;
 			string fieldName = cb.Name.Substring(0, cb.Name.Length - 4);
-			System.Windows.Controls.Image img = register[fieldName + "_ui"] as System.Windows.Controls.Image;
+			CImage img = register[fieldName + "_ui"] as CImage;
 			img.Source = null;
 			Label lab = register[fieldName + "_lab"] as Label;
 			lab.Content = "<No file>";
