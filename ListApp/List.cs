@@ -147,11 +147,17 @@ namespace ListApp {
 		private string field;
 		private ItemType type;
 		private object metadata;
+		private int x, y;
+		private int width, height;
 		//constructors
-		internal ItemTemplateItem(string field, ItemType type, object metadata) {
+		internal ItemTemplateItem(string field, ItemType type, object metadata, int x, int y, int width, int height) {
 			this.field = field;
 			this.type = type;
 			this.metadata = metadata;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
 		}
 		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
 			field = info.GetValue("field", typeof(string)) as string;
@@ -170,28 +176,6 @@ namespace ListApp {
 			info.AddValue("field", field);
 			info.AddValue("type", type);
 			info.AddValue("metadata", metadata);
-		}
-	}
-	class ListIndex {
-		//members
-		private Dictionary<string, List<string>> index;
-		//constructors
-		internal ListIndex(MList list, object sortType) {
-			index = new Dictionary<string, List<string>>();
-			foreach (ListItem li in list) {
-				throw new NotImplementedException();
-			}
-		}
-		//methods
-		internal void Add(string key, string value) {
-			if (index.ContainsKey(key)) {
-				index[key].Add(value);
-			}
-			else {
-				List<string> l = new List<string>();
-				l.Add(value);
-				index.Add(key, l);
-			}
 		}
 	}
 }

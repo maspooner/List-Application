@@ -195,7 +195,7 @@ namespace ListApp {
 				fc.MinWidth = 0;
 				fc.MaxWidth = 0;
 				lastWidth = fc.Width;
-				fc.Width = new GridLength(3);
+				fc.Width = new GridLength(0);
 			}
 		}
 		private void CollapseBottom_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
@@ -210,7 +210,7 @@ namespace ListApp {
 				fr.MinHeight = 0;
 				fr.MaxHeight = 0;
 				lastHeight = fr.Height;
-				fr.Height = new GridLength(3);
+				fr.Height = new GridLength(0);
 			}
 		}
 	}
