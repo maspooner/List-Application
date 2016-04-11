@@ -6,30 +6,39 @@
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
         Title="ListApp" Height="480" Width="720" MinHeight="240" MinWidth="360">
-    <Grid>
+    <Grid Name="mainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="100"/>
-            <ColumnDefinition Width="3"/>
+            <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*" MinWidth="200"/>
         </Grid.ColumnDefinitions>
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" DockPanel.Dock="Left">
             <StackPanel Name="leftPanel">
                 <DockPanel>
                     <Label DockPanel.Dock="Left">Lists</Label>
-                    <Image Name="generalOptionsImage" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
+                    <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
                 </DockPanel>
             </StackPanel>
         </ScrollViewer>
-        <GridSplitter Grid.Column="1"  HorizontalAlignment="Stretch"/>
-        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="rightPanel">
-                <DockPanel Name="listTitlePanel">
-                    <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-                    <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
-                    <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
-                </DockPanel>
-                <Grid Name="listItemGrid"/>
-            </StackPanel>
-        </ScrollViewer>
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" />
+        <Grid Grid.Column="2" Name="rightGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="100"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="*" MinHeight="100"/>
+            </Grid.RowDefinitions>
+            <ScrollViewer Background="Yellow"  Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <DockPanel Name="listTitlePanel">
+                        <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
+                        <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
+                        <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
+                    </DockPanel>
+                    <Grid Name="listItemGrid"/>
+                </StackPanel>
+            </ScrollViewer>
+            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" />
+            <StackPanel Background="Aqua"  Grid.Row="2"/>
+        </Grid>
     </Grid>
 </Window>

@@ -13,6 +13,7 @@ namespace ListApp {
 	public partial class MainWindow : Window {
 		//members
 		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
+		private GridLength lastHeight, lastWidth;
 		private List<MList> lists;
 		private int shownList;
 		private ContextMenu itemsMenu;
@@ -20,7 +21,10 @@ namespace ListApp {
 		public MainWindow() {
 			InitializeComponent();
 			LoadImages();
+
+			lastHeight = lastWidth = GridLength.Auto;
 			shownList = -1;
+
 			LoadTestLists();
 			//LoadLists();
 			for (int i = 0; i < lists.Count; i++) {
@@ -30,7 +34,7 @@ namespace ListApp {
 			itemsMenu.Items.Add("Edit");
 			itemsMenu.Items.Add("Reorder");
 			itemsMenu.Items.Add("Delete");
-			itemsMenu.CommandBindings.Add(n) //TODO commands
+			//TODO commands
 			PrintLists();
 			SaveLists();
 		}
@@ -178,6 +182,36 @@ namespace ListApp {
 		}
 		private void ListOptionImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
 			//TODO
+		}
+		private void CollapseLeft_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+			Console.WriteLine("COLLAPSE");
+			ColumnDefinition fc = mainGrid.ColumnDefinitions[0];
+			if (fc.MinWidth == 0) {
+				fc.MinWidth = 100; //TODO adjust
+				fc.MaxWidth = double.PositiveInfinity;
+				fc.Width = lastWidth;
+			}
+			else {
+				fc.MinWidth = 0;
+				fc.MaxWidth = 0;
+				lastWidth = fc.Width;
+				fc.Width = new GridLength(3);
+			}
+		}
+		private void CollapseBottom_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+			Console.WriteLine("COLLAPSE");
+			RowDefinition fr = rightGrid.RowDefinitions[2];
+			if (fr.MinHeight == 0) {
+				fr.MinHeight = 100; //TODO adjust
+				fr.MaxHeight = double.PositiveInfinity;
+				fr.Height = lastHeight;
+			}
+			else {
+				fr.MinHeight = 0;
+				fr.MaxHeight = 0;
+				lastHeight = fr.Height;
+				fr.Height = new GridLength(3);
+			}
 		}
 	}
 }

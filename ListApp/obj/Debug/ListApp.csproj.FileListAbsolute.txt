@@ -13,3 +13,4 @@ C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\Li
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.csproj.GenerateResource.Cache
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.exe
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.pdb
+C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.csprojResolveAssemblyReference.cache
