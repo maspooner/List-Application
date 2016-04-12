@@ -14,3 +14,5 @@ C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\Li
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.exe
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.pdb
 C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\ListApp.csprojResolveAssemblyReference.cache
+C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\EditLayoutDialog.g.cs
+C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\ListApp\obj\Debug\EditLayoutDialog.baml

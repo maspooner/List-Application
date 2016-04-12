@@ -6,7 +6,11 @@
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
         Title="EditLayoutDialog" Height="300" Width="300">
-    <Grid>
-        
-    </Grid>
+    <StackPanel>
+		<Grid Name="contentPanel"/>
+        <StackPanel Orientation="Horizontal">
+            <Button Click="ConfirmButton_Click">OK</Button>
+            <Button IsCancel="True" IsDefault="True">Cancel</Button>
+        </StackPanel>
+	</StackPanel>
 </Window>

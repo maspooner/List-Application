@@ -1,11 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using CImage = System.Windows.Controls.Image;
@@ -13,7 +9,7 @@ using CImage = System.Windows.Controls.Image;
 namespace ListApp {
 	public partial class AddItemDialog : Window {
 		//methods
-		private MainWindow mainWindow; //TODO need the reference?
+		private MainWindow mainWindow;
 		private Dictionary<string, FrameworkElement> register;
 		//constructors
 		public AddItemDialog(MainWindow mw) {

@@ -76,7 +76,8 @@ namespace ListApp {
 		private void LoadImages() {
 			addImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
-		}
+			listOptionImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
+        }
 		private void PrintLists() {
 			foreach (MList m in lists) {
 				Console.WriteLine(m.Name);
@@ -141,7 +142,7 @@ namespace ListApp {
 			}
 		}
 		//WPF
-		private void AddImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+		private void AddImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			object[] data = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
 			if(data != null) {
 				MList l = lists[shownList];
@@ -152,7 +153,7 @@ namespace ListApp {
 				AddListItemRow(lists[shownList], l.Count - 1);
 			}
 		}
-		private void ListNameLabel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+		private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
 			Label l = sender as Label;
 			int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
             if (shownList != listID) {
@@ -177,11 +178,19 @@ namespace ListApp {
 				shownList = listID;
 			}
 		}
-		private void GeneralOptionImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+		private void GeneralOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO
 		}
-		private void ListOptionImage_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e) {
-			//TODO
+		private void ListOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
+			//TODO move to inside a dialog
+			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(lists[shownList].Template);
+			if(newTemplate != null) {
+				lists[shownList].ClearTemplate();
+				foreach (ItemTemplateItem iti in newTemplate) {
+					lists[shownList].AddToTemplate(iti);
+				}
+				//TODO rearrange content panel
+			}
 		}
 		private void CollapseLeft_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
 			Console.WriteLine("COLLAPSE");

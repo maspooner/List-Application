@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 namespace ListApp {
 	[Serializable]
 	class MList : IEnumerable<ListItem>, ISerializable{
+		internal const int FIELD_GRID_WIDTH = 5;
 		//members
 		private string name;
 		private List<ListItem> items;
@@ -27,17 +28,42 @@ namespace ListApp {
 		internal ListItem this[int i] { get { return items[i]; } }
 		internal List<ItemTemplateItem> Template { get { return template; } }
 		//methods
+		internal void AddToTemplate(ItemTemplateItem iti) {
+			template.Add(iti);
+		}
 		internal void AddToTemplate(string fieldName, ItemType type, object metadata) {
-			template.Add(new ItemTemplateItem(fieldName, type, metadata));
+			AddToTemplate(new ItemTemplateItem(fieldName, type, metadata, FindOpenLocation()));
 		}
 		internal void DeleteFromTemplate(int i) {
 			template.RemoveAt(i);
+		}
+		internal void ClearTemplate() {
+			template.Clear();
 		}
 		internal void ReorderTemplate(int oi, int ni) {
 			int ani = ni > oi ? ni - 1 : ni;
 			ItemTemplateItem item = template[oi];
 			template.RemoveAt(oi);
 			template.Insert(ani, item);
+		}
+		private Location FindOpenLocation() {
+			Location loc = null;
+			int row = 0;
+			if (template.Count == 0) {
+				loc = new Location(0, 0);
+			}
+			while(loc == null) {
+				for (int i = 0; i < FIELD_GRID_WIDTH && loc == null; i++) {
+					foreach (ItemTemplateItem iti in template) {
+						if (i != iti.X && row != iti.Y) {
+							loc = new Location(i, row);
+							break;
+						}
+					}
+				}
+				row++;
+			}
+			return loc;
 		}
 		internal void ResolveFieldFields() {
 			foreach(ListItem li in items) {
@@ -147,17 +173,19 @@ namespace ListApp {
 		private string field;
 		private ItemType type;
 		private object metadata;
-		private int x, y;
+		private Location loc;
+		private List<Location> occupiedCells;
 		private int width, height;
 		//constructors
-		internal ItemTemplateItem(string field, ItemType type, object metadata, int x, int y, int width, int height) {
+		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc) {
 			this.field = field;
 			this.type = type;
 			this.metadata = metadata;
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
+			this.loc = loc;
+			width = 1;
+			height = 1;
+			occupiedCells = new List<Location>();
+			CalculateOccupied();
 		}
 		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
 			field = info.GetValue("field", typeof(string)) as string;
@@ -167,6 +195,8 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return field; } }
 		internal ItemType Type { get { return type; } }
+		internal int X { get { return loc.X; } }
+		internal int Y { get { return loc.Y; } }
 		internal object Metadata {
 			get { return metadata; }
 			set { metadata = value; }
@@ -176,6 +206,14 @@ namespace ListApp {
 			info.AddValue("field", field);
 			info.AddValue("type", type);
 			info.AddValue("metadata", metadata);
+		}
+		private void CalculateOccupied() {
+			occupiedCells.Clear();
+			for (int i = 0; i < height; i++) {
+				for (int j = 0; j < width; j++) {
+					occupiedCells.Add(new Location(loc.X + j, loc.Y + i));
+				}
+			}
 		}
 	}
 }

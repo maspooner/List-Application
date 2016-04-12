@@ -83,7 +83,7 @@
     <Compile Include="EditLayoutDialog.xaml.cs">
       <DependentUpon>EditLayoutDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Misc.cs" />
     <Compile Include="List.cs" />
     <Compile Include="ListItemField.cs" />
     <Compile Include="MainWindow.xaml.cs">
