@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace ListApp {
 	public partial class EditLayoutDialog : Window {
@@ -21,8 +23,7 @@ namespace ListApp {
 		private void CreateElements(List<ItemTemplateItem> template) {
 			for(int i = 0; i < MList.FIELD_GRID_WIDTH; i++) {
 				ColumnDefinition cd = new ColumnDefinition();
-				cd.Width = new GridLength(0, GridUnitType.Star);
-				contentPanel.ColumnDefinitions.Add(cd);
+				layoutContent.ColumnDefinitions.Add(cd);
 			}
 			int maxHeight = 0;
 			foreach (ItemTemplateItem iti in template) {
@@ -33,12 +34,34 @@ namespace ListApp {
 			maxHeight += 5;
 			for (int i = 0; i < maxHeight; i++) {
 				RowDefinition rd = new RowDefinition();
-				rd.Height = new GridLength(0, GridUnitType.Star); //TODO always equal width
-				contentPanel.RowDefinitions.Add(rd);
+				layoutContent.RowDefinitions.Add(rd);
 			}
-
 			//TODO
+			foreach (ItemTemplateItem iti in template) {
+				Label l = new Label();
+				l.HorizontalContentAlignment = HorizontalAlignment.Center;
+				l.VerticalContentAlignment = VerticalAlignment.Center;
+				l.Content = iti.Name + "\n(" + iti.Type + ")";
+				l.Background = System.Windows.Media.Brushes.LightGray;
+				l.BorderThickness = new Thickness(3);
+				Grid.SetColumn(l, iti.X);
+				Grid.SetRow(l, iti.Y);
+				Grid.SetColumnSpan(l, iti.Width);
+				Grid.SetRowSpan(l, iti.Height);
+				Console.WriteLine(iti.X + " " + iti.Y);
+				layoutContent.Children.Add(l);
+			}
+			Console.WriteLine(layoutContent.ColumnDefinitions.Count);
+			Console.WriteLine(layoutContent.RowDefinitions.Count);
 		}
+
+		private void LayoutContent_SizeChanged(object sender, SizeChangedEventArgs e) {
+			double width = layoutContent.ColumnDefinitions[0].ActualWidth;
+			foreach (RowDefinition rd in layoutContent.RowDefinitions) {
+				rd.MinHeight = width;
+			}
+		}
+
 		private void ConfirmButton_Click(object sender, RoutedEventArgs e) {
 			DialogResult = true;
 		}

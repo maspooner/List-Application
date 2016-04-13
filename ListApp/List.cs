@@ -54,11 +54,17 @@ namespace ListApp {
 			}
 			while(loc == null) {
 				for (int i = 0; i < FIELD_GRID_WIDTH && loc == null; i++) {
-					foreach (ItemTemplateItem iti in template) {
-						if (i != iti.X && row != iti.Y) {
-							loc = new Location(i, row);
-							break;
+					bool fits = true;
+					foreach(ItemTemplateItem iti in template) {
+						for(int k = 0; k < iti.Occupied.Count; k++) {
+							Location l = iti.Occupied[k];
+                            if (l.X == i && l.Y == row) {
+								fits = false;
+							}
 						}
+					}
+					if (fits) {
+						loc = new Location(i, row);
 					}
 				}
 				row++;
@@ -197,6 +203,9 @@ namespace ListApp {
 		internal ItemType Type { get { return type; } }
 		internal int X { get { return loc.X; } }
 		internal int Y { get { return loc.Y; } }
+		internal int Width { get { return width; } }
+		internal int Height { get { return height; } }
+		internal List<Location> Occupied { get { return occupiedCells; } }
 		internal object Metadata {
 			get { return metadata; }
 			set { metadata = value; }

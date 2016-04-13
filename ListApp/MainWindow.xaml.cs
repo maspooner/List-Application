@@ -30,6 +30,7 @@ namespace ListApp {
 			for (int i = 0; i < lists.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
 			}
+			DisplayList(0);
 			itemsMenu = new ContextMenu();
 			itemsMenu.Items.Add("Edit");
 			itemsMenu.Items.Add("Reorder");
@@ -65,6 +66,12 @@ namespace ListApp {
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
 			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
+			list1.AddToTemplate("a", ItemType.BASIC, null);
+			list1.AddToTemplate("b", ItemType.BASIC, null);
+			list1.AddToTemplate("c", ItemType.BASIC, null);
+			list1.AddToTemplate("d", ItemType.BASIC, null);
+			list1.AddToTemplate("e", ItemType.BASIC, null);
+			list1.AddToTemplate("f", ItemType.BASIC, null);
 			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
 			list1.ResolveFieldFields();
 			li1a.SetFieldData("status", 1);
@@ -153,29 +160,32 @@ namespace ListApp {
 				AddListItemRow(lists[shownList], l.Count - 1);
 			}
 		}
+		private void DisplayList(int id) {
+			MList list = lists[id];
+			listTitleLabel.Content = list.Name;
+			listItemGrid.Children.Clear();
+			listItemGrid.ColumnDefinitions.Clear();
+			listItemGrid.RowDefinitions.Clear();
+			//add new
+			listItemGrid.RowDefinitions.Add(new RowDefinition());
+			for (int i = 0; i < list.Template.Count; i++) {
+				Label title = new Label();
+				title.SetValue(Grid.RowProperty, 0);
+				title.SetValue(Grid.ColumnProperty, i);
+				title.Content = list.Template[i].Name;
+				listItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
+				listItemGrid.Children.Add(title);
+			}
+			for (int i = 0; i < list.Count; i++) {
+				AddListItemRow(list, i);
+			}
+			shownList = id;
+		}
 		private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
 			Label l = sender as Label;
 			int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
             if (shownList != listID) {
-				MList list = lists[listID];
-				listTitleLabel.Content = list.Name;
-				listItemGrid.Children.Clear();
-				listItemGrid.ColumnDefinitions.Clear();
-				listItemGrid.RowDefinitions.Clear();
-				//add new
-				listItemGrid.RowDefinitions.Add(new RowDefinition());
-				for (int i = 0; i < list.Template.Count; i++) {
-					Label title = new Label();
-					title.SetValue(Grid.RowProperty, 0);
-					title.SetValue(Grid.ColumnProperty, i);
-					title.Content = list.Template[i].Name;
-					listItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
-					listItemGrid.Children.Add(title);
-				}
-				for (int i = 0; i < list.Count; i++) {
-					AddListItemRow(list, i);
-				}
-				shownList = listID;
+				DisplayList(listID);
 			}
 		}
 		private void GeneralOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
