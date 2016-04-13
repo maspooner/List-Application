@@ -27,18 +27,20 @@
                 <RowDefinition Height="5"/>
                 <RowDefinition Height="*" MinHeight="100"/>
             </Grid.RowDefinitions>
-            <ScrollViewer Background="Yellow"  Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <DockPanel Name="listTitlePanel">
-                        <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-                        <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
-                        <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
-                    </DockPanel>
+            <DockPanel Grid.Row="0">
+                <DockPanel DockPanel.Dock="Top" Name="listTitlePanel">
+                    <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
+                    <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
+                    <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
+                </DockPanel>
+                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
                     <Grid Name="listItemGrid"/>
-                </StackPanel>
-            </ScrollViewer>
+                </ScrollViewer>
+            </DockPanel>
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" />
-            <StackPanel Background="Aqua"  Grid.Row="2"/>
+            <ScrollViewer Grid.Row="2">
+                <Grid Name="contentPanel" Background="Aqua"/>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </Window>

@@ -11,7 +11,7 @@
             <Button Click="ConfirmButton_Click">OK</Button>
             <Button IsCancel="True" IsDefault="True">Cancel</Button>
         </StackPanel>
-        <ScrollViewer DockPanel.Dock="Top">
+        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
             <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged"/>
         </ScrollViewer>
     </DockPanel>

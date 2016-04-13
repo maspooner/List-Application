@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 namespace ListApp {
@@ -42,6 +43,30 @@ namespace ListApp {
 			bi.StreamSource = ms;
 			bi.EndInit();
 			return bi;
+		}
+		internal static void ClearGrid(this Grid g) {
+			g.Children.Clear();
+			g.RowDefinitions.Clear();
+			g.ColumnDefinitions.Clear();
+		}
+	}
+	class Utils {
+		internal static void SetupContentGrid(Grid g, List<ItemTemplateItem> template) {
+			for (int i = 0; i < MList.FIELD_GRID_WIDTH; i++) {
+				ColumnDefinition cd = new ColumnDefinition();
+				g.ColumnDefinitions.Add(cd);
+			}
+			int maxHeight = 0;
+			foreach (ItemTemplateItem iti in template) {
+				if (iti.Y > maxHeight) {
+					maxHeight = iti.Y;
+				}
+			}
+			maxHeight += 5;
+			for (int i = 0; i < maxHeight; i++) {
+				RowDefinition rd = new RowDefinition();
+				g.RowDefinitions.Add(rd);
+			}
 		}
 	}
 }

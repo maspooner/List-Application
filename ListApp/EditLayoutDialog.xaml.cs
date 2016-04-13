@@ -21,21 +21,7 @@ namespace ListApp {
 			return null; //TODO
 		}
 		private void CreateElements(List<ItemTemplateItem> template) {
-			for(int i = 0; i < MList.FIELD_GRID_WIDTH; i++) {
-				ColumnDefinition cd = new ColumnDefinition();
-				layoutContent.ColumnDefinitions.Add(cd);
-			}
-			int maxHeight = 0;
-			foreach (ItemTemplateItem iti in template) {
-				if (iti.Y > maxHeight) {
-					maxHeight = iti.Y;
-				}
-			}
-			maxHeight += 5;
-			for (int i = 0; i < maxHeight; i++) {
-				RowDefinition rd = new RowDefinition();
-				layoutContent.RowDefinitions.Add(rd);
-			}
+			Utils.SetupContentGrid(layoutContent, template);
 			//TODO
 			foreach (ItemTemplateItem iti in template) {
 				Label l = new Label();

@@ -31,6 +31,7 @@ namespace ListApp {
 				leftPanel.Children.Add(CreateListLabel(lists[i], i));
 			}
 			DisplayList(0);
+			DisplayItem(0);
 			itemsMenu = new ContextMenu();
 			itemsMenu.Items.Add("Edit");
 			itemsMenu.Items.Add("Reorder");
@@ -74,6 +75,7 @@ namespace ListApp {
 			list1.AddToTemplate("f", ItemType.BASIC, null);
 			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
 			list1.ResolveFieldFields();
+			list1.Add();
 			li1a.SetFieldData("status", 1);
 			//list2.ReorderTemplate(2, 0);
 			//list2.ResolveFieldFields();
@@ -160,12 +162,32 @@ namespace ListApp {
 				AddListItemRow(lists[shownList], l.Count - 1);
 			}
 		}
+		private void DisplayItem(int i) {
+			MList l = lists[shownList];
+			ListItem li = l[i];
+			contentPanel.ClearGrid();
+			//add new
+			Utils.SetupContentGrid(contentPanel, l.Template);
+			//TODO
+			foreach (ListItemField lif in li) {
+				FrameworkElement fe = null;
+				switch (lif.) {
+					case ItemType.BASIC:
+					case ItemType.DATE:
+					case ItemType.ENUM:
+						fe = new Label();
+						(fe as Label).Content = lif.
+						break;
+					case ItemType.IMAGE:
+
+						break;
+				}
+			}
+		}
 		private void DisplayList(int id) {
 			MList list = lists[id];
 			listTitleLabel.Content = list.Name;
-			listItemGrid.Children.Clear();
-			listItemGrid.ColumnDefinitions.Clear();
-			listItemGrid.RowDefinitions.Clear();
+			listItemGrid.ClearGrid();
 			//add new
 			listItemGrid.RowDefinitions.Add(new RowDefinition());
 			for (int i = 0; i < list.Template.Count; i++) {
