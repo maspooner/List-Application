@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -35,12 +34,13 @@ namespace ListApp {
 			itemsMenu.Items.Add("Reorder");
 			itemsMenu.Items.Add("Delete");
 			//TODO commands
-			PrintLists();
+			Console.WriteLine(data);
 			data.Save();
+			Thread t = new Thread(AutoSaveThreadStart);
 		}
 		//test methods
 		private void LoadTestLists() {
-			lists = new List<MList>();
+			data = new ListData();
 			shownList = -1;
 			MList list1 = new MList("group a");
 			list1.AddToTemplate("notes", ItemType.BASIC, null);
@@ -49,18 +49,19 @@ namespace ListApp {
 			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today });
 			li2a.SetFieldData("notes", "More notes");
 			li2a.SetFieldData("date", DateTime.Today);
-			lists.Add(list1);
+			data.Lists.Add(list1);
 
 			MList list2 = new MList("group b");
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
 			list2.AddToTemplate("img", ItemType.IMAGE, null);
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now, new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToBitmapImage() });
+			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now,
+				new Bitmap(System.Drawing.Image.FromFile(ListData.FILE_PATH + "a.jpg")).ConvertToBitmapImage() });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(FILE_PATH + "a.jpg")).ConvertToBitmapImage());
-			lists.Add(list2);
+			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(ListData.FILE_PATH + "a.jpg")).ConvertToBitmapImage());
+			data.Lists.Add(list2);
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
@@ -80,22 +81,16 @@ namespace ListApp {
 			//li2a.SetFieldData("status", 1);
 		}
 		//methods
+		private void AutoSaveThreadStart() {
+			while (true) {
+				Thread.Sleep();
+			}
+		}
 		private void LoadImages() {
 			addImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
 			listOptionImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
         }
-		public void LoadLists() {
-			if (new FileInfo(FILE_PATH + "lists.bin").Exists) {
-				Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Open);
-				BinaryFormatter bformatter = new BinaryFormatter();
-				lists = (List<MList>)bformatter.Deserialize(stream);
-				stream.Close();
-			}
-			else {
-				lists = new List<MList>();
-			}
-		}
 		private Label CreateListLabel(MList list, int i) {
 			Label l = new Label();
 			l.Name = "list_" + i;
@@ -133,18 +128,18 @@ namespace ListApp {
 		}
 		//WPF
 		private void AddImage_MouseUp(object sender, MouseButtonEventArgs e) {
-			object[] data = new AddItemDialog(this).ShowAndGetItem(lists[shownList].Template);
-			if(data != null) {
-				MList l = lists[shownList];
+			object[] fields = new AddItemDialog(this).ShowAndGetItem(data[shownList].Template);
+			if(fields != null) {
+				MList l = data[shownList];
 				ListItem li = l.Add();
 				for(int i = 0; i < l.Template.Count; i++) {
-					li.SetFieldData(l.Template[i].Name, data[i]);
+					li.SetFieldData(l.Template[i].Name, fields[i]);
 				}
-				AddListItemRow(lists[shownList], l.Count - 1);
+				AddListItemRow(data[shownList], l.Count - 1);
 			}
 		}
 		private void DisplayItem(int i) {
-			MList l = lists[shownList];
+			MList l = data[shownList];
 			ListItem li = l[i];
 			contentPanel.ClearGrid();
 			//add new
@@ -175,7 +170,7 @@ namespace ListApp {
 			}
 		}
 		private void DisplayList(int id) {
-			MList list = lists[id];
+			MList list = data[id];
 			listTitleLabel.Content = list.Name;
 			listItemGrid.ClearGrid();
 			//add new
@@ -205,11 +200,11 @@ namespace ListApp {
 		}
 		private void ListOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO move to inside a dialog
-			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(lists[shownList].Template);
+			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
 			if(newTemplate != null) {
-				lists[shownList].ClearTemplate();
+				data[shownList].ClearTemplate();
 				foreach (ItemTemplateItem iti in newTemplate) {
-					lists[shownList].AddToTemplate(iti);
+					data[shownList].AddToTemplate(iti);
 				}
 				//TODO rearrange content panel
 			}

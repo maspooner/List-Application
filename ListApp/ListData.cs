@@ -2,15 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ListApp {
+	[Serializable]
 	class ListData : IEnumerable<MList>, ISerializable{
-		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
+		internal const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		//members
 		private List<MList> lists;
 		private bool txtBackup;
@@ -33,6 +32,9 @@ namespace ListApp {
 			BinaryFormatter bformatter = new BinaryFormatter();
 			bformatter.Serialize(stream, this);
 			stream.Close();
+			if (txtBackup) {
+				WriteToBackupTxt();
+			}
 		}
 		public override string ToString() {
 			string s = "";
@@ -54,6 +56,29 @@ namespace ListApp {
 		}
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
+		}
+		private void WriteToBackupTxt() {
+			//TODO
+			using(TextWriter tw = new StreamWriter(FILE_PATH + "backup.txt")) {
+				foreach (MList ml in lists) {
+					tw.WriteLine(ml.Name);
+					tw.WriteLine("=================");
+					foreach(ListItem li in ml) {
+						tw.WriteLine("Item:");
+						for(int i = 0; i < ml.Template.Count; i++) {
+							ListItemField lif = li[i];
+							ItemTemplateItem iti = ml.Template[i];
+							tw.Write("\t" + lif.Name + ": ");
+							if(lif is EnumField) {
+								tw.WriteLine((lif as EnumField).GetSelectedValue(iti.Metadata));
+							}
+							else {
+								tw.WriteLine(lif.GetValue());
+							}
+						}
+					}
+				}
+			}
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("lists", lists);
