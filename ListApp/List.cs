@@ -18,7 +18,7 @@ namespace ListApp {
 			template = new List<ItemTemplateItem>();
 		}
 		public MList(SerializationInfo info, StreamingContext context) {
-			name = info.GetValue("name", typeof(string)) as string;
+			name = info.GetString("name");
 			items = info.GetValue("items", typeof(List<ListItem>)) as List<ListItem>;
 			template = info.GetValue("template", typeof(List<ItemTemplateItem>)) as List<ItemTemplateItem>;
 		}
@@ -194,7 +194,7 @@ namespace ListApp {
 			CalculateOccupied();
 		}
 		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
-			field = info.GetValue("field", typeof(string)) as string;
+			field = info.GetString("field");
 			type = (ItemType) info.GetValue("type", typeof(ItemType));
 			metadata = info.GetValue("metadata", typeof(object));
 		}

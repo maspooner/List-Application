@@ -6,15 +6,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	public partial class MainWindow : Window {
 		//members
-		private const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		private GridLength lastHeight, lastWidth;
-		private List<MList> lists;
+		private ListData data;
 		private int shownList;
 		private ContextMenu itemsMenu;
 		//constructors
@@ -27,8 +25,8 @@ namespace ListApp {
 
 			LoadTestLists();
 			//LoadLists();
-			for (int i = 0; i < lists.Count; i++) {
-				leftPanel.Children.Add(CreateListLabel(lists[i], i));
+			for (int i = 0; i < data.Count; i++) {
+				leftPanel.Children.Add(CreateListLabel(data[i], i));
 			}
 			DisplayList(0);
 			DisplayItem(0);
@@ -38,7 +36,7 @@ namespace ListApp {
 			itemsMenu.Items.Add("Delete");
 			//TODO commands
 			PrintLists();
-			SaveLists();
+			data.Save();
 		}
 		//test methods
 		private void LoadTestLists() {
@@ -87,23 +85,6 @@ namespace ListApp {
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
 			listOptionImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
         }
-		private void PrintLists() {
-			foreach (MList m in lists) {
-				Console.WriteLine(m.Name);
-				foreach (ListItem li in m) {
-					Console.WriteLine();
-					foreach (ListItemField lif in li) {
-						Console.WriteLine("\t" + lif.Name + ": " + lif.GetValue());
-					}
-				}
-			}
-		}
-		public void SaveLists() {
-			Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Create);
-			BinaryFormatter bformatter = new BinaryFormatter();
-			bformatter.Serialize(stream, lists);
-			stream.Close();
-		}
 		public void LoadLists() {
 			if (new FileInfo(FILE_PATH + "lists.bin").Exists) {
 				Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Open);
@@ -169,19 +150,28 @@ namespace ListApp {
 			//add new
 			Utils.SetupContentGrid(contentPanel, l.Template);
 			//TODO
-			foreach (ListItemField lif in li) {
+			for(int k = 0; k < l.Template.Count; k++) {
+				ListItemField lif = li[k];
 				FrameworkElement fe = null;
-				switch (lif.) {
-					case ItemType.BASIC:
-					case ItemType.DATE:
-					case ItemType.ENUM:
-						fe = new Label();
-						(fe as Label).Content = lif.
-						break;
-					case ItemType.IMAGE:
-
-						break;
+				ItemTemplateItem iti = l.Template[k];
+				if (lif is ImageField) {
+					fe = new CImage();
+					(fe as CImage).Source = (lif as ImageField).GetBitmap();
+                }
+				else if(lif is EnumField) {
+					fe = new Label();
+					(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata);
 				}
+				else {
+					fe = new Label();
+					object val = lif.GetValue();
+					(fe as Label).Content = val == null ? "" : val.ToString();
+				}
+                Grid.SetColumn(fe, iti.X);
+				Grid.SetRow(fe, iti.Y);
+				Grid.SetColumnSpan(fe, iti.Width);
+				Grid.SetRowSpan(fe, iti.Height);
+				contentPanel.Children.Add(fe);
 			}
 		}
 		private void DisplayList(int id) {

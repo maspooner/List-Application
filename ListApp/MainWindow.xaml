@@ -33,7 +33,7 @@
                     <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
                     <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
                 </DockPanel>
-                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                     <Grid Name="listItemGrid"/>
                 </ScrollViewer>
             </DockPanel>

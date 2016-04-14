@@ -37,7 +37,7 @@ namespace ListApp {
 			value = null;
 		}
 		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetValue("value", typeof(string)) as string;
+			value = info.GetString("value");
 		}
 		//methods
 		public override int CompareTo(ListItemField other) {
@@ -59,7 +59,7 @@ namespace ListApp {
 			value = DateTime.MinValue;
 		}
 		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = (DateTime) info.GetValue("value", typeof(DateTime));
+			value = info.GetDateTime("value");
 		}
 		//methods
 		public override int CompareTo(ListItemField other) {
@@ -122,7 +122,7 @@ namespace ListApp {
 			value = 0;
 		}
 		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = (int)info.GetValue("value", typeof(int));
+			value = info.GetInt32("value");
 		}
 		//methods
 		public string GetSelectedValue(object metadata) {
