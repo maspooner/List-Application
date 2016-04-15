@@ -8,10 +8,12 @@ namespace ListApp {
 	public partial class EditLayoutDialog : Window {
 		//members
 		private MainWindow mainWindow;
+		private Dictionary<string, FrameworkElement> register;
 		//constructors
 		public EditLayoutDialog(MainWindow mw) {
 			InitializeComponent();
 			this.mainWindow = mw;
+			register = new Dictionary<string, FrameworkElement>();
 		}
 		//methods
 		internal List<ItemTemplateItem> ShowAndGetTemplate(List<ItemTemplateItem> template) {
@@ -24,18 +26,30 @@ namespace ListApp {
 			Utils.SetupContentGrid(layoutContent, template);
 			//TODO
 			foreach (ItemTemplateItem iti in template) {
-				Label l = new Label();
-				l.HorizontalContentAlignment = HorizontalAlignment.Center;
-				l.VerticalContentAlignment = VerticalAlignment.Center;
-				l.Content = iti.Name + "\n(" + iti.Type + ")";
-				l.Background = System.Windows.Media.Brushes.LightGray;
-				l.BorderThickness = new Thickness(3);
-				Grid.SetColumn(l, iti.X);
-				Grid.SetRow(l, iti.Y);
-				Grid.SetColumnSpan(l, iti.Width);
-				Grid.SetRowSpan(l, iti.Height);
+				DockPanel comp = new DockPanel();
+				Grid.SetColumn(comp, iti.X);
+				Grid.SetRow(comp, iti.Y);
+				Grid.SetColumnSpan(comp, iti.Width);
+				Grid.SetRowSpan(comp, iti.Height);
+				
+				Label c = new Label();
+				c.HorizontalContentAlignment = HorizontalAlignment.Center;
+				c.VerticalContentAlignment = VerticalAlignment.Center;
+				c.Content = iti.Name + "\n(" + iti.Type + ")";
+				c.Background = System.Windows.Media.Brushes.LightGray;
+
+				Label r = new Label();
+				DockPanel.SetDock(r, Dock.Right);
+				r.Cursor = System.Windows.Input.Cursors.SizeWE;
+				r.Width = 5;
+				r.BorderThickness = new Thickness(0, 0, 3, 0);
+				r.Background = System.Windows.Media.Brushes.Aqua;
+
+				comp.Children.Add(r);
+				comp.Children.Add(c);
+
 				Console.WriteLine(iti.X + " " + iti.Y);
-				layoutContent.Children.Add(l);
+				layoutContent.Children.Add(comp);
 			}
 			Console.WriteLine(layoutContent.ColumnDefinitions.Count);
 			Console.WriteLine(layoutContent.RowDefinitions.Count);

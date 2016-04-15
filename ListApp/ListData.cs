@@ -18,7 +18,7 @@ namespace ListApp {
 		internal ListData() {
 			lists = new List<MList>();
 			txtBackup = false;
-			waitSaveTime =  6000; //10 min
+			waitSaveTime =  10 * 60 * 1000; //10 min
 		}
 		private ListData(SerializationInfo info, StreamingContext context) {
 			lists = info.GetValue("lists", typeof(List<MList>)) as List<MList>;
