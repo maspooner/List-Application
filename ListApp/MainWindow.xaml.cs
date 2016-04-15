@@ -9,11 +9,14 @@ using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	public partial class MainWindow : Window {
+		internal const int SHOWN_AUTOSAVE_TEXT_TIME = 5000; //TODO adjust
 		//members
 		private GridLength lastHeight, lastWidth;
 		private ListData data;
 		private int shownList;
+		private Thread autoSaveThread;
 		private ContextMenu itemsMenu;
+		private bool done;
 		//constructors
 		public MainWindow() {
 			InitializeComponent();
@@ -21,6 +24,7 @@ namespace ListApp {
 
 			lastHeight = lastWidth = GridLength.Auto;
 			shownList = -1;
+			done = false;
 
 			LoadTestLists();
 			//LoadLists();
@@ -36,7 +40,8 @@ namespace ListApp {
 			//TODO commands
 			Console.WriteLine(data);
 			data.Save();
-			Thread t = new Thread(AutoSaveThreadStart);
+			autoSaveThread = new Thread(AutoSaveThreadStart);
+			autoSaveThread.Start();
 		}
 		//test methods
 		private void LoadTestLists() {
@@ -82,8 +87,20 @@ namespace ListApp {
 		}
 		//methods
 		private void AutoSaveThreadStart() {
-			while (true) {
-				Thread.Sleep();
+			while (!done) {
+				try {
+					Thread.Sleep(data.WaitSaveTime);
+					data.Save();
+					Console.WriteLine("Saving");
+					//TODO can't do
+					Dispatcher.Invoke(new Action(() => { messageLabel.Content = "Autosave complete"; }));
+					Thread.Sleep(SHOWN_AUTOSAVE_TEXT_TIME);
+					Dispatcher.Invoke(new Action(() => { messageLabel.Content = ""; }));
+				}
+				catch(Exception e) {
+					Console.WriteLine(e.Message);
+					Thread.Sleep(5000);
+				}
 			}
 		}
 		private void LoadImages() {
@@ -106,7 +123,7 @@ namespace ListApp {
 				ListItemField lif = item[j];
 				FrameworkElement fe;
 				if(lif is ImageField) {
-					System.Windows.Controls.Image img = new System.Windows.Controls.Image();
+					CImage img = new CImage();
 					img.BeginInit();
 					img.Source = (lif as ImageField).GetBitmap();
 					img.EndInit();
@@ -238,6 +255,12 @@ namespace ListApp {
 				lastHeight = fr.Height;
 				fr.Height = new GridLength(0);
 			}
+		}
+		protected override void OnClosed(EventArgs e) {
+			base.OnClosed(e);
+			done = true;
+			autoSaveThread.Interrupt();
+			autoSaveThread.Join();
 		}
 	}
 }

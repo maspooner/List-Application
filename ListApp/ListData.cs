@@ -13,10 +13,12 @@ namespace ListApp {
 		//members
 		private List<MList> lists;
 		private bool txtBackup;
+		private int waitSaveTime;
 		//constructors
 		internal ListData() {
 			lists = new List<MList>();
 			txtBackup = false;
+			waitSaveTime =  6000; //10 min
 		}
 		private ListData(SerializationInfo info, StreamingContext context) {
 			lists = info.GetValue("lists", typeof(List<MList>)) as List<MList>;
@@ -26,6 +28,7 @@ namespace ListApp {
 		internal List<MList> Lists { get { return lists; } }
 		internal int Count { get { return lists.Count; } }
 		internal MList this[int i] { get { return lists[i]; } }
+		internal int WaitSaveTime { get { return waitSaveTime - MainWindow.SHOWN_AUTOSAVE_TEXT_TIME; } } //save time for showing text on same thread
 		//methods
 		internal void Save() {
 			Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Create);

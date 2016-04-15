@@ -12,14 +12,16 @@
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*" MinWidth="200"/>
         </Grid.ColumnDefinitions>
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" DockPanel.Dock="Left">
-            <StackPanel Name="leftPanel">
-                <DockPanel>
-                    <Label DockPanel.Dock="Left">Lists</Label>
-                    <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
-                </DockPanel>
-            </StackPanel>
-        </ScrollViewer>
+        <DockPanel Grid.Column="0">
+            <DockPanel DockPanel.Dock="Top">
+                <Label DockPanel.Dock="Left">Lists</Label>
+                <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
+            </DockPanel>
+            <Label Name="messageLabel" DockPanel.Dock="Bottom"/>
+            <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
+                <StackPanel Name="leftPanel"/>
+            </ScrollViewer>
+        </DockPanel>
         <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" />
         <Grid Grid.Column="2" Name="rightGrid">
             <Grid.RowDefinitions>
