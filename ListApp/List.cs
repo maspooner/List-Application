@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace ListApp {
 	[Serializable]
@@ -197,6 +199,8 @@ namespace ListApp {
 			CalculateOccupied();
 		}
 		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc) : this(field, type, metadata, loc, 1, 1) {
+		}
+		internal ItemTemplateItem(ItemTemplateItem iti) : this(iti.field.Clone() as string, iti.type, iti.metadata, new Location(iti.X, iti.Y), iti.width, iti.height) {
 		}
 		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
 			field = info.GetString("field");

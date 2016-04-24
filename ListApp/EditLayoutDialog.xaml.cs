@@ -20,13 +20,16 @@ namespace ListApp {
 		//methods
 		internal List<ItemTemplateItem> ShowAndGetTemplate(List<ItemTemplateItem> template) {
 			Owner = mainWindow;
-			this.items = template;
-			CreateElements(template);
+			this.items = new List<ItemTemplateItem>();
+			foreach(ItemTemplateItem iti in template) {
+				items.Add(new ItemTemplateItem(iti));
+			}
+			CreateElements(items);
 			ShowDialog();
 			foreach(ItemTemplateItem iti in items) {
 				Console.WriteLine(iti.X + " " + iti.Y);
 			}
-			return items; 
+			return DialogResult.Value ? items : null; 
 		}
 		private void CreateElements(List<ItemTemplateItem> template) {
 			Utils.SetupContentGrid(layoutContent, template);
