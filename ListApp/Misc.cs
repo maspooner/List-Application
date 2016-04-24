@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
@@ -25,8 +26,16 @@ namespace ListApp {
 			y = (int)info.GetValue("y", typeof(int));
 		}
 		//properties
-		internal int X { get { return x; } }
-		internal int Y { get { return y; } }
+		internal int X
+		{
+			get { return x; }
+			set { x = value; }
+		}
+		internal int Y
+		{
+			get { return y; }
+			set { y = value; }
+		}
 		//methods
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("x", x);
@@ -48,6 +57,14 @@ namespace ListApp {
 			g.Children.Clear();
 			g.RowDefinitions.Clear();
 			g.ColumnDefinitions.Clear();
+		}
+		internal static FrameworkElement FindAt(this Grid g, int x, int y) {
+			foreach (FrameworkElement fe in g.Children) {
+				if(Grid.GetColumn(fe) == x && Grid.GetRow(fe) == y) {
+					return fe;
+				}
+			}
+			return null;
 		}
 	}
 	class Utils {

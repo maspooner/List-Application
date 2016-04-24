@@ -32,7 +32,7 @@
             <DockPanel Grid.Row="0">
                 <DockPanel DockPanel.Dock="Top" Name="listTitlePanel">
                     <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-                    <Image Name="addImage" Height="20" MouseUp="AddImage_MouseUp"/>
+                    <Image Name="listActionImage" Height="20" MouseUp="ListActionImage_MouseUp"/>
                     <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
                 </DockPanel>
                 <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">

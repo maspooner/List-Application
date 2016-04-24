@@ -28,16 +28,16 @@ namespace ListApp {
 		internal ListItem this[int i] { get { return items[i]; } }
 		internal List<ItemTemplateItem> Template { get { return template; } }
 		//methods
-		internal void AddToTemplate(ItemTemplateItem iti) {
+		internal virtual void AddToTemplate(ItemTemplateItem iti) {
 			template.Add(iti);
 		}
-		internal void AddToTemplate(string fieldName, ItemType type, object metadata) {
-			AddToTemplate(new ItemTemplateItem(fieldName, type, metadata, FindOpenLocation()));
+		internal virtual void AddToTemplate(string fieldName, ItemType type, object metadata) {
+			template.Add(new ItemTemplateItem(fieldName, type, metadata, FindOpenLocation()));
 		}
-		internal void DeleteFromTemplate(int i) {
+		internal virtual void DeleteFromTemplate(int i) {
 			template.RemoveAt(i);
 		}
-		internal void ClearTemplate() {
+		internal virtual void ClearTemplate() {
 			template.Clear();
 		}
 		internal void ReorderTemplate(int oi, int ni) {
@@ -92,6 +92,9 @@ namespace ListApp {
 		internal void Delete(int i) {
 			items.RemoveAt(i);
 		}
+		internal void Clear() {
+			items.Clear();
+		}
 		internal void SetMetadata(string fieldName, object metadata) {
 			ItemTemplateItem iti = template.Find(x => x.Name.Equals(fieldName));
 			if (iti == null) {
@@ -110,7 +113,7 @@ namespace ListApp {
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
 		}
-		public void GetObjectData(SerializationInfo info, StreamingContext context) {
+		public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("name", name);
 			info.AddValue("items", items);
             info.AddValue("template", template);
@@ -183,15 +186,17 @@ namespace ListApp {
 		private List<Location> occupiedCells;
 		private int width, height;
 		//constructors
-		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc) {
+		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc, int width, int height) {
 			this.field = field;
 			this.type = type;
 			this.metadata = metadata;
 			this.loc = loc;
-			width = 1;
-			height = 1;
+			this.width = width;
+			this.height = height;
 			occupiedCells = new List<Location>();
 			CalculateOccupied();
+		}
+		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc) : this(field, type, metadata, loc, 1, 1) {
 		}
 		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
 			field = info.GetString("field");
@@ -215,6 +220,16 @@ namespace ListApp {
 			info.AddValue("field", field);
 			info.AddValue("type", type);
 			info.AddValue("metadata", metadata);
+		}
+		internal void Move(int x, int y) {
+			loc.X = x;
+			loc.Y = y;
+			CalculateOccupied();
+		}
+		internal void Resize(int width, int height) {
+			this.width = width;
+			this.height = height;
+			CalculateOccupied();
 		}
 		private void CalculateOccupied() {
 			occupiedCells.Clear();

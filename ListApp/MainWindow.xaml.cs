@@ -32,7 +32,6 @@ namespace ListApp {
 				leftPanel.Children.Add(CreateListLabel(data[i], i));
 			}
 			DisplayList(0);
-			DisplayItem(0);
 			itemsMenu = new ContextMenu();
 			itemsMenu.Items.Add("Edit");
 			itemsMenu.Items.Add("Reorder");
@@ -68,6 +67,12 @@ namespace ListApp {
 			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(ListData.FILE_PATH + "a.jpg")).ConvertToBitmapImage());
 			data.Lists.Add(list2);
 
+			XmlList list3 = new XmlList("group c (xml)", "anime");
+			list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
+			list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
+			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"", "Plan to Watch", "Watching", "Completed", "Dropped" }, "my_status");
+
+			data.Lists.Add(list3);
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
 			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
@@ -92,19 +97,18 @@ namespace ListApp {
 					Thread.Sleep(data.WaitSaveTime);
 					data.Save();
 					Console.WriteLine("Saving");
-					//TODO can't do
 					Dispatcher.Invoke(new Action(() => { messageLabel.Content = "Autosave complete"; }));
 					Thread.Sleep(SHOWN_AUTOSAVE_TEXT_TIME);
 					Dispatcher.Invoke(new Action(() => { messageLabel.Content = ""; }));
 				}
 				catch(Exception e) {
 					Console.WriteLine(e.Message);
-					Thread.Sleep(5000);
+					Thread.Sleep(5000); //TODO remove
 				}
 			}
 		}
 		private void LoadImages() {
-			addImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
+			listActionImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
 			listOptionImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
         }
@@ -144,50 +148,66 @@ namespace ListApp {
 			}
 		}
 		//WPF
-		private void AddImage_MouseUp(object sender, MouseButtonEventArgs e) {
-			object[] fields = new AddItemDialog(this).ShowAndGetItem(data[shownList].Template);
-			if(fields != null) {
-				MList l = data[shownList];
-				ListItem li = l.Add();
-				for(int i = 0; i < l.Template.Count; i++) {
-					li.SetFieldData(l.Template[i].Name, fields[i]);
+		private void ListActionImage_MouseUp(object sender, MouseButtonEventArgs e) {
+			MList l = data[shownList];
+			if (l is XmlList) {
+				//TODO choose file
+				(l as XmlList).LoadValues(@"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
+				DisplayList(shownList);
+			}
+			else {
+				object[] fields = new AddItemDialog(this).ShowAndGetItem(data[shownList].Template);
+				if (fields != null) {
+					ListItem li = l.Add();
+					for (int i = 0; i < l.Template.Count; i++) {
+						li.SetFieldData(l.Template[i].Name, fields[i]);
+					}
+					AddListItemRow(data[shownList], l.Count - 1);
 				}
-				AddListItemRow(data[shownList], l.Count - 1);
 			}
 		}
 		private void DisplayItem(int i) {
-			MList l = data[shownList];
-			ListItem li = l[i];
 			contentPanel.ClearGrid();
-			//add new
-			Utils.SetupContentGrid(contentPanel, l.Template);
-			//TODO
-			for(int k = 0; k < l.Template.Count; k++) {
-				ListItemField lif = li[k];
-				FrameworkElement fe = null;
-				ItemTemplateItem iti = l.Template[k];
-				if (lif is ImageField) {
-					fe = new CImage();
-					(fe as CImage).Source = (lif as ImageField).GetBitmap();
-                }
-				else if(lif is EnumField) {
-					fe = new Label();
-					(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata);
+			MList l = data[shownList];
+			if(l.Count == 0 || i == -1) {
+				Label q = new Label();
+				q.Content = "No Item Selected";
+				contentPanel.Children.Add(q);
+			}
+			else {
+				ListItem li = l[i];
+				//add new
+				Utils.SetupContentGrid(contentPanel, l.Template);
+				//TODO
+				for (int k = 0; k < l.Template.Count; k++) {
+					ListItemField lif = li[k];
+					FrameworkElement fe = null;
+					ItemTemplateItem iti = l.Template[k];
+					if (lif is ImageField) {
+						fe = new CImage();
+						(fe as CImage).Source = (lif as ImageField).GetBitmap();
+					}
+					else if (lif is EnumField) {
+						fe = new Label();
+						(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata);
+					}
+					else {
+						fe = new Label();
+						object val = lif.GetValue();
+						(fe as Label).Content = val == null ? "" : val.ToString();
+					}
+					Grid.SetColumn(fe, iti.X);
+					Grid.SetRow(fe, iti.Y);
+					Grid.SetColumnSpan(fe, iti.Width);
+					Grid.SetRowSpan(fe, iti.Height);
+					contentPanel.Children.Add(fe);
 				}
-				else {
-					fe = new Label();
-					object val = lif.GetValue();
-					(fe as Label).Content = val == null ? "" : val.ToString();
-				}
-                Grid.SetColumn(fe, iti.X);
-				Grid.SetRow(fe, iti.Y);
-				Grid.SetColumnSpan(fe, iti.Width);
-				Grid.SetRowSpan(fe, iti.Height);
-				contentPanel.Children.Add(fe);
 			}
 		}
 		private void DisplayList(int id) {
 			MList list = data[id];
+			listActionImage.Source = list is XmlList ?
+				Properties.Resources.reloadIcon.ConvertToBitmapImage() : Properties.Resources.addIcon.ConvertToBitmapImage();
 			listTitleLabel.Content = list.Name;
 			listItemGrid.ClearGrid();
 			//add new
@@ -204,6 +224,7 @@ namespace ListApp {
 				AddListItemRow(list, i);
 			}
 			shownList = id;
+			DisplayItem(0);
 		}
 		private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
 			Label l = sender as Label;
