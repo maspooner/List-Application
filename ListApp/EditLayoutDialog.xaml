@@ -7,10 +7,10 @@
         mc:Ignorable="d"
         Title="EditLayoutDialog" Height="300" Width="300">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-            <Button Click="ConfirmButton_Click">OK</Button>
+		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
+			<Button Click="ConfirmButton_Click">OK</Button>
             <Button IsCancel="True" IsDefault="True">Cancel</Button>
-        </StackPanel>
+        </DockPanel>
         <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
             <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged"/>
         </ScrollViewer>

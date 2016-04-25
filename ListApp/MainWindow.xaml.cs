@@ -239,7 +239,6 @@ namespace ListApp {
 		private void ListOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO move to inside a dialog
 			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
-			Console.WriteLine(newTemplate);
 			if(newTemplate != null) {
 				data[shownList].ClearTemplate();
 				foreach (ItemTemplateItem iti in newTemplate) {
