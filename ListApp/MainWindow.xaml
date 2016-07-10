@@ -8,9 +8,9 @@
         Title="ListApp" Height="480" Width="720" MinHeight="240" MinWidth="360">
     <Grid Name="mainGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="100"/>
+            <ColumnDefinition Width="1*" MinWidth="100"/>
             <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="*" MinWidth="200"/>
+            <ColumnDefinition Width="3*" MinWidth="200"/>
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0">
             <DockPanel DockPanel.Dock="Top">
@@ -35,9 +35,8 @@
                     <Image Name="listActionImage" Height="20" MouseUp="ListActionImage_MouseUp"/>
                     <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
                 </DockPanel>
-                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                    <Grid Name="listItemGrid"/>
-                </ScrollViewer>
+                <DataGrid VerticalScrollBarVisibility="Auto" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True" 
+						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="listItemGrid_Sorting"/>
             </DockPanel>
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" />
             <ScrollViewer Grid.Row="2">

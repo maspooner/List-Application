@@ -9,7 +9,7 @@ using System.Text;
 namespace ListApp {
 	[Serializable]
 	class ListData : IEnumerable<MList>, ISerializable{
-		internal const string FILE_PATH = @"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
+		internal const string FILE_PATH = @"F:\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		//members
 		private List<MList> lists;
 		private bool txtBackup;

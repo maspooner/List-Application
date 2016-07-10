@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,12 +44,19 @@ namespace ListApp {
 			base.ClearTemplate();
 			tagNames.Clear();
 		}
-		internal void LoadValues(string fileName) {
+		internal void LoadValues(string fileName, bool fromWeb = false) {
 			//TODO
 			//TODO replace add new item button with reload button
 			Clear();
 			XmlDocument doc = new XmlDocument();
-			doc.Load(fileName);
+			if (fromWeb) {
+				using (WebClient client = new WebClient()) {
+					doc.LoadXml(client.DownloadString(fileName));
+				}
+			}
+			else {
+				doc.Load(fileName);
+			}
 			XmlNodeList items = doc.GetElementsByTagName(itemTag);
 			foreach (XmlNode n in items) {
 				ListItem li = Add();
@@ -65,7 +73,11 @@ namespace ListApp {
 									if (choices[j].Equals(foundNode.InnerText))
 										data = j;
 								}
-								if (data == null) data = 0;
+								if (data == null) {
+									int Itry = 0;
+									bool success = int.TryParse(foundNode.InnerText, out Itry);
+									data = success ? Itry : 0;
+								}
 								break;
 						}
 						li.SetFieldData(Template[i].Name, data);

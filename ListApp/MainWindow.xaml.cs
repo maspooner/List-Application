@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using CImage = System.Windows.Controls.Image;
 
@@ -25,7 +28,7 @@ namespace ListApp {
 			lastHeight = lastWidth = GridLength.Auto;
 			shownList = -1;
 			done = false;
-
+			
 			LoadTestLists();
 			//LoadLists();
 			for (int i = 0; i < data.Count; i++) {
@@ -70,7 +73,7 @@ namespace ListApp {
 			XmlList list3 = new XmlList("group c (xml)", "anime");
 			list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
 			list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
-			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"", "Plan to Watch", "Watching", "Completed", "Dropped" }, "my_status");
+			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
 
 			data.Lists.Add(list3);
 			//PrintLists();
@@ -84,7 +87,6 @@ namespace ListApp {
 			list1.AddToTemplate("f", ItemType.BASIC, null);
 			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
 			list1.ResolveFieldFields();
-			list1.Add();
 			li1a.SetFieldData("status", 1);
 			//list2.ReorderTemplate(2, 0);
 			//list2.ResolveFieldFields();
@@ -119,40 +121,21 @@ namespace ListApp {
 			l.MouseUp += ListNameLabel_MouseUp;
 			return l;
 		}
-		private void AddListItemRow(MList list, int i) {
-			ListItem item = list[i];
-			listItemGrid.RowDefinitions.Add(new RowDefinition());
-			//rest of fields
-			for (int j = 0; j < item.Count; j++) {
-				ListItemField lif = item[j];
-				FrameworkElement fe;
-				if(lif is ImageField) {
-					CImage img = new CImage();
-					img.BeginInit();
-					img.Source = (lif as ImageField).GetBitmap();
-					img.EndInit();
-					fe = img;
-				}
-				else if (lif is EnumField) {
-					fe = new Label();
-					(fe as Label).Content = (lif as EnumField).GetSelectedValue(list.Template.Find(x => lif.Name.Equals(x.Name)).Metadata);
-				}
-				else {
-					fe = new Label();
-					(fe as Label).Content = lif.GetValue();
-				}
-				fe.SetValue(Grid.RowProperty, i + 1);
-				fe.SetValue(Grid.ColumnProperty, j);
-				fe.ContextMenu = itemsMenu;
-				listItemGrid.Children.Add(fe);
+		private void Refresh() {
+			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
+			lcv.CustomSort = null;
+			foreach (DataGridColumn dgc in listItemGrid.Columns) {
+				dgc.SortDirection = null;
 			}
+			listItemGrid.Items.Refresh();
 		}
 		//WPF
 		private void ListActionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
 			if (l is XmlList) {
-				//TODO choose file
-				(l as XmlList).LoadValues(@"C:\Users\Matt\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
+				//TODO choose file / web location
+				(l as XmlList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
+				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 				DisplayList(shownList);
 			}
 			else {
@@ -162,7 +145,7 @@ namespace ListApp {
 					for (int i = 0; i < l.Template.Count; i++) {
 						li.SetFieldData(l.Template[i].Name, fields[i]);
 					}
-					AddListItemRow(data[shownList], l.Count - 1);
+					Refresh();
 				}
 			}
 		}
@@ -209,22 +192,59 @@ namespace ListApp {
 			listActionImage.Source = list is XmlList ?
 				Properties.Resources.reloadIcon.ConvertToBitmapImage() : Properties.Resources.addIcon.ConvertToBitmapImage();
 			listTitleLabel.Content = list.Name;
-			listItemGrid.ClearGrid();
-			//add new
-			listItemGrid.RowDefinitions.Add(new RowDefinition());
-			for (int i = 0; i < list.Template.Count; i++) {
-				Label title = new Label();
-				title.SetValue(Grid.RowProperty, 0);
-				title.SetValue(Grid.ColumnProperty, i);
-				title.Content = list.Template[i].Name;
-				listItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
-				listItemGrid.Children.Add(title);
-			}
-			for (int i = 0; i < list.Count; i++) {
-				AddListItemRow(list, i);
+			listItemGrid.Columns.Clear();
+			listItemGrid.ItemsSource = list.Items;
+			//listItemGrid.Items.Clear();
+			//foreach(ListItem li in list) {
+			//	listItemGrid.Items.Add(li);
+			//}
+			foreach (ItemTemplateItem iti in list.Template) {
+				listItemGrid.Columns.Add(DefineColumn(iti));
 			}
 			shownList = id;
 			DisplayItem(0);
+		}
+		private DataGridTemplateColumn DefineColumn(ItemTemplateItem iti) {
+			//CImage img = new CImage();
+			//img.BeginInit();
+			//img.Source = (lif as ImageField).GetBitmap();
+			//img.EndInit();
+			//fe = img;
+			DataGridTemplateColumn dgc = new DataGridTemplateColumn();
+			FrameworkElementFactory fef = null;
+			Binding bind = new Binding();
+			bind.Mode = BindingMode.OneWay;
+            switch (iti.Type) {
+				case ItemType.DATE:
+				case ItemType.BASIC:
+					fef = new FrameworkElementFactory(typeof(TextBlock));
+					bind.Converter = new ListItemToValueConverter();
+					bind.ConverterParameter = iti.Name;
+					fef.SetBinding(TextBlock.TextProperty, bind);
+					break;
+				case ItemType.ENUM:
+					fef = new FrameworkElementFactory(typeof(TextBlock));
+					bind.Converter = new ListItemToEnumConverter();
+					bind.ConverterParameter = iti;
+					fef.SetBinding(TextBlock.TextProperty, bind);
+					break;
+				case ItemType.IMAGE:
+					fef = new FrameworkElementFactory(typeof(CImage));
+					bind.Converter = new ListItemToImageConverter();
+					bind.ConverterParameter = iti;
+					fef.SetBinding(CImage.SourceProperty, bind);
+					//TODO
+					break;
+			}
+			DataTemplate dataTemp = new DataTemplate();
+			dataTemp.VisualTree = fef;
+			dataTemp.DataType = typeof(DataGridTemplateColumn);
+			dgc.CellTemplate = dataTemp;
+			dgc.Header = iti.Name;
+			dgc.CanUserSort = true;
+			dgc.SortMemberPath = iti.Name;
+
+			return dgc;
 		}
 		private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
 			Label l = sender as Label;
@@ -277,6 +297,20 @@ namespace ListApp {
 				fr.Height = new GridLength(0);
 			}
 		}
+
+		private void listItemGrid_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			DisplayItem(listItemGrid.SelectedIndex);
+		}
+
+		private void listItemGrid_Sorting(object sender, DataGridSortingEventArgs e) {
+            e.Handled = true;
+			ListSortDirection dir = e.Column.SortDirection != ListSortDirection.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending;
+            e.Column.SortDirection = dir;
+			Console.WriteLine(CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource));
+			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
+			lcv.CustomSort = new ListItemComparer(e.Column.Header as string, dir);
+		}
+
 		protected override void OnClosed(EventArgs e) {
 			base.OnClosed(e);
 			done = true;

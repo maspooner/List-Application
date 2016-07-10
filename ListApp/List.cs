@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -27,6 +28,7 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		internal int Count { get { return items.Count; } }
+		internal List<ListItem> Items { get { return items; } }
 		internal ListItem this[int i] { get { return items[i]; } }
 		internal List<ItemTemplateItem> Template { get { return template; } }
 		//methods
@@ -97,6 +99,7 @@ namespace ListApp {
 		internal void Clear() {
 			items.Clear();
 		}
+
 		internal void SetMetadata(string fieldName, object metadata) {
 			ItemTemplateItem iti = template.Find(x => x.Name.Equals(fieldName));
 			if (iti == null) {
@@ -129,7 +132,6 @@ namespace ListApp {
 		internal ListItem(List<ItemTemplateItem> template) {
 			fields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
-				string n = template[i].Name;
 				fields.Add(CreateField(template[i]));
 			}
 		}
@@ -149,8 +151,11 @@ namespace ListApp {
 				default: return null;
 			}
 		}
+		internal ListItemField FindField(string name) {
+			return fields.Find(x => x.Name.Equals(name));
+        }
 		internal void SetFieldData(string fieldName, object value) {
-			ListItemField lif = fields.Find(x => x.Name.Equals(fieldName));
+			ListItemField lif = FindField(fieldName);
 			if(lif == null) {
 				throw new InvalidOperationException();
 			}
@@ -161,7 +166,7 @@ namespace ListApp {
 		internal void ChangeTemplate(List<ItemTemplateItem> template) {
 			List<ListItemField> newFields = new List<ListItemField>();
 			for(int i = 0; i < template.Count; i++) {
-				ListItemField match = fields.Find(x => x.Name.Equals(template[i].Name));
+				ListItemField match = FindField(template[i].Name);
 				newFields.Add(match != null ? match : CreateField(template[i]));
 			}
 			this.fields = newFields;
@@ -176,6 +181,18 @@ namespace ListApp {
 		}
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
+		}
+	}
+	class ListItemComparer : IComparer {
+		private string name;
+		private ListSortDirection lsd;
+		internal ListItemComparer(string name, ListSortDirection lsd) {
+			this.name = name;
+			this.lsd = lsd;
+		}
+		public int Compare(object x, object y) {
+			int comp = (x as ListItem).FindField(name).CompareTo((y as ListItem).FindField(name));
+            return lsd.Equals(ListSortDirection.Ascending) ? comp : comp * -1;
 		}
 	}
 	[Serializable]
