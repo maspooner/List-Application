@@ -44,9 +44,16 @@ namespace ListApp {
 			base.ClearTemplate();
 			tagNames.Clear();
 		}
+		internal int? ParseNullable(string s, string fail) {
+			if (s.Equals(fail)) {
+				return null;
+			}
+			else {
+				return int.Parse(s);
+			}
+		}
 		internal void LoadValues(string fileName, bool fromWeb = false) {
 			//TODO
-			//TODO replace add new item button with reload button
 			Clear();
 			XmlDocument doc = new XmlDocument();
 			if (fromWeb) {
@@ -66,7 +73,20 @@ namespace ListApp {
 						object data = null;
 						switch (Template[i].Type) {
 							case ItemType.BASIC: data = foundNode.InnerText; break;
-							case ItemType.DATE: data = DateTime.ParseExact(foundNode.InnerText, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture); break;
+							case ItemType.DATE:
+								DateTime dateTime;
+								bool success = DateTime.TryParseExact(foundNode.InnerText, "yyyy-MM-dd",
+									System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dateTime);
+								if (success) {
+									data = dateTime;
+								}
+								else {
+									int? year = ParseNullable(foundNode.InnerText.Substring(0, 4), "0000");
+									int? month = ParseNullable(foundNode.InnerText.Substring(5, 2), "00");
+									int? day = ParseNullable(foundNode.InnerText.Substring(8, 2), "00");
+									data = new XDate(year, month, day, 0);
+								}
+								break;
 							case ItemType.ENUM:
 								string[] choices = Template[i].Metadata as string[];
 								for(int j = 0; data == null && j < choices.Length; j++) {
@@ -75,7 +95,7 @@ namespace ListApp {
 								}
 								if (data == null) {
 									int Itry = 0;
-									bool success = int.TryParse(foundNode.InnerText, out Itry);
+									success = int.TryParse(foundNode.InnerText, out Itry);
 									data = success ? Itry : 0;
 								}
 								break;

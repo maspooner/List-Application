@@ -47,19 +47,19 @@ namespace ListApp {
 			return value;
 		}
 		public override void SetValue(object obj) {
-			value = obj as string;
+			value = obj.ToString();
 		}
 	}
 	[Serializable]
 	class DateField : ListItemField {
 		//members
-		private DateTime value;
+		private XDate value;
 		//constructors
 		internal DateField(string fieldName) : base(fieldName) {
-			value = DateTime.MinValue;
+			value = null;
 		}
 		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetDateTime("value");
+			value = info.GetValue("value", typeof(XDate)) as XDate;
 		}
 		//methods
 		public override int CompareTo(ListItemField other) {
@@ -69,48 +69,48 @@ namespace ListApp {
 			return value;
 		}
 		public override void SetValue(object obj) {
-			value = (DateTime)obj;
+			if(obj is DateTime) {
+				value = new XDate((DateTime)obj);
+			}
+			else {
+				value = obj as XDate;
+			}
 		}
 	}
 	[Serializable]
 	class ImageField : ListItemField {
 		//members
+		private XImage value;
 		[NonSerialized]
-		private BitmapImage value;
+		private BitmapImage bImg;
 		//constructors
 		internal ImageField(string fieldName) : base(fieldName) {
 			value = null;
+			bImg = null;
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			byte[] imageBytes = (byte[])info.GetValue("value", typeof(byte[]));
-			if (imageBytes != null) {
-				using (MemoryStream ms = new MemoryStream(imageBytes)) {
-					value = new Bitmap(ms).ConvertToBitmapImage();
-				}
-			}
+			value = info.GetValue("value", typeof(XImage)) as XImage;
+			bImg = CreateBitmapImage();
 		}
 		//methods
-		internal BitmapImage GetBitmap() {
-			return value;
+		internal BitmapImage GetBitmapImage() {
+			return bImg;
 		}
 		public override int CompareTo(ListItemField other) {
 			return 0;
 		}
 		public override object GetValue() {
-			byte[] imageBytes = null;
-			if(value != null) {
-				using(MemoryStream ms = new MemoryStream()) {
-					PngBitmapEncoder pngbe = new PngBitmapEncoder();
-					BitmapFrame frame = BitmapFrame.Create(value);
-					pngbe.Frames.Add(frame);
-					pngbe.Save(ms);
-					imageBytes = ms.ToArray();
-				}
-			}
-			return imageBytes;
+			return value;
 		}
 		public override void SetValue(object obj) {
-			value = obj as BitmapImage;
+			value = obj as XImage;
+			bImg = CreateBitmapImage();
+		}
+		private BitmapImage CreateBitmapImage() {
+			if (value != null && value.IsLoaded) {
+				return value.Img.ConvertToBitmapImage();
+			}
+			return null;
 		}
 	}
 	[Serializable]

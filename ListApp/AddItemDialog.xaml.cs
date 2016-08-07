@@ -77,7 +77,7 @@ namespace ListApp {
 					case ItemType.IMAGE:
 						fe = new CImage();
 						if(li != null) {
-							(fe as CImage).Source = (li[i] as ImageField).GetBitmap();
+							(fe as CImage).Source = (li[i] as ImageField).GetBitmapImage();
 						}
 						break;
 				}

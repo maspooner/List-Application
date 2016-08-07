@@ -62,6 +62,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ListItemToValueConverter.cs" />
+    <Compile Include="XClasses.cs" />
     <Compile Include="XmlList.cs" />
     <Page Include="AddItemDialog.xaml">
       <SubType>Designer</SubType>

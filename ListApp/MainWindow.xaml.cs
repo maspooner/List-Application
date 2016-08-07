@@ -12,7 +12,6 @@ using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	public partial class MainWindow : Window {
-		internal const int SHOWN_AUTOSAVE_TEXT_TIME = 5000; //TODO adjust
 		//members
 		private GridLength lastHeight, lastWidth;
 		private ListData data;
@@ -28,9 +27,9 @@ namespace ListApp {
 			lastHeight = lastWidth = GridLength.Auto;
 			shownList = -1;
 			done = false;
-			
+
 			LoadTestLists();
-			//LoadLists();
+			//data = ListData.Load();
 			for (int i = 0; i < data.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(data[i], i));
 			}
@@ -61,19 +60,23 @@ namespace ListApp {
 			MList list2 = new MList("group b");
 			list2.AddToTemplate("notes", ItemType.BASIC, null);
 			list2.AddToTemplate("date", ItemType.DATE, null);
-			list2.AddToTemplate("img", ItemType.IMAGE, null);
+			list2.AddToTemplate("img", ItemType.IMAGE, 50.0);
 			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now,
-				new Bitmap(System.Drawing.Image.FromFile(ListData.FILE_PATH + "a.jpg")).ConvertToBitmapImage() });
+				new XImage(@"F:\Documents\Visual Studio 2015\Projects\ListApp\a.jpg", false) });
 			ListItem li2b = list2.Add();
 			li2b.SetFieldData("notes", "More notes");
 			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new Bitmap(System.Drawing.Image.FromFile(ListData.FILE_PATH + "a.jpg")).ConvertToBitmapImage());
+			li2b.SetFieldData("img", new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true));
 			data.Lists.Add(list2);
 
 			XmlList list3 = new XmlList("group c (xml)", "anime");
 			list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
 			list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
 			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
+			list3.AddToTemplate("startedDate", ItemType.DATE, null, "my_start_date");
+			list3.AddToTemplate("endedDate", ItemType.DATE, null, "my_finish_date");
+			list3.AddToTemplate("watchedEpisodes", ItemType.BASIC, null, "my_watched_episodes");
+			list3.AddToTemplate("score", ItemType.BASIC, null, "my_score");
 
 			data.Lists.Add(list3);
 			//PrintLists();
@@ -85,6 +88,23 @@ namespace ListApp {
 			list1.AddToTemplate("d", ItemType.BASIC, null);
 			list1.AddToTemplate("e", ItemType.BASIC, null);
 			list1.AddToTemplate("f", ItemType.BASIC, null);
+			list1.AddToTemplate("q", ItemType.IMAGE, 10.0);
+			list1.AddToTemplate("z", ItemType.DATE, null);
+			list1.AddToTemplate("adfsd", ItemType.DATE, null);
+			list1.AddToTemplate("ccccc", ItemType.DATE, null);
+			list1.AddToTemplate("a333", ItemType.DATE, null);
+			list1.AddToTemplate("a1123", ItemType.DATE, null);
+			list1.AddToTemplate("a324", ItemType.DATE, null);
+			list1.AddToTemplate("a3243", ItemType.DATE, null);
+			list1.AddToTemplate("a2334", ItemType.DATE, null);
+			list1.AddToTemplate("a3aaaa4", ItemType.DATE, null);
+			list1.AddToTemplate("a32aaaaaaaaa4", ItemType.DATE, null);
+			list1.AddToTemplate("a445fd", ItemType.DATE, null);
+			list1.AddToTemplate("zxd", ItemType.DATE, null);
+			list1.AddToTemplate("a32ddd", ItemType.DATE, null);
+			list1.AddToTemplate("hytrd", ItemType.DATE, null);
+			list1.AddToTemplate("a44ree", ItemType.DATE, null);
+			list1.AddToTemplate("aaaaaaaa", ItemType.DATE, null);
 			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
 			list1.ResolveFieldFields();
 			li1a.SetFieldData("status", 1);
@@ -100,7 +120,7 @@ namespace ListApp {
 					data.Save();
 					Console.WriteLine("Saving");
 					Dispatcher.Invoke(new Action(() => { messageLabel.Content = "Autosave complete"; }));
-					Thread.Sleep(SHOWN_AUTOSAVE_TEXT_TIME);
+					Thread.Sleep(C.SHOWN_AUTOSAVE_TEXT_TIME);
 					Dispatcher.Invoke(new Action(() => { messageLabel.Content = ""; }));
 				}
 				catch(Exception e) {
@@ -137,6 +157,7 @@ namespace ListApp {
 				(l as XmlList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
 				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 				DisplayList(shownList);
+				Refresh();
 			}
 			else {
 				object[] fields = new AddItemDialog(this).ShowAndGetItem(data[shownList].Template);
@@ -168,7 +189,7 @@ namespace ListApp {
 					ItemTemplateItem iti = l.Template[k];
 					if (lif is ImageField) {
 						fe = new CImage();
-						(fe as CImage).Source = (lif as ImageField).GetBitmap();
+						(fe as CImage).Source = (lif as ImageField).GetBitmapImage();
 					}
 					else if (lif is EnumField) {
 						fe = new Label();
@@ -233,6 +254,7 @@ namespace ListApp {
 					bind.Converter = new ListItemToImageConverter();
 					bind.ConverterParameter = iti;
 					fef.SetBinding(CImage.SourceProperty, bind);
+					fef.SetValue(CImage.MaxHeightProperty, iti.Metadata);
 					//TODO
 					break;
 			}
@@ -264,7 +286,7 @@ namespace ListApp {
 				foreach (ItemTemplateItem iti in newTemplate) {
 					data[shownList].AddToTemplate(iti);
 				}
-				DisplayItem(0);
+				DisplayItem(listItemGrid.SelectedIndex);
 			}
 		}
 		private void CollapseLeft_MouseDoubleClick(object sender, MouseButtonEventArgs e) {

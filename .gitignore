@@ -45,3 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+#Other files
+ListApp/bin/
+ListApp/obj/
+.suo

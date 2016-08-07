@@ -9,16 +9,19 @@ using System.Text;
 namespace ListApp {
 	[Serializable]
 	class ListData : IEnumerable<MList>, ISerializable{
-		internal const string FILE_PATH = @"F:\Documents\Visual Studio 2015\Projects\ListApp\"; //TODO adjustable
 		//members
 		private List<MList> lists;
 		private bool txtBackup;
 		private int waitSaveTime;
+		//nonserialized
+		[NonSerialized]
+		private string baseDir;
 		//constructors
 		internal ListData() {
 			lists = new List<MList>();
-			txtBackup = false;
-			waitSaveTime =  10 * 60 * 1000; //10 min
+			txtBackup = true;
+			waitSaveTime =  10 * 60 * 1000; //10 min //TODO adjustable
+			baseDir = GetBaseDir();
 		}
 		private ListData(SerializationInfo info, StreamingContext context) {
 			lists = info.GetValue("lists", typeof(List<MList>)) as List<MList>;
@@ -28,10 +31,10 @@ namespace ListApp {
 		internal List<MList> Lists { get { return lists; } }
 		internal int Count { get { return lists.Count; } }
 		internal MList this[int i] { get { return lists[i]; } }
-		internal int WaitSaveTime { get { return waitSaveTime - MainWindow.SHOWN_AUTOSAVE_TEXT_TIME; } } //save time for showing text on same thread
+		internal int WaitSaveTime { get { return waitSaveTime - C.SHOWN_AUTOSAVE_TEXT_TIME; } } //save time for showing text on same thread
 		//methods
 		internal void Save() {
-			Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Create);
+			Stream stream = File.Open(baseDir + "/lists.bin", FileMode.Create);
 			BinaryFormatter bformatter = new BinaryFormatter();
 			bformatter.Serialize(stream, this);
 			stream.Close();
@@ -62,7 +65,7 @@ namespace ListApp {
 		}
 		private void WriteToBackupTxt() {
 			//TODO
-			using(TextWriter tw = new StreamWriter(FILE_PATH + "backup.txt")) {
+			using(TextWriter tw = new StreamWriter(baseDir + "/backup.txt")) {
 				foreach (MList ml in lists) {
 					tw.WriteLine(ml.Name);
 					tw.WriteLine("=================");
@@ -88,9 +91,11 @@ namespace ListApp {
 			info.AddValue("txtBackup", txtBackup);
 		}
 		//statics
-		internal ListData Load() {
-			if (new FileInfo(FILE_PATH + "lists.bin").Exists) {
-				Stream stream = File.Open(FILE_PATH + "lists.bin", FileMode.Open);
+		private static string GetBaseDir() { return Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath); }
+		internal static ListData Load() {
+			string listsFile = GetBaseDir() + "/lists.bin";
+			if (new FileInfo(listsFile).Exists) {
+				Stream stream = File.Open(listsFile, FileMode.Open);
 				BinaryFormatter bformatter = new BinaryFormatter();
 				ListData ld = (ListData) bformatter.Deserialize(stream);
 				stream.Close();

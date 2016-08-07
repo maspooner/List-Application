@@ -9,7 +9,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace ListApp {
 	[Serializable]
 	class MList : IEnumerable<ListItem>, ISerializable{
-		internal const int FIELD_GRID_WIDTH = 5;
 		//members
 		private string name;
 		private List<ListItem> items;
@@ -57,7 +56,7 @@ namespace ListApp {
 				loc = new Location(0, 0);
 			}
 			while(loc == null) {
-				for (int i = 0; i < FIELD_GRID_WIDTH && loc == null; i++) {
+				for (int i = 0; i < C.FIELD_GRID_WIDTH && loc == null; i++) {
 					bool fits = true;
 					foreach(ItemTemplateItem iti in template) {
 						for(int k = 0; k < iti.Occupied.Count; k++) {

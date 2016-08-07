@@ -34,7 +34,7 @@ namespace ListApp {
 			ListItem li = value as ListItem;
 			ItemTemplateItem iti = parameter as ItemTemplateItem;
 			ImageField imgF = li.FindField(iti.Name) as ImageField;
-			return imgF.GetBitmap();
+			return imgF.GetBitmapImage();
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {

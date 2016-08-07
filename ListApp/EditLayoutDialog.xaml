@@ -5,14 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
-        Title="EditLayoutDialog" Height="300" Width="300">
+        Title="EditLayoutDialog" Height="500" Width="500">
     <DockPanel>
 		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
 			<Button Click="ConfirmButton_Click">OK</Button>
             <Button IsCancel="True" IsDefault="True">Cancel</Button>
         </DockPanel>
         <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
-            <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged"/>
+			
+            <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged" KeyDown="layoutContent_KeyDown"/>
         </ScrollViewer>
     </DockPanel>
 </Window>
