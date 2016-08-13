@@ -61,9 +61,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ItemTemplateItem.cs" />
     <Compile Include="ListItemToValueConverter.cs" />
+    <Compile Include="SyncList.cs" />
     <Compile Include="XClasses.cs" />
-    <Compile Include="XmlList.cs" />
+    <Compile Include="XMLList.cs" />
     <Page Include="AddItemDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -10,87 +10,87 @@ namespace ListApp {
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
 		//members
 		private string fieldName;
+		private object value;
 		//constructors
 		internal ListItemField(string fieldName) {
 			this.fieldName = fieldName;
+			value = StartingValue();
 		}
 		public ListItemField(SerializationInfo info, StreamingContext context) {
 			fieldName = info.GetValue("fieldName", typeof(string)) as string;
+			value = DeserializeValue(info);
 		}
 		//properties
 		internal string Name { get { return fieldName; } }
+		internal virtual object Value { get { return value; } set { this.value = value; } }
 		//methods
 		public abstract int CompareTo(ListItemField other);
-		public abstract void SetValue(object obj);
-		public abstract object GetValue();
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("fieldName", fieldName);
-			info.AddValue("value", GetValue());
+			info.AddValue("value", value);
+		}
+		internal abstract object DeserializeValue(SerializationInfo info);
+		internal virtual object StartingValue() {
+			return null;
 		}
 	}
 	[Serializable]
 	class BasicField : ListItemField {
-		//members
-		private string value;
 		//constructors
-		internal BasicField(string fieldName) : base(fieldName){
-			value = null;
-		}
-		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetString("value");
-		}
+		internal BasicField(string fieldName) : base(fieldName) { }
+		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 		//methods
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetString("value");
+		}
 		public override int CompareTo(ListItemField other) {
-			return other is BasicField ? this.value.CompareTo((other as BasicField).value) : -1;
-		}
-		public override object GetValue() {
-			return value;
-		}
-		public override void SetValue(object obj) {
-			value = obj.ToString();
+			return other is BasicField ? (this.Value as string).CompareTo(other.Value as string) : -1;
 		}
 	}
 	[Serializable]
 	class DateField : ListItemField {
-		//members
-		private XDate value;
 		//constructors
-		internal DateField(string fieldName) : base(fieldName) {
-			value = null;
-		}
-		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetValue("value", typeof(XDate)) as XDate;
+		internal DateField(string fieldName) : base(fieldName) { }
+		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) { }
+		//properties
+		internal override object Value {
+			get { return base.Value; }
+			set {
+				if (value is DateTime) {
+					base.Value = new XDate((DateTime)value);
+				}
+				else {
+					base.Value = value;
+				}
+			}
 		}
 		//methods
 		public override int CompareTo(ListItemField other) {
-			return other is DateField ? this.value.CompareTo((other as DateField).value) : -1;
+			return other is DateField ? (this.Value as XDate).CompareTo(other.Value as XDate) : -1;
 		}
-		public override object GetValue() {
-			return value;
-		}
-		public override void SetValue(object obj) {
-			if(obj is DateTime) {
-				value = new XDate((DateTime)obj);
-			}
-			else {
-				value = obj as XDate;
-			}
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetValue("value", typeof(XDate)) as XDate;
 		}
 	}
 	[Serializable]
 	class ImageField : ListItemField {
 		//members
-		private XImage value;
 		[NonSerialized]
 		private BitmapImage bImg;
 		//constructors
 		internal ImageField(string fieldName) : base(fieldName) {
-			value = null;
 			bImg = null;
 		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetValue("value", typeof(XImage)) as XImage;
 			bImg = CreateBitmapImage();
+		}
+		//properties
+		internal override object Value {
+			get { return base.Value; }
+			set {
+				base.Value = value;
+				bImg = CreateBitmapImage();
+			}
 		}
 		//methods
 		internal BitmapImage GetBitmapImage() {
@@ -99,43 +99,34 @@ namespace ListApp {
 		public override int CompareTo(ListItemField other) {
 			return 0;
 		}
-		public override object GetValue() {
-			return value;
-		}
-		public override void SetValue(object obj) {
-			value = obj as XImage;
-			bImg = CreateBitmapImage();
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetValue("value", typeof(XImage)) as XImage;
 		}
 		private BitmapImage CreateBitmapImage() {
-			if (value != null && value.IsLoaded) {
-				return value.Img.ConvertToBitmapImage();
+			XImage xImg = Value as XImage; 
+			if (xImg != null && xImg.IsLoaded) {
+				return xImg.Img.ConvertToBitmapImage();
 			}
 			return null;
 		}
 	}
 	[Serializable]
 	class EnumField : ListItemField {
-		//members
-		private int value;
 		//constructors
-		internal EnumField(string fieldName) : base(fieldName) {
-			value = 0;
-		}
-		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			value = info.GetInt32("value");
-		}
+		internal EnumField(string fieldName) : base(fieldName) { }
+		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 		//methods
+		internal override object StartingValue() {
+			return 0;
+		}
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetInt32("value");
+		}
 		public string GetSelectedValue(object metadata) {
-			return (metadata as string[])[value];
+			return (metadata as string[])[(int)this.Value];
 		}
 		public override int CompareTo(ListItemField other) {
-			return other is EnumField ? value - (other as EnumField).value : -1;
-		}
-		public override object GetValue() {
-			return value;
-		}
-		public override void SetValue(object obj) {
-			value = (int)obj;
+			return other is EnumField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
 		}
 	}
 }

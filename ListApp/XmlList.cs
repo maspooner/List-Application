@@ -9,16 +9,16 @@ using System.Xml;
 
 namespace ListApp {
 	[Serializable]
-	class XmlList : MList, ISerializable {
+	class XMLList : MList, ISerializable {
 		//members
 		private string itemTag;
 		private List<string> tagNames;
 		//constructors
-		internal XmlList(string name, string itemTag) : base(name) {
+		internal XMLList(string name, string itemTag) : base(name) {
 			this.itemTag = itemTag;
 			tagNames = new List<string>();
 		}
-		internal XmlList(SerializationInfo info, StreamingContext context) : base(info, context) {
+		internal XMLList(SerializationInfo info, StreamingContext context) : base(info, context) {
 			tagNames = info.GetValue("tagNames", typeof(List<string>)) as List<string>;
 		}
 		//methods

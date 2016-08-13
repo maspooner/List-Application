@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -154,9 +155,15 @@ namespace ListApp {
 		}
 		public override string ToString() {
 			if (month == null && day == null && year == null) return "";
-			string s = month == null ? "??" : string.Format("{0:00}", month.Value);
-			s += "/" + (day == null ? "??" : string.Format("{0:00}", day.Value));
-			s += "/" + (year == null ? "????" : year.Value.ToString());
+			string s = month == null ? "" : CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedMonthNames[month.Value - 1];
+			if(s.Length > 0 && day != null) {
+				s += " ";
+			}
+			s += day == null ? "" : day.Value.ToString() + ",";
+			if (s.Length > 0 && year != null) {
+				s += " ";
+			}
+			s += year == null ? "" : year.Value.ToString();
 			if (unknown) {
 				s += " (" + id + ")";
 			}

@@ -5,15 +5,47 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
-        Title="EditLayoutDialog" Height="500" Width="500">
+        Title="EditLayoutDialog" Height="500" Width="600"
+		PreviewKeyDown="window_KeyDown">
     <DockPanel>
-		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
-			<Button Click="ConfirmButton_Click">OK</Button>
-            <Button IsCancel="True" IsDefault="True">Cancel</Button>
-        </DockPanel>
-        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
-			
-            <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged" KeyDown="layoutContent_KeyDown"/>
-        </ScrollViewer>
+        <Button DockPanel.Dock="Bottom" IsCancel="True" IsDefault="True">Cancel</Button>
+        <Button DockPanel.Dock="Bottom" Click="ConfirmButton_Click">OK</Button>
+        <Grid DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="5*"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0">
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Bottom" KeyboardNavigation.TabNavigation="Cycle" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Label Name="nameLabel"/>
+                    <StackPanel Orientation="Horizontal" KeyboardNavigation.IsTabStop="True">
+                        <Label>(</Label>
+                        <TextBox KeyboardNavigation.TabIndex="0" Name="xIn" GotFocus="textIn_GotFocus" LostFocus="textIn_LostFocus"/>
+                        <Label>,</Label>
+                        <TextBox KeyboardNavigation.TabIndex="1" Name="yIn" GotFocus="textIn_GotFocus" LostFocus="textIn_LostFocus"/>
+                        <Label>)</Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" KeyboardNavigation.IsTabStop="True">
+                        <TextBox KeyboardNavigation.TabIndex="2" Name="wIn" GotFocus="textIn_GotFocus" LostFocus="textIn_LostFocus"/>
+                        <Label>x</Label>
+                        <TextBox KeyboardNavigation.TabIndex="3" Name="hIn" GotFocus="textIn_GotFocus" LostFocus="textIn_LostFocus"/>
+                    </StackPanel>
+                </StackPanel>
+                <ListView Name="nameList" DockPanel.Dock="Top" SelectionChanged="nameList_SelectionChanged">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Style.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Beige"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Beige"/>
+                            </Style.Resources>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+				</ListView>
+            </DockPanel>
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <Grid Name="layoutContent" SizeChanged="LayoutContent_SizeChanged"/>
+            </ScrollViewer>
+        </Grid>
     </DockPanel>
 </Window>

@@ -69,7 +69,7 @@ namespace ListApp {
 			li2b.SetFieldData("img", new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true));
 			data.Lists.Add(list2);
 
-			XmlList list3 = new XmlList("group c (xml)", "anime");
+			XMLList list3 = new XMLList("group c (xml)", "anime");
 			list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
 			list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
 			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
@@ -152,9 +152,9 @@ namespace ListApp {
 		//WPF
 		private void ListActionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
-			if (l is XmlList) {
+			if (l is XMLList) {
 				//TODO choose file / web location
-				(l as XmlList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
+				(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
 				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 				DisplayList(shownList);
 				Refresh();
@@ -197,8 +197,7 @@ namespace ListApp {
 					}
 					else {
 						fe = new Label();
-						object val = lif.GetValue();
-						(fe as Label).Content = val == null ? "" : val.ToString();
+						(fe as Label).Content = lif.Value == null ? "" : lif.Value.ToString();
 					}
 					Grid.SetColumn(fe, iti.X);
 					Grid.SetRow(fe, iti.Y);
@@ -210,7 +209,7 @@ namespace ListApp {
 		}
 		private void DisplayList(int id) {
 			MList list = data[id];
-			listActionImage.Source = list is XmlList ?
+			listActionImage.Source = list is XMLList ?
 				Properties.Resources.reloadIcon.ConvertToBitmapImage() : Properties.Resources.addIcon.ConvertToBitmapImage();
 			listTitleLabel.Content = list.Name;
 			listItemGrid.Columns.Clear();

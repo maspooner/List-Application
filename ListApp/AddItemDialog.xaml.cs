@@ -59,19 +59,19 @@ namespace ListApp {
 					case ItemType.BASIC:
 						fe = new TextBox();
 						if(li != null) {
-							(fe as TextBox).Text = li[i].GetValue().ToString();
+							(fe as TextBox).Text = li[i].Value.ToString();
 						}
 						break;
 					case ItemType.DATE:
 						DatePicker dp = new DatePicker();
 						dp.SelectedDateFormat = DatePickerFormat.Short;
-						dp.SelectedDate = li == null ? DateTime.Today : (DateTime)li[i].GetValue();
+						dp.SelectedDate = li == null ? DateTime.Today : (DateTime)li[i].Value;
 						fe = dp;
 						break;
 					case ItemType.ENUM:
 						ComboBox cb = new ComboBox();
 						cb.ItemsSource = iti.Metadata as string[];
-						cb.SelectedIndex = li == null ? 0 : (int)li[i].GetValue();
+						cb.SelectedIndex = li == null ? 0 : (int)li[i].Value;
 						fe = cb;
 						break;
 					case ItemType.IMAGE:

@@ -10,7 +10,7 @@ namespace ListApp {
 	class ListItemToValueConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			return li.FindField(parameter as string).GetValue();
+			return li.FindField(parameter as string).Value;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {

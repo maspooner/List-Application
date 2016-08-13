@@ -49,7 +49,7 @@ namespace ListApp {
 				foreach (ListItem li in m) {
 					s += "\n";
 					foreach (ListItemField lif in li) {
-						s += "\t" + lif.Name + ": " + lif.GetValue() + "\n";
+						s += "\t" + lif.Name + ": " + lif.Value + "\n";
 					}
 				}
 			}
@@ -79,7 +79,7 @@ namespace ListApp {
 								tw.WriteLine((lif as EnumField).GetSelectedValue(iti.Metadata));
 							}
 							else {
-								tw.WriteLine(lif.GetValue());
+								tw.WriteLine(lif.Value);
 							}
 						}
 					}
