@@ -39,6 +39,9 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\..\..\0Home\Program Libraries\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -62,8 +65,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ItemTemplateItem.cs" />
+    <Compile Include="ListItem.cs" />
     <Compile Include="ListItemToValueConverter.cs" />
     <Compile Include="SyncList.cs" />
+    <Compile Include="SyncSchema.cs" />
     <Compile Include="XClasses.cs" />
     <Compile Include="XMLList.cs" />
     <Page Include="AddItemDialog.xaml">

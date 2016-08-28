@@ -13,7 +13,6 @@ using System.Windows.Media.Imaging;
 namespace ListApp {
 	[Serializable]
 	class XImage : ISerializable {
-		
 		//members
 		[NonSerialized]
 		private Bitmap img;
@@ -91,7 +90,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class XDate : IComparable<XDate>, ISerializable {
+	class XDate : IComparable<XDate> {
 		//members
 		private int? year;
 		private int? month;
@@ -112,13 +111,6 @@ namespace ListApp {
 			this.day = day;
 			unknown = true;
 			this.id = id;
-		}
-		public XDate(SerializationInfo info, StreamingContext context) {
-			year = info.GetValue("year", typeof(int?)) as int?;
-			month = info.GetValue("month", typeof(int?)) as int?;
-			day = info.GetValue("day", typeof(int?)) as int?;
-			unknown = info.GetBoolean("unknown");
-			id = info.GetInt32("id");
 		}
 		//properties
 
@@ -145,13 +137,6 @@ namespace ListApp {
 				return monthComp;
 			}
 			return yearComp;
-		}
-		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("year", year);
-			info.AddValue("month", month);
-			info.AddValue("day", day);
-			info.AddValue("unknown", unknown);
-			info.AddValue("id", id);
 		}
 		public override string ToString() {
 			if (month == null && day == null && year == null) return "";

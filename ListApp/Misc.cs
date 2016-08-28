@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Xml;
 using MColor = System.Windows.Media.Color;
 
 namespace ListApp {
@@ -20,7 +21,7 @@ namespace ListApp {
 		internal const int COLOR_SEED = 5003534; //TODO adjust 5003534
 	}
 	[Serializable]
-	class Location : ISerializable{
+	class Location{
 		//members
 		private int x, y;
 		//constructors
@@ -28,10 +29,6 @@ namespace ListApp {
 		internal Location(int x, int y) {
 			this.x = x;
 			this.y = y;
-		}
-		public Location(SerializationInfo info, StreamingContext context) {
-			x = (int) info.GetValue("x", typeof(int));
-			y = (int)info.GetValue("y", typeof(int));
 		}
 		//properties
 		internal int X
@@ -44,13 +41,15 @@ namespace ListApp {
 			get { return y; }
 			set { y = value; }
 		}
-		//methods
-		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("x", x);
-			info.AddValue("y", y);
-		}
 	}
 	static class Extensions {
+		internal static XmlNode FindChild(this XmlNode parent, string tagName) {
+			foreach (XmlNode n in parent.ChildNodes) {
+				if (n.Name.Equals(tagName))
+					return n;
+			}
+			return null;
+		}
 		internal static BitmapImage ConvertToBitmapImage(this Bitmap b) {
 			MemoryStream ms = new MemoryStream();
 			b.Save(ms, System.Drawing.Imaging.ImageFormat.Png);

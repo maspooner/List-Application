@@ -4,10 +4,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace ListApp {
 	[Serializable]
-	class ItemTemplateItem : ISerializable {
+	class ItemTemplateItem {
 		//members
 		private string field;
 		private ItemType type;
@@ -30,11 +31,6 @@ namespace ListApp {
 		}
 		internal ItemTemplateItem(ItemTemplateItem iti) : this(iti.field.Clone() as string, iti.type, iti.metadata, new Location(iti.X, iti.Y), iti.width, iti.height) {
 		}
-		public ItemTemplateItem(SerializationInfo info, StreamingContext context) {
-			field = info.GetString("field");
-			type = (ItemType)info.GetValue("type", typeof(ItemType));
-			metadata = info.GetValue("metadata", typeof(object));
-		}
 		//properties
 		internal string Name { get { return field; } }
 		internal ItemType Type { get { return type; } }
@@ -48,11 +44,6 @@ namespace ListApp {
 			set { metadata = value; }
 		}
 		//methods
-		public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("field", field);
-			info.AddValue("type", type);
-			info.AddValue("metadata", metadata);
-		}
 		internal void Move(int x, int y) {
 			loc.X = x;
 			loc.Y = y;
@@ -73,19 +64,23 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class SyncTemplateItem : ItemTemplateItem, ISerializable {
-		private delegate object SyncDelegate();
+	class SyncTemplateItem : ItemTemplateItem {
 		//members
-		private SyncDelegate method;
+		private string backName;
+		private object syncMeta;
 		//constructors
-		public SyncTemplateItem(SerializationInfo info, StreamingContext context) : base(info, context) {
-			
+		internal SyncTemplateItem(string field, ItemType type, object metadata, Location loc, string backName, object syncMeta) 
+			: base(field, type, metadata, loc) {
+			this.backName = backName;
+			this.syncMeta = syncMeta;
+		}
+		internal SyncTemplateItem(SyncTemplateItem sti) : base(sti) {
+			this.backName = sti.backName.Clone() as string;
+			this.syncMeta = sti.syncMeta;
 		}
 		//properties
+		internal string BackName { get { return backName; } }
+		internal object SyncMeta { get { return syncMeta; } }
 		//methods
-		public override void GetObjectData(SerializationInfo info, StreamingContext context) {
-			base.GetObjectData(info, context);
-
-		}
 	}
 }

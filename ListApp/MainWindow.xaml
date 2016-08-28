@@ -5,72 +5,52 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListApp"
         mc:Ignorable="d"
-        Title="ListApp" Height="480" Width="720" MinHeight="240" MinWidth="360">
-    <Grid Name="mainGrid">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*" MinWidth="100"/>
-            <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="3*" MinWidth="200"/>
-        </Grid.ColumnDefinitions>
-        <DockPanel Grid.Column="0">
-            <DockPanel DockPanel.Dock="Top">
-                <Label DockPanel.Dock="Left">Lists</Label>
-                <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
-            </DockPanel>
-            <Label Name="messageLabel" DockPanel.Dock="Bottom"/>
-            <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
-                <StackPanel Name="leftPanel"/>
-            </ScrollViewer>
+        Title="ListApp" Height="480" Width="720" MinHeight="240" MinWidth="360"
+		Name="mainWindow">
+
+    <DockPanel Name="rootPanel">
+        <DockPanel DockPanel.Dock="Bottom">
+            <ProgressBar Name="syncBar" DockPanel.Dock="Right" Minimum="0" Maximum="100" Width="170" Visibility="Collapsed"/>
+            <Label Name="messageLabel" DockPanel.Dock="Left" Background="{StaticResource lighterBrush}"/>
         </DockPanel>
-        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" />
-        <Grid Grid.Column="2" Name="rightGrid">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*" MinHeight="100"/>
-                <RowDefinition Height="5"/>
-                <RowDefinition Height="3*" MinHeight="100"/>
-            </Grid.RowDefinitions>
-            <DockPanel Grid.Row="0">
-                <DockPanel DockPanel.Dock="Top" Name="listTitlePanel">
-                    <Label Name="listTitleLabel" DockPanel.Dock="Left" Background="LightGray"/>
-                    <Image Name="listActionImage" Height="20" MouseUp="ListActionImage_MouseUp"/>
-                    <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
+        <Grid Name="mainGrid" DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="100"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="3*" MinWidth="200"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0">
+                <DockPanel DockPanel.Dock="Top" Background="{StaticResource lightBrush}">
+                    <Label DockPanel.Dock="Left">Lists</Label>
+                    <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
                 </DockPanel>
-                <DataGrid VerticalScrollBarVisibility="Auto" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True" GridLinesVisibility="None"
-						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="listItemGrid_Sorting"
-						SelectionMode="Single" SelectionUnit="FullRow">
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-							<Setter Property="Background" Value="DarkBlue"/>
-							<Setter Property="Foreground" Value="White"/>
-                            <Setter Property="BorderBrush" Value="LightGray"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="Aqua"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-					</DataGrid.RowStyle>
-                    <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="Margin" Value="10"/>
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="Aqua"/>
-                                    <Setter Property="Foreground" Value="Black"/>
-									<Setter Property="BorderBrush" Value="Aqua"/>
-                                </Trigger>
-							</Style.Triggers>
-                        </Style>
-                    </DataGrid.CellStyle>
-                </DataGrid>
+                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Name="leftPanel" Background="{StaticResource darkerBrush}"/>
+                </ScrollViewer>
             </DockPanel>
-            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" />
-            <ScrollViewer Grid.Row="2">
-                <Grid Name="contentPanel" Background="Aqua"/>
-            </ScrollViewer>
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" Background="{StaticResource darkBrush}" />
+            <Grid Grid.Column="2" Name="rightGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5*" MinHeight="100"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="3*" MinHeight="100"/>
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0">
+                    <DockPanel DockPanel.Dock="Top" Name="listTitlePanel" Background="{StaticResource darkBrush}">
+                        <Label Name="listTitleLabel" DockPanel.Dock="Left"/>
+                        <Image Name="listActionImage" Height="20" MouseUp="ListActionImage_MouseUp"/>
+                        <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
+                    </DockPanel>
+                    <DataGrid VerticalScrollBarVisibility="Auto" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True" GridLinesVisibility="None" CanUserResizeRows="False"
+						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="listItemGrid_Sorting" Background="{StaticResource darkestBrush}"
+						SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column" MinColumnWidth="30">
+                    </DataGrid>
+                </DockPanel>
+                <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" Background="{StaticResource darkBrush}" />
+                <ScrollViewer Grid.Row="2">
+                    <Grid Name="contentPanel" Background="{StaticResource darkestBrush}"/>
+                </ScrollViewer>
+            </Grid>
         </Grid>
-    </Grid>
+    </DockPanel>
 </Window>

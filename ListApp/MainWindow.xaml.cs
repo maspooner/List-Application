@@ -69,16 +69,24 @@ namespace ListApp {
 			li2b.SetFieldData("img", new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true));
 			data.Lists.Add(list2);
 
-			XMLList list3 = new XMLList("group c (xml)", "anime");
-			list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
-			list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
-			list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
-			list3.AddToTemplate("startedDate", ItemType.DATE, null, "my_start_date");
-			list3.AddToTemplate("endedDate", ItemType.DATE, null, "my_finish_date");
-			list3.AddToTemplate("watchedEpisodes", ItemType.BASIC, null, "my_watched_episodes");
-			list3.AddToTemplate("score", ItemType.BASIC, null, "my_score");
+			//XMLList list3 = new XMLList("group c (xml)", "anime");
+			//list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
+			//list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
+			//list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
+			//list3.AddToTemplate("startedDate", ItemType.DATE, null, "my_start_date");
+			//list3.AddToTemplate("endedDate", ItemType.DATE, null, "my_finish_date");
+			//list3.AddToTemplate("watchedEpisodes", ItemType.BASIC, null, "my_watched_episodes");
+			//list3.AddToTemplate("score", ItemType.BASIC, null, "my_score");
 
-			data.Lists.Add(list3);
+			//data.Lists.Add(list3);
+
+			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
+			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
+			list4.SchemaOptionAt(0).Enabled = true;
+			list4.SaveSchemaOptions();
+
+			data.Lists.Add(list4);
+
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
 			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
@@ -141,7 +149,7 @@ namespace ListApp {
 			l.MouseUp += ListNameLabel_MouseUp;
 			return l;
 		}
-		private void Refresh() {
+		internal void Refresh() {
 			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
 			lcv.CustomSort = null;
 			foreach (DataGridColumn dgc in listItemGrid.Columns) {
@@ -152,9 +160,10 @@ namespace ListApp {
 		//WPF
 		private void ListActionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
-			if (l is XMLList) {
-				//TODO choose file / web location
-				(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
+			if (l is SyncList) {
+				//TODO refreshments
+				(l as SyncList).StartRefreshAllTask(this, syncBar, messageLabel);
+				//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
 				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 				DisplayList(shownList);
 				Refresh();
@@ -209,7 +218,7 @@ namespace ListApp {
 		}
 		private void DisplayList(int id) {
 			MList list = data[id];
-			listActionImage.Source = list is XMLList ?
+			listActionImage.Source = list is SyncList ?
 				Properties.Resources.reloadIcon.ConvertToBitmapImage() : Properties.Resources.addIcon.ConvertToBitmapImage();
 			listTitleLabel.Content = list.Name;
 			listItemGrid.Columns.Clear();
