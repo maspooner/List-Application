@@ -80,9 +80,10 @@ namespace ListApp {
 
 			//data.Lists.Add(list3);
 
-			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
+			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "AndrewCS");
 			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
 			list4.SchemaOptionAt(0).Enabled = true;
+			list4.SchemaOptionAt(1).Enabled = true;
 			list4.SaveSchemaOptions();
 
 			data.Lists.Add(list4);
@@ -162,7 +163,7 @@ namespace ListApp {
 			MList l = data[shownList];
 			if (l is SyncList) {
 				//TODO refreshments
-				(l as SyncList).StartRefreshAllTask(this, syncBar, messageLabel);
+				(l as SyncList).StartRefreshAllTask(this, syncBar, messageLabel, syncCancel);
 				//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
 				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 				DisplayList(shownList);
@@ -339,6 +340,12 @@ namespace ListApp {
 			Console.WriteLine(CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource));
 			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
 			lcv.CustomSort = new ListItemComparer(e.Column.Header as string, dir);
+		}
+
+		private void syncCancel_Click(object sender, RoutedEventArgs e) {
+			if(data[shownList] is SyncList) {
+				(data[shownList] as SyncList).CancelRefreshAllTask();
+			}
 		}
 
 		protected override void OnClosed(EventArgs e) {

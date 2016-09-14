@@ -156,6 +156,7 @@ namespace ListApp {
 		//}
 		internal override void PrepareRefresh() {
 			using (WebClient client = new WebClient()) {
+				client.Encoding = Encoding.UTF8;
 				string xmlStr = client.DownloadString("http://myanimelist.net/malappinfo.php?u=" + username + "&status=all&type=anime");
 				XmlDocument xmlDoc = new XmlDocument();
 				xmlDoc.LoadXml(xmlStr);

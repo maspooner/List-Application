@@ -21,6 +21,8 @@ namespace ListApp {
 		[NonSerialized]
 		private Label messagesLabel;
 		[NonSerialized]
+		private Button syncCancel;
+		[NonSerialized]
 		private MainWindow mainWindow;
 		[NonSerialized]
 		private BackgroundWorker itemWorker;
@@ -49,12 +51,18 @@ namespace ListApp {
 			//add all new schema settings
 			Template.AddRange(schema.GenerateTemplate(this));
 		}
-		internal void StartRefreshAllTask(MainWindow mainWindow, ProgressBar pb, Label l) {
-			this.mainWindow = mainWindow;
-			syncBar = pb;
-			messagesLabel = l;
-			syncBar.Visibility = System.Windows.Visibility.Visible;
-			itemWorker.RunWorkerAsync();
+		internal void StartRefreshAllTask(MainWindow mainWindow, ProgressBar pb, Label l, Button b) {
+			if (!itemWorker.IsBusy) {
+				this.mainWindow = mainWindow;
+				syncBar = pb;
+				messagesLabel = l;
+				syncCancel = b;
+				syncBar.Visibility = syncCancel.Visibility = System.Windows.Visibility.Visible;
+				itemWorker.RunWorkerAsync();
+			}
+		}
+		internal void CancelRefreshAllTask() {
+			itemWorker.CancelAsync();
 		}
 		private void ItemWorker_DoWork(object sender, DoWorkEventArgs e) {
 			BackgroundWorker bw = sender as BackgroundWorker;
@@ -82,7 +90,7 @@ namespace ListApp {
 			messagesLabel.Content = e.UserState as string;
 		}
 		private void ItemWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
-			syncBar.Visibility = System.Windows.Visibility.Collapsed;
+			syncBar.Visibility = syncCancel.Visibility = System.Windows.Visibility.Collapsed;
 			messagesLabel.Content = "";
 			if (e.Cancelled) {
 				Console.WriteLine("Canceled");
