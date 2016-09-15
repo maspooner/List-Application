@@ -11,6 +11,7 @@ using System.Windows.Input;
 using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
+	//TODO ption to cancel mid-way through download
 	public partial class MainWindow : Window {
 		//members
 		private GridLength lastHeight, lastWidth;
