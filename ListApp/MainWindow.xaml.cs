@@ -13,6 +13,7 @@ using CImage = System.Windows.Controls.Image;
 namespace ListApp {
 	//TODO sorting messes up display panel
 	//TODO sort by id doesn't work
+	//TODO option to cancel mid-way through download
 	public partial class MainWindow : Window {
 		//members
 		private GridLength lastHeight, lastWidth;
