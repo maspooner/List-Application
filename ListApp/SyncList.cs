@@ -102,7 +102,7 @@ namespace ListApp {
 				Console.WriteLine("Done");
 				Items.Clear();
 				Items.AddRange(e.Result as List<SyncListItem>);
-				mainWindow.Refresh();
+				mainWindow.Dispatcher.Invoke(mainWindow.Refresh);
 			}
 		}
 	}

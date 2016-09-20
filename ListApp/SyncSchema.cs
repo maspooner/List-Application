@@ -45,6 +45,14 @@ namespace ListApp {
 			return new SchemaOption[] {
 				new SchemaOption("title", "series_title", ItemType.BASIC, null, true),
 				new SchemaOption("episodes", "series_episodes", ItemType.BASIC, null, true),
+				new SchemaOption("start date", "my_start_date", ItemType.DATE, null, true),
+				new SchemaOption("end date", "my_finish_date", ItemType.DATE, null, true),
+				new SchemaOption("image", "series_image", ItemType.IMAGE, 50.0, true),
+				new SchemaOption("watch status", "my_status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, true),
+				new SchemaOption("id", "series_animedb_id", ItemType.BASIC, null, true),
+				new SchemaOption("synonyms", "series_synonyms", ItemType.BASIC, null, true),
+				new SchemaOption("watched #", "my_watched_episodes", ItemType.BASIC, null, true),
+				new SchemaOption("score", "my_score", ItemType.ENUM, new string[] { "-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, true)
 			};
 		}
 		internal override IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list) {
@@ -181,7 +189,7 @@ namespace ListApp {
 						}
 					}
 					Console.WriteLine("time: " + s.ElapsedMilliseconds);
-					if(xyz++ > 5) {
+					if(xyz++ > 15) {
 						yield break;
 					}
 				}

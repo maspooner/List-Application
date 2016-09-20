@@ -105,7 +105,9 @@ namespace ListApp {
 		private BitmapImage CreateBitmapImage() {
 			XImage xImg = Value as XImage; 
 			if (xImg != null && xImg.IsLoaded) {
-				return xImg.Img.ConvertToBitmapImage();
+				BitmapImage bi = xImg.Img.ConvertToBitmapImage();
+				bi.Freeze();
+                return bi;
 			}
 			return null;
 		}

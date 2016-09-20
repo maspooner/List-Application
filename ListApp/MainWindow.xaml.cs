@@ -11,6 +11,8 @@ using System.Windows.Input;
 using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
+	//TODO sorting messes up display panel
+	//TODO sort by id doesn't work
 	public partial class MainWindow : Window {
 		//members
 		private GridLength lastHeight, lastWidth;
@@ -80,10 +82,11 @@ namespace ListApp {
 
 			//data.Lists.Add(list3);
 
-			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "AndrewCS");
+			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
 			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
-			list4.SchemaOptionAt(0).Enabled = true;
-			list4.SchemaOptionAt(1).Enabled = true;
+			for(int i = 0; i < 10; i++) {
+				list4.SchemaOptionAt(i).Enabled = true;
+			}
 			list4.SaveSchemaOptions();
 
 			data.Lists.Add(list4);
