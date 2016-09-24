@@ -5,7 +5,16 @@ using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 
 namespace ListApp {
-	enum ItemType { BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL }
+	enum ItemType {
+		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL
+		//Metadata format:
+		//Basic: none
+		//Date: none
+		//Image: [maxHeight] (double)
+		//Enum: possibleEntries (string[])
+		//Number: [minVal] (int) [maxVal] (int)
+		//Decimal: [decimalPlaces] (int) [minVal] (float) [maxVal] (float)
+	}
 	[Serializable]
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
 		//members

@@ -53,8 +53,9 @@ namespace ListApp {
 			MList list1 = new MList("group a");
 			list1.AddToTemplate("notes", ItemType.BASIC, null);
 			list1.AddToTemplate("date", ItemType.DATE, null);
-			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now });
-			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today });
+			list1.AddToTemplate("num", ItemType.DECIMAL, new object[] { 2, 3.14f, 10.26f });
+			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now, 50f });
+			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today, 40f });
 			li2a.SetFieldData("notes", "More notes");
 			li2a.SetFieldData("date", DateTime.Today);
 			data.Lists.Add(list1);
@@ -96,18 +97,12 @@ namespace ListApp {
 			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
 			list1.AddToTemplate("a", ItemType.BASIC, null);
 			list1.AddToTemplate("b", ItemType.BASIC, null);
-			list1.AddToTemplate("c", ItemType.BASIC, null);
-			list1.AddToTemplate("d", ItemType.BASIC, null);
-			list1.AddToTemplate("e", ItemType.BASIC, null);
 			list1.AddToTemplate("f", ItemType.BASIC, null);
 			list1.AddToTemplate("q", ItemType.IMAGE, 10.0);
 			list1.AddToTemplate("z", ItemType.DATE, null);
 			list1.AddToTemplate("adfsd", ItemType.DATE, null);
 			list1.AddToTemplate("ccccc", ItemType.DATE, null);
 			list1.AddToTemplate("a333", ItemType.DATE, null);
-			list1.AddToTemplate("a1123", ItemType.DATE, null);
-			list1.AddToTemplate("a324", ItemType.DATE, null);
-			list1.AddToTemplate("a3243", ItemType.DATE, null);
 			list1.AddToTemplate("a2334", ItemType.DATE, null);
 			list1.AddToTemplate("a3aaaa4", ItemType.DATE, null);
 			list1.AddToTemplate("a32aaaaaaaaa4", ItemType.DATE, null);
@@ -276,7 +271,7 @@ namespace ListApp {
 			else if(uiType.Name.Equals("Image")) {
 				//TODO
 				fef.SetBinding(CImage.SourceProperty, bind);
-				fef.SetValue(CImage.MaxHeightProperty, iti.Metadata);
+				fef.SetValue(CImage.MaxHeightProperty, iti.Metadata == null ? 50.0 : iti.Metadata);
 			}
 			else {
 				throw new NotImplementedException();

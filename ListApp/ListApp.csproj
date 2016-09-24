@@ -69,6 +69,7 @@
     <Compile Include="ListItemToValueConverter.cs" />
     <Compile Include="SyncList.cs" />
     <Compile Include="SyncSchema.cs" />
+    <Compile Include="UIElements.cs" />
     <Compile Include="XClasses.cs" />
     <Compile Include="XMLList.cs" />
     <Page Include="AddItemDialog.xaml">

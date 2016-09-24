@@ -43,6 +43,12 @@ namespace ListApp {
 						case ItemType.IMAGE:
 							data[i] = (field as CImage).Source as System.Windows.Media.Imaging.BitmapImage;
 							break;
+						case ItemType.NUMBER:
+							data[i] = (field as NumberTextBox).ParseValue();
+							break;
+						case ItemType.DECIMAL:
+							data[i] = (field as DecimalTextBox).ParseValue();
+							break;
 						default:
 							throw new NotImplementedException();
 					}
@@ -53,6 +59,11 @@ namespace ListApp {
 				return null;
 			}
 		}
+		private TextBox CreateTextBox(ListItem li, int i) {
+			TextBox tb = new TextBox();
+			
+			return tb;
+		}
 		private void CreateElements(List<ItemTemplateItem> template, ListItem li) {
 			for (int i = 0; i < template.Count; i++) {
 				ItemTemplateItem iti = template[i];
@@ -60,8 +71,31 @@ namespace ListApp {
 				switch (iti.Type) {
 					case ItemType.BASIC:
 						fe = new TextBox();
-						if(li != null) {
-							(fe as TextBox).Text = li[i].Value.ToString();
+						break;
+					case ItemType.NUMBER:
+						if (iti.Metadata == null) {
+							fe = new NumberTextBox();
+						}
+						else {
+							object[] fields = iti.Metadata as object[];
+							fe = new NumberTextBox((int)fields[0], (int)fields[1]);
+						}
+                        break;
+					case ItemType.DECIMAL:
+						if (iti.Metadata == null) {
+							fe = new DecimalTextBox();
+						}
+						else {
+							object[] fields = iti.Metadata as object[];
+							if(fields.Length == 1) {
+								fe = new DecimalTextBox((int)fields[0]);
+							}
+							else if (fields.Length == 3) {
+								fe = new DecimalTextBox((int)fields[0], (float)fields[1], (float)fields[2]);
+							}
+							else {
+								throw new NotSupportedException();
+							}
 						}
 						break;
 					case ItemType.DATE:
@@ -85,10 +119,17 @@ namespace ListApp {
 					default:
 						throw new NotImplementedException();
 				}
+				if(fe is TextBox) {
+					if (li != null) {
+						(fe as TextBox).Text = li[i].Value.ToString();
+					}
+				}
 				register.Add(iti.Name + "_ui", fe);
 				switch (iti.Type) {
 					case ItemType.BASIC:
 					case ItemType.DATE:
+					case ItemType.NUMBER:
+					case ItemType.DECIMAL:
 					case ItemType.ENUM:
 						DockPanel dp = new DockPanel();
 						Label l = new Label();
@@ -138,7 +179,17 @@ namespace ListApp {
 		}
 		private bool IsValidInput() {
 			foreach (FrameworkElement fe in register.Values) {
-				if (fe is TextBox) {
+				if(fe is NumberTextBox) {
+					if(!(fe as NumberTextBox).IsValid()) {
+						return false;
+					}
+				}
+				else if(fe is DecimalTextBox) {
+					if (!(fe as DecimalTextBox).IsValid()) {
+						return false;
+					}
+				}
+				else if (fe is TextBox) {
 					if ((fe as TextBox).Text.Equals("")) {
 						return false;
 					}
