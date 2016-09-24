@@ -5,8 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
+using HtmlAgilityPack;
 
 namespace ListApp {
 	[Serializable]
@@ -44,15 +44,17 @@ namespace ListApp {
 		protected override SchemaOption[] GenerateOptions() {
 			return new SchemaOption[] {
 				new SchemaOption("title", "series_title", ItemType.BASIC, null, true),
-				new SchemaOption("episodes", "series_episodes", ItemType.BASIC, null, true),
+				new SchemaOption("episodes", "series_episodes", ItemType.NUMBER, null, true),
 				new SchemaOption("start date", "my_start_date", ItemType.DATE, null, true),
 				new SchemaOption("end date", "my_finish_date", ItemType.DATE, null, true),
 				new SchemaOption("image", "series_image", ItemType.IMAGE, 50.0, true),
 				new SchemaOption("watch status", "my_status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, true),
-				new SchemaOption("id", "series_animedb_id", ItemType.BASIC, null, true),
+				new SchemaOption("id", "series_animedb_id", ItemType.NUMBER, null, true),
 				new SchemaOption("synonyms", "series_synonyms", ItemType.BASIC, null, true),
-				new SchemaOption("watched #", "my_watched_episodes", ItemType.BASIC, null, true),
-				new SchemaOption("score", "my_score", ItemType.ENUM, new string[] { "-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, true)
+				new SchemaOption("watched #", "my_watched_episodes", ItemType.NUMBER, null, true),
+				new SchemaOption("score", "my_score", ItemType.ENUM, new string[] { "-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, true),
+				new SchemaOption("rating", "pub_rating", ItemType.DECIMAL, null, false),
+				new SchemaOption("rating count", "pub_rater_count", ItemType.NUMBER, null, false)
 			};
 		}
 		internal override IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list) {
@@ -102,11 +104,33 @@ namespace ListApp {
 					return success ? Itry : 0;
 				case ItemType.IMAGE:
 					return new XImage(content, true);
+				case ItemType.NUMBER:
+					return int.Parse(content);
+				case ItemType.DECIMAL:
+					return float.Parse(content);
+				default:
+					throw new NotImplementedException();
 			}
-			return null;
 		}
-		private object FindDataFromHTML(SyncTemplateItem sti) {
-			return null; //TODO
+		private IEnumerable<HtmlNode> FindNodesWithAttribute(HtmlDocument htmlDoc, string attriName, string attriValue) {
+			return htmlDoc.DocumentNode.Descendants().Where(n => n.Attributes.Contains(attriName)
+				&& n.Attributes[attriName].Value.Equals(attriValue));
+		}
+		private object FindDataFromHTML(HtmlDocument htmlDoc, SyncTemplateItem sti) {
+			//IEnumerable<HtmlNode> sideBarNodes = htmlDoc.DocumentNode.Descendants().
+			//	Where(n => n.Attributes.Contains("class") && n.Attributes["class"].Value.Contains("js-scrollfix-bottom"));
+			//foreach(HtmlNode n in sideBarNodes) {
+			//	Console.WriteLine(n.InnerText);
+			//}
+			if (sti.BackName.Equals("pub_rating")) {
+				return float.Parse(FindNodesWithAttribute(htmlDoc, "itemprop", "ratingValue").FirstOrDefault().InnerHtml);
+            }
+			else if (sti.BackName.Equals("pub_rater_count")) {
+				return int.Parse(FindNodesWithAttribute(htmlDoc, "itemprop", "ratingCount").FirstOrDefault().InnerHtml,
+					System.Globalization.NumberStyles.AllowThousands);
+			}
+			throw new InvalidOperationException();
+			//TODO
 		}
 
   //      internal override Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template) {
@@ -177,7 +201,7 @@ namespace ListApp {
 				string id = xmlNode.FindChild("series_animedb_id").InnerText;
 				Console.WriteLine("anime node id: " + id);
 				SyncListItem sli = new SyncListItem(id, template);
-				HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
+				HtmlDocument htmlDoc = new HtmlDocument();
 				using (WebClient client = new WebClient()) {
 					System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
 					string htmlStr = client.DownloadString("http://myanimelist.net/anime/" + id + "/");
@@ -185,11 +209,12 @@ namespace ListApp {
 					foreach (ItemTemplateItem iti in template) {
 						if (iti is SyncTemplateItem) {
 							SyncTemplateItem sti = iti as SyncTemplateItem;
-							sli.FindField(sti.Name).Value = (bool)sti.SyncMeta ? FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(sti);
+							sli.FindField(sti.Name).Value = (bool)sti.SyncMeta ? 
+								FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(htmlDoc, sti);
 						}
 					}
 					Console.WriteLine("time: " + s.ElapsedMilliseconds);
-					if(xyz++ > 15) {
+					if(xyz++ > 10) {
 						yield break;
 					}
 				}

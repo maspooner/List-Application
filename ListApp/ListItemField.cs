@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 
 namespace ListApp {
-	enum ItemType { BASIC, DATE, IMAGE, ENUM }
+	enum ItemType { BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL }
 	[Serializable]
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
 		//members
@@ -45,6 +45,32 @@ namespace ListApp {
 		}
 		public override int CompareTo(ListItemField other) {
 			return other is BasicField ? (this.Value as string).CompareTo(other.Value as string) : -1;
+		}
+	}
+	[Serializable]
+	class NumberField : ListItemField {
+		//constructors
+		internal NumberField(string fieldName) : base(fieldName) { }
+		public NumberField(SerializationInfo info, StreamingContext context) : base(info, context) { }
+
+		public override int CompareTo(ListItemField other) {
+			return other is NumberField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
+		}
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetInt32("value");
+		}
+	}
+	[Serializable]
+	class DecimalField : ListItemField {
+		//constructors
+		internal DecimalField(string fieldName) : base(fieldName) { }
+		public DecimalField(SerializationInfo info, StreamingContext context) : base(info, context) { }
+
+		public override int CompareTo(ListItemField other) {
+			return other is DecimalField ? ((float)this.Value).CompareTo((float)other.Value) : -1;
+		}
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetSingle("value");
 		}
 	}
 	[Serializable]

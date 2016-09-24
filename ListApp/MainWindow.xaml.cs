@@ -12,7 +12,6 @@ using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	//TODO sorting messes up display panel
-	//TODO sort by id doesn't work
 	//TODO option to cancel mid-way through download
 	public partial class MainWindow : Window {
 		//members
@@ -85,7 +84,7 @@ namespace ListApp {
 
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
 			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
-			for(int i = 0; i < 10; i++) {
+			for(int i = 0; i < list4.GetSchemaLength(); i++) {
 				list4.SchemaOptionAt(i).Enabled = true;
 			}
 			list4.SaveSchemaOptions();
@@ -245,31 +244,42 @@ namespace ListApp {
 			//img.EndInit();
 			//fe = img;
 			DataGridTemplateColumn dgc = new DataGridTemplateColumn();
-			FrameworkElementFactory fef = null;
 			Binding bind = new Binding();
 			bind.Mode = BindingMode.OneWay;
-            switch (iti.Type) {
+			bind.ConverterParameter = iti;
+			Type uiType = typeof(TextBlock);
+			switch (iti.Type) {
 				case ItemType.DATE:
 				case ItemType.BASIC:
-					fef = new FrameworkElementFactory(typeof(TextBlock));
 					bind.Converter = new ListItemToValueConverter();
-					bind.ConverterParameter = iti.Name;
-					fef.SetBinding(TextBlock.TextProperty, bind);
 					break;
 				case ItemType.ENUM:
-					fef = new FrameworkElementFactory(typeof(TextBlock));
 					bind.Converter = new ListItemToEnumConverter();
-					bind.ConverterParameter = iti;
-					fef.SetBinding(TextBlock.TextProperty, bind);
 					break;
 				case ItemType.IMAGE:
-					fef = new FrameworkElementFactory(typeof(CImage));
+					uiType = typeof(CImage);
 					bind.Converter = new ListItemToImageConverter();
-					bind.ConverterParameter = iti;
-					fef.SetBinding(CImage.SourceProperty, bind);
-					fef.SetValue(CImage.MaxHeightProperty, iti.Metadata);
-					//TODO
 					break;
+				case ItemType.NUMBER:
+					bind.Converter = new ListItemToNumberConverter();
+					break;
+				case ItemType.DECIMAL:
+					bind.Converter = new ListItemToDecimalConverter();
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+			FrameworkElementFactory fef = new FrameworkElementFactory(uiType);
+			if (uiType.Name.Equals("TextBlock")) {
+				fef.SetBinding(TextBlock.TextProperty, bind);
+			}
+			else if(uiType.Name.Equals("Image")) {
+				//TODO
+				fef.SetBinding(CImage.SourceProperty, bind);
+				fef.SetValue(CImage.MaxHeightProperty, iti.Metadata);
+			}
+			else {
+				throw new NotImplementedException();
 			}
 			DataTemplate dataTemp = new DataTemplate();
 			dataTemp.VisualTree = fef;

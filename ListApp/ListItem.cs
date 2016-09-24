@@ -29,6 +29,8 @@ namespace ListApp {
 				case ItemType.DATE: return new DateField(item.Name);
 				case ItemType.IMAGE: return new ImageField(item.Name);
 				case ItemType.ENUM: return new EnumField(item.Name);
+				case ItemType.NUMBER: return new NumberField(item.Name);
+				case ItemType.DECIMAL: return new DecimalField(item.Name);
 				default: return null;
 			}
 		}

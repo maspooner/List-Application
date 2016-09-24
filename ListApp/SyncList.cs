@@ -45,6 +45,7 @@ namespace ListApp {
 			return null;
 		}
 		internal SchemaOption SchemaOptionAt(int i) { return schema.Options[i]; }
+		internal int GetSchemaLength() { return schema.Options.Length; }
 		internal void SaveSchemaOptions() {
 			//remove all old schema settings
 			Template.RemoveAll((iti) => iti is SyncTemplateItem);

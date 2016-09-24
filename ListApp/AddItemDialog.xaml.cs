@@ -43,6 +43,8 @@ namespace ListApp {
 						case ItemType.IMAGE:
 							data[i] = (field as CImage).Source as System.Windows.Media.Imaging.BitmapImage;
 							break;
+						default:
+							throw new NotImplementedException();
 					}
 				}
 				return data;
@@ -80,6 +82,8 @@ namespace ListApp {
 							(fe as CImage).Source = (li[i] as ImageField).GetBitmapImage();
 						}
 						break;
+					default:
+						throw new NotImplementedException();
 				}
 				register.Add(iti.Name + "_ui", fe);
 				switch (iti.Type) {
@@ -127,6 +131,8 @@ namespace ListApp {
 						g.Children.Add(fe);
 						contentPanel.Children.Add(g);
 						break;
+					default:
+						throw new NotImplementedException();
 				}
 			}
 		}
