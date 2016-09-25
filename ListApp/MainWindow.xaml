@@ -37,11 +37,7 @@
                     <RowDefinition Height="3*" MinHeight="100"/>
                 </Grid.RowDefinitions>
                 <DockPanel Grid.Row="0">
-                    <DockPanel DockPanel.Dock="Top" Name="listTitlePanel" Background="{StaticResource darkBrush}">
-                        <Label Name="listTitleLabel" DockPanel.Dock="Left"/>
-                        <Image Name="listActionImage" Height="20" MouseUp="ListActionImage_MouseUp"/>
-                        <Image Name="listOptionImage" Height="20" MouseUp="ListOptionImage_MouseUp"/>
-                    </DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Name="listActionBar" Background="{StaticResource darkBrush}" LastChildFill="False"/>
                     <DataGrid VerticalScrollBarVisibility="Auto" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True" GridLinesVisibility="None" CanUserResizeRows="False"
 						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="listItemGrid_Sorting" Background="{StaticResource darkestBrush}"
 						SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column" MinColumnWidth="30">

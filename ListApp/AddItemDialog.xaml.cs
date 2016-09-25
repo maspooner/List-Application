@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
 	public partial class AddItemDialog : Window {
@@ -24,8 +23,6 @@ namespace ListApp {
 			ShowDialog();
 			Console.WriteLine("CLOSED DIALOG");
 			if (DialogResult.Value) {
-				Console.WriteLine("OK");
-				//TODO implement
 				object[] data = new object[template.Count];
 				for(int i = 0; i < template.Count; i++) {
 					ItemTemplateItem iti = template[i];
@@ -41,7 +38,7 @@ namespace ListApp {
 							data[i] = (field as ComboBox).SelectedIndex;
 							break;
 						case ItemType.IMAGE:
-							data[i] = (field as CImage).Source as System.Windows.Media.Imaging.BitmapImage;
+							data[i] = (field as BackupImage).GetBackup();
 							break;
 						case ItemType.NUMBER:
 							data[i] = (field as NumberTextBox).ParseValue();
@@ -58,11 +55,6 @@ namespace ListApp {
 			else {
 				return null;
 			}
-		}
-		private TextBox CreateTextBox(ListItem li, int i) {
-			TextBox tb = new TextBox();
-			
-			return tb;
 		}
 		private void CreateElements(List<ItemTemplateItem> template, ListItem li) {
 			for (int i = 0; i < template.Count; i++) {
@@ -111,10 +103,11 @@ namespace ListApp {
 						fe = cb;
 						break;
 					case ItemType.IMAGE:
-						fe = new CImage();
+						BackupImage bi = new BackupImage();
 						if(li != null) {
-							(fe as CImage).Source = (li[i] as ImageField).GetBitmapImage();
+							bi.SetSourceAndBackup((li[i] as ImageField).Value as XImage);
 						}
+						fe = bi;
 						break;
 					default:
 						throw new NotImplementedException();
@@ -199,8 +192,8 @@ namespace ListApp {
 						return false;
 					}
 				}
-				else if (fe is CImage) {
-					if((fe as CImage).Source == null) {
+				else if (fe is BackupImage) {
+					if((fe as BackupImage).GetBackup() == null) {
 						return false;
 					}
 				}
@@ -222,10 +215,10 @@ namespace ListApp {
 			ofd.DefaultExt = ".png";
 			ofd.Filter = "Image Files|*.jpeg;*.png;*.jpg;*.gif|JPEG Files (*.jpeg)|*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif";
 			if(ofd.ShowDialog() == true) {
-				Bitmap b = new Bitmap(Bitmap.FromFile(ofd.FileName) as Bitmap, new System.Drawing.Size(300, 100)); //TODO adjustable
+				XImage xi = new XImage(ofd.FileName, false);
 				string fieldName = bb.Name.Substring(0, bb.Name.Length - 3);
-                CImage img = register[fieldName + "_ui"] as CImage;
-				img.Source = b.ConvertToBitmapImage();
+                BackupImage img = register[fieldName + "_ui"] as BackupImage;
+				img.SetSourceAndBackup(xi);
 				Label lab = register[fieldName + "_lab"] as Label;
 				lab.Content = ofd.FileName.Substring(ofd.FileName.LastIndexOf('\\'));
 			}
@@ -233,8 +226,8 @@ namespace ListApp {
 		private void ClearButton_Click(object sender, RoutedEventArgs e) {
 			Button cb = sender as Button;
 			string fieldName = cb.Name.Substring(0, cb.Name.Length - 4);
-			CImage img = register[fieldName + "_ui"] as CImage;
-			img.Source = null;
+			BackupImage img = register[fieldName + "_ui"] as BackupImage;
+			img.SetSourceAndBackup(null);
 			Label lab = register[fieldName + "_lab"] as Label;
 			lab.Content = "<No file>";
 		}

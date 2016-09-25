@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,7 +55,6 @@ namespace ListApp {
 				int decimalPlaces = Text.Substring(Text.IndexOf('.')).Length - 1;
                 if (decimalPlaces > maxDecimals) {
 					Text = Text.Substring(0, Text.IndexOf('.') + 1 + maxDecimals);
-					//TODO test
 				}
 			}
 			float val;
@@ -71,5 +71,19 @@ namespace ListApp {
 				Text = "";
 			}
 		}
+	}
+	class BackupImage : System.Windows.Controls.Image {
+		//properties
+		private XImage backup;
+		//constructor
+		internal BackupImage() {
+			backup = null;
+			Height = 50;
+		}
+		internal void SetSourceAndBackup(XImage xi) {
+			backup = xi;
+			Source = xi == null ? null : xi.Img.ConvertToBitmapImage();
+		}
+		internal XImage GetBackup() { return backup; }
 	}
 }

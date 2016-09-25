@@ -71,7 +71,6 @@
     <Compile Include="SyncSchema.cs" />
     <Compile Include="UIElements.cs" />
     <Compile Include="XClasses.cs" />
-    <Compile Include="XMLList.cs" />
     <Page Include="AddItemDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

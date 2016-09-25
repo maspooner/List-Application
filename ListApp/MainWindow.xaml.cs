@@ -72,17 +72,6 @@ namespace ListApp {
 			li2b.SetFieldData("img", new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true));
 			data.Lists.Add(list2);
 
-			//XMLList list3 = new XMLList("group c (xml)", "anime");
-			//list3.AddToTemplate("title", ItemType.BASIC, null, "series_title");
-			//list3.AddToTemplate("episodes", ItemType.BASIC, null, "series_episodes");
-			//list3.AddToTemplate("status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, "my_status");
-			//list3.AddToTemplate("startedDate", ItemType.DATE, null, "my_start_date");
-			//list3.AddToTemplate("endedDate", ItemType.DATE, null, "my_finish_date");
-			//list3.AddToTemplate("watchedEpisodes", ItemType.BASIC, null, "my_watched_episodes");
-			//list3.AddToTemplate("score", ItemType.BASIC, null, "my_score");
-
-			//data.Lists.Add(list3);
-
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
 			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
 			for(int i = 0; i < list4.GetSchemaLength(); i++) {
@@ -137,9 +126,7 @@ namespace ListApp {
 			}
 		}
 		private void LoadImages() {
-			listActionImage.Source = Properties.Resources.addIcon.ConvertToBitmapImage();
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
-			listOptionImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
         }
 		private Label CreateListLabel(MList list, int i) {
 			Label l = new Label();
@@ -156,26 +143,57 @@ namespace ListApp {
 			}
 			listItemGrid.Items.Refresh();
 		}
+		private CImage CreateActionImage(System.Windows.Media.ImageSource source, MouseButtonEventHandler handler) {
+			CImage ci = new CImage();
+			ci.Source = source;
+			ci.MouseUp += handler;
+			ci.Height = 30;
+			ci.Margin = new Thickness(0, 0, 5, 0);
+			DockPanel.SetDock(ci, Dock.Right);
+			return ci;
+		}
+		private void ReloadActionBar(string name, bool isSync) {
+			listActionBar.Children.Clear();
+			Label title = new Label();
+			title.Content = name;
+			DockPanel.SetDock(title, Dock.Left);
+
+			listActionBar.Children.Add(CreateActionImage(Properties.Resources.optionIcon.ConvertToBitmapImage(), listOptionImg_MouseUp));
+			listActionBar.Children.Add(CreateActionImage(Properties.Resources.addIcon.ConvertToBitmapImage(), addNewImg_MouseUp));
+
+			if (isSync) {
+				listActionBar.Children.Add(CreateActionImage(Properties.Resources.reloadIcon.ConvertToBitmapImage(), syncListImg_MouseUp));
+			}
+		}
+
 		//WPF
-		private void ListActionImage_MouseUp(object sender, MouseButtonEventArgs e) {
+		private void addNewImg_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
-			if (l is SyncList) {
-				//TODO refreshments
-				(l as SyncList).StartRefreshAllTask(this, syncBar, messageLabel, syncCancel);
-				//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
-				//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
-				DisplayList(shownList);
+			object[] fields = new AddItemDialog(this).ShowAndGetItem(l.Template);
+			if (fields != null) {
+				ListItem li = l.Add();
+				for (int i = 0; i < l.Template.Count; i++) {
+					li.SetFieldData(l.Template[i].Name, fields[i]);
+				}
 				Refresh();
 			}
-			else {
-				object[] fields = new AddItemDialog(this).ShowAndGetItem(data[shownList].Template);
-				if (fields != null) {
-					ListItem li = l.Add();
-					for (int i = 0; i < l.Template.Count; i++) {
-						li.SetFieldData(l.Template[i].Name, fields[i]);
-					}
-					Refresh();
+		}
+		private void syncListImg_MouseUp(object sender, MouseButtonEventArgs e) {
+			//TODO refreshments
+			(data[shownList] as SyncList).StartRefreshAllTask(this, syncBar, messageLabel, syncCancel);
+			//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
+			//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
+			DisplayList(shownList);
+			Refresh();
+		}
+		private void listOptionImg_MouseUp(object sender, MouseButtonEventArgs e) {
+			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
+			if (newTemplate != null) {
+				data[shownList].ClearTemplate();
+				foreach (ItemTemplateItem iti in newTemplate) {
+					data[shownList].AddToTemplate(iti);
 				}
+				DisplayItem(listItemGrid.SelectedIndex);
 			}
 		}
 		private void DisplayItem(int i) {
@@ -217,9 +235,8 @@ namespace ListApp {
 		}
 		private void DisplayList(int id) {
 			MList list = data[id];
-			listActionImage.Source = list is SyncList ?
-				Properties.Resources.reloadIcon.ConvertToBitmapImage() : Properties.Resources.addIcon.ConvertToBitmapImage();
-			listTitleLabel.Content = list.Name;
+			ReloadActionBar(list.Name, list is SyncList);
+
 			listItemGrid.Columns.Clear();
 			listItemGrid.ItemsSource = list.Items;
 			//listItemGrid.Items.Clear();
@@ -295,17 +312,6 @@ namespace ListApp {
 		}
 		private void GeneralOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO
-		}
-		private void ListOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
-			//TODO move to inside a dialog
-			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
-			if(newTemplate != null) {
-				data[shownList].ClearTemplate();
-				foreach (ItemTemplateItem iti in newTemplate) {
-					data[shownList].AddToTemplate(iti);
-				}
-				DisplayItem(listItemGrid.SelectedIndex);
-			}
 		}
 		private void CollapseLeft_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
 			Console.WriteLine("COLLAPSE");
