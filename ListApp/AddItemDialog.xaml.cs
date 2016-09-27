@@ -6,169 +6,200 @@ using System.Windows;
 using System.Windows.Controls;
 
 namespace ListApp {
+	/// <summary>
+	/// Models a dialog Window that can be shown to generate a new <seealso cref="ListItem"/>
+	/// </summary>
 	public partial class AddItemDialog : Window {
-		//methods
-		private MainWindow mainWindow;
+		//constants
+		private static string UI_ELEMENT_SUFFIX = "_ui";
+		//members
+		/// <summary>
+		/// Holds references to all framework elements added, accessed by name
+		/// </summary>
 		private Dictionary<string, FrameworkElement> register;
 		//constructors
-		public AddItemDialog(MainWindow mw) {
-			mainWindow = mw;
+		/// <summary>
+		/// Creates new dialog to add a new ListItem
+		/// </summary>
+		/// <param name="mw">A reference to the MainWindow</param>
+		public AddItemDialog() {
 			register = new Dictionary<string, FrameworkElement>();
+
 			InitializeComponent();
 		}
 		//methods
-		internal object[] ShowAndGetItem(List<ItemTemplateItem> template, ListItem li = null) {
+		/// <summary>
+		/// Shows this dialog, and adds or modifies a <seealso cref="ListItem"/>
+		/// from the given <seealso cref="MList"/>.
+		/// If a <seealso cref="ListItem"/> is given, the item will be modified,
+		/// otherwise, a new item will be created and added to the list.
+		/// </summary>
+		/// <param name="mainWindow">The main window</param>
+		/// <param name="list">the list to add or modify</param>
+		/// <param name="existingItem">(optional) an existing item to modify 
+		/// instead of creating a new item</param>
+		/// <returns>true if the element was modified or added, false if the dialog was canceled</returns>
+		internal bool ShowDialogForItem(MainWindow mainWindow, MList list, ListItem existingItem = null) {
 			Owner = mainWindow;
-			CreateElements(template, li);
+			List<FieldTemplateItem> template = list.Template;
+			//create the UI elements for editting fields
+			CreateUIElements(template, existingItem);
+			//show the dialog and wait for a close or ok
 			ShowDialog();
 			Console.WriteLine("CLOSED DIALOG");
+			//ok button pressed
 			if (DialogResult.Value) {
-				object[] data = new object[template.Count];
-				for(int i = 0; i < template.Count; i++) {
-					ItemTemplateItem iti = template[i];
-					FrameworkElement field = register[iti.Name + "_ui"];
-					switch (iti.Type) {
-						case ItemType.BASIC:
-							data[i] = (field as TextBox).Text;
-							break;
-						case ItemType.DATE:
-							data[i] = (field as DatePicker).SelectedDate;
-							break;
-						case ItemType.ENUM:
-							data[i] = (field as ComboBox).SelectedIndex;
-							break;
-						case ItemType.IMAGE:
-							data[i] = (field as BackupImage).GetBackup();
-							break;
-						case ItemType.NUMBER:
-							data[i] = (field as NumberTextBox).ParseValue();
-							break;
-						case ItemType.DECIMAL:
-							data[i] = (field as DecimalTextBox).ParseValue();
-							break;
-						default:
-							throw new NotImplementedException();
-					}
+				//modify a new item if there is no existing item available
+				ListItem toModifyItem = existingItem == null ? list.Add() : existingItem;
+				//for every field to add/modify
+				for (int i = 0; i < template.Count; i++) {
+					FieldTemplateItem iti = template[i];
+					//find the ui element in the register with the content to parse
+					FrameworkElement field = register[iti.Name + UI_ELEMENT_SUFFIX];
+					//set the field data to the parsed data from the ui element
+					toModifyItem.SetFieldData(template[i].Name, ParseFieldData(field, iti.Type));
 				}
-				return data;
+				return true; //success
 			}
-			else {
-				return null;
+			return false; //fail
+		}
+		/// <summary>
+		/// Given a <seealso cref="FrameworkElement"/>, the data of a given <seealso cref="FieldType"/> is parsed
+		/// </summary>
+		/// <param name="uiElement">The ui element to parse data from</param>
+		/// <param name="fieldType">The type of field</param>
+		/// <returns>the data parsed from the field</returns>
+		private object ParseFieldData(FrameworkElement uiElement, FieldType fieldType) {
+			switch (fieldType) {
+				case FieldType.BASIC:	return (uiElement as TextBox).Text;
+				case FieldType.DATE:	return (uiElement as DatePicker).SelectedDate;
+				case FieldType.ENUM:	return (uiElement as ComboBox).SelectedIndex;
+				case FieldType.IMAGE:	return (uiElement as BackupImage).GetBackup();
+				case FieldType.NUMBER:	return (uiElement as NumberTextBox).ParseValue();
+				case FieldType.DECIMAL:	return (uiElement as DecimalTextBox).ParseValue();
+				default:				throw new NotImplementedException();
 			}
 		}
-		private void CreateElements(List<ItemTemplateItem> template, ListItem li) {
-			for (int i = 0; i < template.Count; i++) {
-				ItemTemplateItem iti = template[i];
-				FrameworkElement fe = null;
-				switch (iti.Type) {
-					case ItemType.BASIC:
-						fe = new TextBox();
-						break;
-					case ItemType.NUMBER:
-						if (iti.Metadata == null) {
-							fe = new NumberTextBox();
-						}
-						else {
-							object[] fields = iti.Metadata as object[];
-							fe = new NumberTextBox((int)fields[0], (int)fields[1]);
-						}
-                        break;
-					case ItemType.DECIMAL:
-						if (iti.Metadata == null) {
-							fe = new DecimalTextBox();
-						}
-						else {
-							object[] fields = iti.Metadata as object[];
-							if(fields.Length == 1) {
-								fe = new DecimalTextBox((int)fields[0]);
-							}
-							else if (fields.Length == 3) {
-								fe = new DecimalTextBox((int)fields[0], (float)fields[1], (float)fields[2]);
-							}
-							else {
-								throw new NotSupportedException();
-							}
-						}
-						break;
-					case ItemType.DATE:
-						DatePicker dp = new DatePicker();
-						dp.SelectedDateFormat = DatePickerFormat.Short;
-						dp.SelectedDate = li == null ? DateTime.Today : (DateTime)li[i].Value;
-						fe = dp;
-						break;
-					case ItemType.ENUM:
-						ComboBox cb = new ComboBox();
-						cb.ItemsSource = iti.Metadata as string[];
-						cb.SelectedIndex = li == null ? 0 : (int)li[i].Value;
-						fe = cb;
-						break;
-					case ItemType.IMAGE:
-						BackupImage bi = new BackupImage();
-						if(li != null) {
-							bi.SetSourceAndBackup((li[i] as ImageField).Value as XImage);
-						}
-						fe = bi;
-						break;
-					default:
-						throw new NotImplementedException();
+		/// <summary>
+		/// Creates and adds ui elements for each field in a <seealso cref="List{FieldTemplateItem}"/>
+		/// (with possible starting values if a <seealso cref="ListItem"/> is given).
+		/// </summary>
+		/// <param name="template">a list of template items to use to create ui elements</param>
+		/// <param name="item">a possibly null value that will be used to fill in ui 
+		/// elements with previous values</param>
+		private void CreateUIElements(List<FieldTemplateItem> template, ListItem item) {
+			foreach (FieldTemplateItem fti in template) {
+				//create the main ui element for each template item
+				//i.e. the ui element that holds the content of each field
+				FrameworkElement uiField = CreateMainUIElement(fti.Type, fti.Metadata);
+				//add this ui element to the register for access later, appending the suffix "_ui"
+				//to differentiate it as the main ui element
+				register.Add(fti.Name + UI_ELEMENT_SUFFIX, uiField);
+				//if using values from before
+				if (item != null) {
+					//fill in the ui element with the field's value
+					FillValueIn(uiField, item.FindField(fti.Name));
 				}
-				if(fe is TextBox) {
-					if (li != null) {
-						(fe as TextBox).Text = li[i].Value.ToString();
-					}
-				}
-				register.Add(iti.Name + "_ui", fe);
-				switch (iti.Type) {
-					case ItemType.BASIC:
-					case ItemType.DATE:
-					case ItemType.NUMBER:
-					case ItemType.DECIMAL:
-					case ItemType.ENUM:
-						DockPanel dp = new DockPanel();
-						Label l = new Label();
-						l.Content = iti.Name + ": ";
-						dp.Children.Add(l);
-						DockPanel.SetDock(l, Dock.Left);
-						dp.Children.Add(fe);
-						DockPanel.SetDock(fe, Dock.Right);
-						contentPanel.Children.Add(dp);
-						break;
-					case ItemType.IMAGE:
-						Button browse = new Button();
-						browse.Content = "Browse...";
-						browse.Click += BrowseButton_Click;
-						browse.Name = iti.Name + "_bb";
-						Button clear = new Button();
-						clear.Content = "Clear";
-						clear.Name = iti.Name + "_clr";
-						clear.Click += ClearButton_Click;
-						Label file = new Label();
-						file.Content = li != null ? "<Cached file>" : "<No file>";
-						register.Add(iti.Name + "_lab", file);
-
-						Grid g = new Grid();
-						g.ColumnDefinitions.Add(new ColumnDefinition());
-						g.ColumnDefinitions.Add(new ColumnDefinition());
-						g.RowDefinitions.Add(new RowDefinition());
-						g.RowDefinitions.Add(new RowDefinition());
-						file.SetValue(Grid.ColumnProperty, 0);
-						file.SetValue(Grid.RowProperty, 0);
-						browse.SetValue(Grid.ColumnProperty, 1);
-						browse.SetValue(Grid.RowProperty, 0);
-						clear.SetValue(Grid.ColumnProperty, 0);
-						clear.SetValue(Grid.RowProperty, 1);
-						fe.SetValue(Grid.ColumnProperty, 1);
-						fe.SetValue(Grid.RowProperty, 1);
-						g.Children.Add(browse);
-						g.Children.Add(clear);
-						g.Children.Add(file);
-						g.Children.Add(fe);
-						contentPanel.Children.Add(g);
-						break;
-					default:
-						throw new NotImplementedException();
-				}
+				//wrap up the element for presentation and add it to the content panel
+				contentPanel.Children.Add(WrapUpElement(fti.Name, fti.Type, uiField, item));
 			}
+		}
+		/// <summary>
+		/// Creates a ui element for a given field type and metadata
+		/// </summary>
+		/// <param name="fieldType">the type of field to create a ui element for</param>
+		/// <param name="metadata">metadata to aid in the creation of the ui element</param>
+		/// <returns>the main ui element for the field</returns>
+		private FrameworkElement CreateMainUIElement(FieldType fieldType, object metadata) {
+			switch (fieldType) {
+				case FieldType.BASIC:	return new TextBox();
+				case FieldType.NUMBER:	return new NumberTextBox(metadata as NumberMetadata);
+				case FieldType.DECIMAL: return new DecimalTextBox(metadata as DecimalMetadata);
+				case FieldType.IMAGE:	return new BackupImage(metadata as ImageMetadata);
+				case FieldType.DATE:
+					DatePicker dp = new DatePicker();
+					dp.SelectedDateFormat = DatePickerFormat.Short;
+					return dp;
+				case FieldType.ENUM:
+					ComboBox cb = new ComboBox();
+					//enum possabilities are combo box options
+					cb.ItemsSource = (metadata as EnumMetadata).Entries;
+					return cb;
+				default: throw new NotImplementedException();
+			}
+		}
+		/// <summary>
+		/// Fills a ui element with the data from a field
+		/// </summary>
+		/// <param name="uiField">the ui element to fill</param>
+		/// <param name="field">the field to get data from</param>
+		private void FillValueIn(FrameworkElement uiField, ListItemField field) {
+			if (uiField is TextBox) {
+				//includes TextBox, NumberTextBox, DecimalTextBox
+				(uiField as TextBox).Text = field.Value.ToString();
+			}
+			else if(uiField is DatePicker) {
+				(uiField as DatePicker).SelectedDate = (DateTime)field.Value;
+			}
+			else if(uiField is ComboBox) {
+				(uiField as ComboBox).SelectedIndex = (int)field.Value;
+			}
+			else if (uiField is BackupImage) {
+				//set the source to a BitmapImage, and store the XImage for later
+				(uiField as BackupImage).SetSourceAndBackup((field as ImageField).Value as XImage);
+			}
+		}
+		private FrameworkElement WrapUpElement(string fieldName, FieldType fieldType, FrameworkElement mainUI, ListItem item) {
+			switch (fieldType) {
+				case FieldType.BASIC:
+				case FieldType.DATE:
+				case FieldType.NUMBER:
+				case FieldType.DECIMAL:
+				case FieldType.ENUM:
+					DockPanel dp = new DockPanel();
+					Label l = new Label();
+					l.Content = fieldName + ": ";
+					dp.Children.Add(l);
+					DockPanel.SetDock(l, Dock.Left);
+					dp.Children.Add(mainUI);
+					DockPanel.SetDock(mainUI, Dock.Right);
+					return dp;
+				case FieldType.IMAGE:
+					return CreateImageUI(fieldName, mainUI, item);
+				default: throw new NotImplementedException();
+			}
+		}
+		private Grid CreateImageUI(string fieldName, FrameworkElement mainUI, ListItem item) {
+			Button browse = new Button();
+			browse.Content = "Browse...";
+			browse.Click += BrowseButton_Click;
+			browse.Name = fieldName + "_bb";
+			Button clear = new Button();
+			clear.Content = "Clear";
+			clear.Name = fieldName + "_clr";
+			clear.Click += ClearButton_Click;
+			Label file = new Label();
+			file.Content = item != null ? "<Cached file>" : "<No file>";
+			register.Add(fieldName + "_lab", file);
+
+			Grid g = new Grid();
+			g.ColumnDefinitions.Add(new ColumnDefinition());
+			g.ColumnDefinitions.Add(new ColumnDefinition());
+			g.RowDefinitions.Add(new RowDefinition());
+			g.RowDefinitions.Add(new RowDefinition());
+			file.SetValue(Grid.ColumnProperty, 0);
+			file.SetValue(Grid.RowProperty, 0);
+			browse.SetValue(Grid.ColumnProperty, 1);
+			browse.SetValue(Grid.RowProperty, 0);
+			clear.SetValue(Grid.ColumnProperty, 0);
+			clear.SetValue(Grid.RowProperty, 1);
+			mainUI.SetValue(Grid.ColumnProperty, 1);
+			mainUI.SetValue(Grid.RowProperty, 1);
+			g.Children.Add(browse);
+			g.Children.Add(clear);
+			g.Children.Add(file);
+			g.Children.Add(mainUI);
+			return g;
 		}
 		private bool IsValidInput() {
 			foreach (FrameworkElement fe in register.Values) {
@@ -217,7 +248,7 @@ namespace ListApp {
 			if(ofd.ShowDialog() == true) {
 				XImage xi = new XImage(ofd.FileName, false);
 				string fieldName = bb.Name.Substring(0, bb.Name.Length - 3);
-                BackupImage img = register[fieldName + "_ui"] as BackupImage;
+                BackupImage img = register[fieldName + UI_ELEMENT_SUFFIX] as BackupImage;
 				img.SetSourceAndBackup(xi);
 				Label lab = register[fieldName + "_lab"] as Label;
 				lab.Content = ofd.FileName.Substring(ofd.FileName.LastIndexOf('\\'));
@@ -226,7 +257,7 @@ namespace ListApp {
 		private void ClearButton_Click(object sender, RoutedEventArgs e) {
 			Button cb = sender as Button;
 			string fieldName = cb.Name.Substring(0, cb.Name.Length - 4);
-			BackupImage img = register[fieldName + "_ui"] as BackupImage;
+			BackupImage img = register[fieldName + UI_ELEMENT_SUFFIX] as BackupImage;
 			img.SetSourceAndBackup(null);
 			Label lab = register[fieldName + "_lab"] as Label;
 			lab.Content = "<No file>";

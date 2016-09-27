@@ -11,7 +11,7 @@ namespace ListApp {
 		//members
 		private MainWindow mainWindow;
 		private Dictionary<string, FrameworkElement> register;
-		private List<ItemTemplateItem> items;
+		private List<FieldTemplateItem> items;
 		private Random rand;
 		//constructors
 		public EditLayoutDialog(MainWindow mw) {
@@ -21,24 +21,24 @@ namespace ListApp {
 			rand = new Random(C.COLOR_SEED);
 		}
 		//methods
-		internal List<ItemTemplateItem> ShowAndGetTemplate(List<ItemTemplateItem> template) {
+		internal List<FieldTemplateItem> ShowAndGetTemplate(List<FieldTemplateItem> template) {
 			Owner = mainWindow;
-			this.items = new List<ItemTemplateItem>();
-			foreach(ItemTemplateItem iti in template) {
-				items.Add(new ItemTemplateItem(iti));
+			this.items = new List<FieldTemplateItem>();
+			foreach(FieldTemplateItem iti in template) {
+				items.Add(new FieldTemplateItem(iti));
 			}
 			CreateElements(items);
 			ShowDialog();
-			foreach(ItemTemplateItem iti in items) {
+			foreach(FieldTemplateItem iti in items) {
 				Console.WriteLine(iti.X + " " + iti.Y);
 			}
 			return DialogResult.Value ? items : null; 
 		}
-		private void CreateElements(List<ItemTemplateItem> template) {
+		private void CreateElements(List<FieldTemplateItem> template) {
 			Utils.SetupContentGrid(layoutContent, template);
 			//TODO
 			for(int i = 0; i < template.Count; i++) {
-				ItemTemplateItem iti = template[i];
+				FieldTemplateItem iti = template[i];
 				Color cBack = Utils.RandomColor(rand);
 				SolidColorBrush back = new SolidColorBrush(cBack);
 				
@@ -67,7 +67,7 @@ namespace ListApp {
 			Console.WriteLine(layoutContent.ColumnDefinitions.Count);
 			Console.WriteLine(layoutContent.RowDefinitions.Count);
 		}
-		private bool Move(ItemTemplateItem oIti, int cDest, int rDest) {
+		private bool Move(FieldTemplateItem oIti, int cDest, int rDest) {
 			Console.WriteLine("move");
 			if(isBlockFree(cDest, rDest, oIti.Width, oIti.Height, oIti)) {
 				oIti.Move(cDest, rDest);
@@ -79,7 +79,7 @@ namespace ListApp {
 				return false;
 			}
 		}
-		private bool Resize(ItemTemplateItem oIti, bool isWidth, int newDim) {
+		private bool Resize(FieldTemplateItem oIti, bool isWidth, int newDim) {
 			//TODO
 			if(isWidth) {
 				int dw = newDim - oIti.Width;
@@ -101,7 +101,7 @@ namespace ListApp {
 			}
 			return false;
 		}
-		private bool isBlockFree(int x, int y, int w, int h, ItemTemplateItem thisIti) {
+		private bool isBlockFree(int x, int y, int w, int h, FieldTemplateItem thisIti) {
 			bool isSpace = true;
 			for (int cx = 0; cx < w && isSpace; cx++) {
 				for (int cy = 0; cy < h && isSpace; cy++) {
@@ -112,8 +112,8 @@ namespace ListApp {
 			}
 			return isSpace;
 		}
-		private bool IsSpaceFree(int c, int r, ItemTemplateItem thisIti = null) {
-			foreach (ItemTemplateItem iti in items) {
+		private bool IsSpaceFree(int c, int r, FieldTemplateItem thisIti = null) {
+			foreach (FieldTemplateItem iti in items) {
 				if(thisIti == null || thisIti != iti) {
 					foreach (Location l in iti.Occupied) {
 						if (l.X == c && l.Y == r) {
@@ -136,7 +136,7 @@ namespace ListApp {
 
 		private void nameList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 			ListView lw = sender as ListView;
-			ItemTemplateItem iti = items[lw.SelectedIndex];
+			FieldTemplateItem iti = items[lw.SelectedIndex];
 			xIn.Text = iti.X.ToString();
 			yIn.Text = iti.Y.ToString();
 			wIn.Text = iti.Width.ToString();
@@ -165,7 +165,7 @@ namespace ListApp {
 			TextBox tb = sender as TextBox;
 			int dim = 0;
 			bool isNum = int.TryParse(tb.Text, out dim);
-			ItemTemplateItem iti = items[nameList.SelectedIndex];
+			FieldTemplateItem iti = items[nameList.SelectedIndex];
             if (tb.Name.StartsWith("x")) {
 				if (!isNum || !Move(iti, dim, iti.Y)) {
 					tb.Text = iti.X.ToString();

@@ -8,16 +8,16 @@ using System.Xml;
 
 namespace ListApp {
 	[Serializable]
-	class ItemTemplateItem {
+	class FieldTemplateItem {
 		//members
 		private string field;
-		private ItemType type;
+		private FieldType type;
 		private object metadata;
 		private Location loc;
 		private List<Location> occupiedCells;
 		private int width, height;
 		//constructors
-		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc, int width, int height) {
+		internal FieldTemplateItem(string field, FieldType type, Location loc, int width, int height, object metadata) {
 			this.field = field;
 			this.type = type;
 			this.metadata = metadata;
@@ -27,13 +27,12 @@ namespace ListApp {
 			occupiedCells = new List<Location>();
 			CalculateOccupied();
 		}
-		internal ItemTemplateItem(string field, ItemType type, object metadata, Location loc) : this(field, type, metadata, loc, 1, 1) {
-		}
-		internal ItemTemplateItem(ItemTemplateItem iti) : this(iti.field.Clone() as string, iti.type, iti.metadata, new Location(iti.X, iti.Y), iti.width, iti.height) {
-		}
+		internal FieldTemplateItem(string field, FieldType type, object metadata, Location loc) : this(field, type, loc, 1, 1, metadata) { }
+		internal FieldTemplateItem(FieldTemplateItem iti) : this(iti.field.Clone() as string, iti.type, 
+				new Location(iti.X, iti.Y), iti.width, iti.height, iti.metadata) { }
 		//properties
 		internal string Name { get { return field; } }
-		internal ItemType Type { get { return type; } }
+		internal FieldType Type { get { return type; } }
 		internal int X { get { return loc.X; } }
 		internal int Y { get { return loc.Y; } }
 		internal int Width { get { return width; } }
@@ -44,6 +43,15 @@ namespace ListApp {
 			set { metadata = value; }
 		}
 		//methods
+		//private object CreateMetadata(FieldType fieldType, object metadataParams) {
+		//	switch (fieldType) {
+		//		case FieldType.IMAGE:	return new ImageMetadata();
+		//		case FieldType.DECIMAL: return new DecimalMetadata();
+		//		case FieldType.ENUM:	return new EnumMetadata(metadataParams as string[]);
+		//		case FieldType.NUMBER:	return new NumberMetadata();
+		//		default:				return null;
+		//	}
+		//}
 		internal void Move(int x, int y) {
 			loc.X = x;
 			loc.Y = y;
@@ -64,12 +72,12 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class SyncTemplateItem : ItemTemplateItem {
+	class SyncTemplateItem : FieldTemplateItem {
 		//members
 		private string backName;
 		private object syncMeta;
 		//constructors
-		internal SyncTemplateItem(string field, ItemType type, object metadata, Location loc, string backName, object syncMeta) 
+		internal SyncTemplateItem(string field, FieldType type, object metadata, Location loc, string backName, object syncMeta) 
 			: base(field, type, metadata, loc) {
 			this.backName = backName;
 			this.syncMeta = syncMeta;

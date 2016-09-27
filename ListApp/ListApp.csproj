@@ -64,9 +64,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ItemTemplateItem.cs" />
+    <Compile Include="FieldTemplateItem.cs" />
     <Compile Include="ListItem.cs" />
     <Compile Include="ListItemToValueConverter.cs" />
+    <Compile Include="Metadata.cs" />
     <Compile Include="SyncList.cs" />
     <Compile Include="SyncSchema.cs" />
     <Compile Include="UIElements.cs" />

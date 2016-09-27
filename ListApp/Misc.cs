@@ -102,13 +102,13 @@ namespace ListApp {
 		}
 	}
 	class Utils {
-		internal static void SetupContentGrid(Grid g, List<ItemTemplateItem> template) {
+		internal static void SetupContentGrid(Grid g, List<FieldTemplateItem> template) {
 			for (int i = 0; i < C.FIELD_GRID_WIDTH; i++) {
 				ColumnDefinition cd = new ColumnDefinition();
 				g.ColumnDefinitions.Add(cd);
 			}
 			int maxHeight = 0;
-			foreach (ItemTemplateItem iti in template) {
+			foreach (FieldTemplateItem iti in template) {
 				if (iti.Y + iti.Height > maxHeight) {
 					maxHeight = iti.Y + iti.Height;
 				}

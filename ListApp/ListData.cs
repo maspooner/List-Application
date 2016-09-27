@@ -73,10 +73,10 @@ namespace ListApp {
 						tw.WriteLine("Item:");
 						for(int i = 0; i < ml.Template.Count; i++) {
 							ListItemField lif = li[i];
-							ItemTemplateItem iti = ml.Template[i];
+							FieldTemplateItem iti = ml.Template[i];
 							tw.Write("\t" + lif.Name + ": ");
 							if(lif is EnumField) {
-								tw.WriteLine((lif as EnumField).GetSelectedValue(iti.Metadata));
+								tw.WriteLine((lif as EnumField).GetSelectedValue(iti.Metadata as EnumMetadata));
 							}
 							else {
 								tw.WriteLine(lif.Value);

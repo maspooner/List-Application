@@ -10,7 +10,7 @@ namespace ListApp {
 	class ListItemToValueConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			ItemTemplateItem iti = parameter as ItemTemplateItem;
+			FieldTemplateItem iti = parameter as FieldTemplateItem;
 			return li.FindField(iti.Name).Value;
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -20,9 +20,9 @@ namespace ListApp {
 	class ListItemToEnumConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			ItemTemplateItem iti = parameter as ItemTemplateItem;
+			FieldTemplateItem iti = parameter as FieldTemplateItem;
 			EnumField ef = li.FindField(iti.Name) as EnumField;
-			return ef.GetSelectedValue(iti.Metadata);
+			return ef.GetSelectedValue(iti.Metadata as EnumMetadata);
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
 			throw new NotImplementedException();
@@ -31,7 +31,7 @@ namespace ListApp {
 	class ListItemToNumberConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			ItemTemplateItem iti = parameter as ItemTemplateItem;
+			FieldTemplateItem iti = parameter as FieldTemplateItem;
 			return string.Format("{0:n0}", (int)li.FindField(iti.Name).Value);
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -41,7 +41,7 @@ namespace ListApp {
 	class ListItemToDecimalConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			ItemTemplateItem iti = parameter as ItemTemplateItem;
+			FieldTemplateItem iti = parameter as FieldTemplateItem;
 			return ((float)li.FindField(iti.Name).Value).ToString();
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -51,7 +51,7 @@ namespace ListApp {
 	class ListItemToImageConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			ListItem li = value as ListItem;
-			ItemTemplateItem iti = parameter as ItemTemplateItem;
+			FieldTemplateItem iti = parameter as FieldTemplateItem;
 			ImageField imgF = li.FindField(iti.Name) as ImageField;
 			return imgF.GetBitmapImage();
 		}

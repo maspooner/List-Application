@@ -12,25 +12,25 @@ namespace ListApp {
 		//members
 		private string name;
 		private List<ListItem> items;
-		private List<ItemTemplateItem> template;
+		private List<FieldTemplateItem> template;
 		//constructors
 		internal MList(string name) {
 			this.name = name;
 			items = new List<ListItem>();
-			template = new List<ItemTemplateItem>();
+			template = new List<FieldTemplateItem>();
 		}
 		//properties
 		internal string Name { get { return name; } }
 		internal int Count { get { return items.Count; } }
 		internal List<ListItem> Items { get { return items; } }
 		internal ListItem this[int i] { get { return items[i]; } }
-		internal List<ItemTemplateItem> Template { get { return template; } }
+		internal List<FieldTemplateItem> Template { get { return template; } }
 		//methods
-		internal virtual void AddToTemplate(ItemTemplateItem iti) {
+		internal virtual void AddToTemplate(FieldTemplateItem iti) {
 			template.Add(iti);
 		}
-		internal virtual void AddToTemplate(string fieldName, ItemType type, object metadata) {
-			template.Add(new ItemTemplateItem(fieldName, type, metadata, FindOpenLocation()));
+		internal virtual void AddToTemplate(string fieldName, FieldType type, object metadata) {
+			template.Add(new FieldTemplateItem(fieldName, type, metadata, FindOpenLocation()));
 		}
 		internal virtual void DeleteFromTemplate(int i) {
 			template.RemoveAt(i);
@@ -40,7 +40,7 @@ namespace ListApp {
 		}
 		internal void ReorderTemplate(int oi, int ni) {
 			int ani = ni > oi ? ni - 1 : ni;
-			ItemTemplateItem item = template[oi];
+			FieldTemplateItem item = template[oi];
 			template.RemoveAt(oi);
 			template.Insert(ani, item);
 		}
@@ -53,7 +53,7 @@ namespace ListApp {
 			while(loc == null) {
 				for (int i = 0; i < C.FIELD_GRID_WIDTH && loc == null; i++) {
 					bool fits = true;
-					foreach(ItemTemplateItem iti in template) {
+					foreach(FieldTemplateItem iti in template) {
 						for(int k = 0; k < iti.Occupied.Count; k++) {
 							Location l = iti.Occupied[k];
                             if (l.X == i && l.Y == row) {
@@ -94,7 +94,7 @@ namespace ListApp {
 			items.Clear();
 		}
 		internal void SetMetadata(string fieldName, object metadata) {
-			ItemTemplateItem iti = template.Find(x => x.Name.Equals(fieldName));
+			FieldTemplateItem iti = template.Find(x => x.Name.Equals(fieldName));
 			if (iti == null) {
 				throw new InvalidOperationException();
 			}

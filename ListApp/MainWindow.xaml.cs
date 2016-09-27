@@ -51,19 +51,20 @@ namespace ListApp {
 			data = new ListData();
 			shownList = -1;
 			MList list1 = new MList("group a");
-			list1.AddToTemplate("notes", ItemType.BASIC, null);
-			list1.AddToTemplate("date", ItemType.DATE, null);
-			list1.AddToTemplate("num", ItemType.DECIMAL, new object[] { 2, 3.14f, 10.26f });
-			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now, 50f });
-			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today, 40f });
+			list1.AddToTemplate("notes", FieldType.BASIC, null);
+			list1.AddToTemplate("date", FieldType.DATE, null);
+			list1.AddToTemplate("dec", FieldType.DECIMAL, new DecimalMetadata(2, 3.14f, 10.26f));
+			list1.AddToTemplate("num", FieldType.NUMBER, new NumberMetadata(0, 10));
+			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now, 50f, 6 });
+			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today, 40f, 5 });
 			li2a.SetFieldData("notes", "More notes");
 			li2a.SetFieldData("date", DateTime.Today);
 			data.Lists.Add(list1);
 
 			MList list2 = new MList("group b");
-			list2.AddToTemplate("notes", ItemType.BASIC, null);
-			list2.AddToTemplate("date", ItemType.DATE, null);
-			list2.AddToTemplate("img", ItemType.IMAGE, 50.0);
+			list2.AddToTemplate("notes", FieldType.BASIC, null);
+			list2.AddToTemplate("date", FieldType.DATE, null);
+			list2.AddToTemplate("img", FieldType.IMAGE, new ImageMetadata(50.0));
 			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now,
 				new XImage(@"F:\Documents\Visual Studio 2015\Projects\ListApp\a.jpg", false) });
 			ListItem li2b = list2.Add();
@@ -73,7 +74,7 @@ namespace ListApp {
 			data.Lists.Add(list2);
 
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
-			list4.AddToTemplate("random tag", ItemType.ENUM, new string[] { "one", "two", "three" });
+			list4.AddToTemplate("random tag", FieldType.ENUM, new EnumMetadata("one", "two", "three"));
 			for(int i = 0; i < list4.GetSchemaLength(); i++) {
 				list4.SchemaOptionAt(i).Enabled = true;
 			}
@@ -83,25 +84,25 @@ namespace ListApp {
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);
-			list1.AddToTemplate("status", ItemType.ENUM, new string[] {"completed", "started", "on hold" });
-			list1.AddToTemplate("a", ItemType.BASIC, null);
-			list1.AddToTemplate("b", ItemType.BASIC, null);
-			list1.AddToTemplate("f", ItemType.BASIC, null);
-			list1.AddToTemplate("q", ItemType.IMAGE, 10.0);
-			list1.AddToTemplate("z", ItemType.DATE, null);
-			list1.AddToTemplate("adfsd", ItemType.DATE, null);
-			list1.AddToTemplate("ccccc", ItemType.DATE, null);
-			list1.AddToTemplate("a333", ItemType.DATE, null);
-			list1.AddToTemplate("a2334", ItemType.DATE, null);
-			list1.AddToTemplate("a3aaaa4", ItemType.DATE, null);
-			list1.AddToTemplate("a32aaaaaaaaa4", ItemType.DATE, null);
-			list1.AddToTemplate("a445fd", ItemType.DATE, null);
-			list1.AddToTemplate("zxd", ItemType.DATE, null);
-			list1.AddToTemplate("a32ddd", ItemType.DATE, null);
-			list1.AddToTemplate("hytrd", ItemType.DATE, null);
-			list1.AddToTemplate("a44ree", ItemType.DATE, null);
-			list1.AddToTemplate("aaaaaaaa", ItemType.DATE, null);
-			list1.SetMetadata("status", new string[] { "a", "b", "c", "d" });
+			list1.AddToTemplate("status", FieldType.ENUM, new EnumMetadata("completed", "started", "on hold"));
+			list1.AddToTemplate("a", FieldType.BASIC, null);
+			list1.AddToTemplate("b", FieldType.BASIC, null);
+			list1.AddToTemplate("f", FieldType.BASIC, null);
+			list1.AddToTemplate("q", FieldType.IMAGE, new ImageMetadata(10.0));
+			list1.AddToTemplate("z", FieldType.DATE, null);
+			list1.AddToTemplate("adfsd", FieldType.DATE, null);
+			list1.AddToTemplate("ccccc", FieldType.DATE, null);
+			list1.AddToTemplate("a333", FieldType.DATE, null);
+			list1.AddToTemplate("a2334", FieldType.DATE, null);
+			list1.AddToTemplate("a3aaaa4", FieldType.DATE, null);
+			list1.AddToTemplate("a32aaaaaaaaa4", FieldType.DATE, null);
+			list1.AddToTemplate("a445fd", FieldType.DATE, null);
+			list1.AddToTemplate("zxd", FieldType.DATE, null);
+			list1.AddToTemplate("a32ddd", FieldType.DATE, null);
+			list1.AddToTemplate("hytrd", FieldType.DATE, null);
+			list1.AddToTemplate("a44ree", FieldType.DATE, null);
+			list1.AddToTemplate("aaaaaaaa", FieldType.DATE, null);
+			list1.SetMetadata("status", new EnumMetadata("a", "b", "c", "d"));
 			list1.ResolveFieldFields();
 			li1a.SetFieldData("status", 1);
 			//list2.ReorderTemplate(2, 0);
@@ -169,12 +170,8 @@ namespace ListApp {
 		//WPF
 		private void addNewImg_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
-			object[] fields = new AddItemDialog(this).ShowAndGetItem(l.Template);
-			if (fields != null) {
-				ListItem li = l.Add();
-				for (int i = 0; i < l.Template.Count; i++) {
-					li.SetFieldData(l.Template[i].Name, fields[i]);
-				}
+			bool wasModification = new AddItemDialog().ShowDialogForItem(this, l);
+			if (wasModification) {
 				Refresh();
 			}
 		}
@@ -187,10 +184,10 @@ namespace ListApp {
 			Refresh();
 		}
 		private void listOptionImg_MouseUp(object sender, MouseButtonEventArgs e) {
-			List<ItemTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
+			List<FieldTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
 			if (newTemplate != null) {
 				data[shownList].ClearTemplate();
-				foreach (ItemTemplateItem iti in newTemplate) {
+				foreach (FieldTemplateItem iti in newTemplate) {
 					data[shownList].AddToTemplate(iti);
 				}
 				DisplayItem(listItemGrid.SelectedIndex);
@@ -212,14 +209,14 @@ namespace ListApp {
 				for (int k = 0; k < l.Template.Count; k++) {
 					ListItemField lif = li[k];
 					FrameworkElement fe = null;
-					ItemTemplateItem iti = l.Template[k];
+					FieldTemplateItem iti = l.Template[k];
 					if (lif is ImageField) {
 						fe = new CImage();
 						(fe as CImage).Source = (lif as ImageField).GetBitmapImage();
 					}
 					else if (lif is EnumField) {
 						fe = new Label();
-						(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata);
+						(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata as EnumMetadata);
 					}
 					else {
 						fe = new Label();
@@ -243,13 +240,13 @@ namespace ListApp {
 			//foreach(ListItem li in list) {
 			//	listItemGrid.Items.Add(li);
 			//}
-			foreach (ItemTemplateItem iti in list.Template) {
+			foreach (FieldTemplateItem iti in list.Template) {
 				listItemGrid.Columns.Add(DefineColumn(iti));
 			}
 			shownList = id;
 			DisplayItem(0);
 		}
-		private DataGridTemplateColumn DefineColumn(ItemTemplateItem iti) {
+		private DataGridTemplateColumn DefineColumn(FieldTemplateItem iti) {
 			//CImage img = new CImage();
 			//img.BeginInit();
 			//img.Source = (lif as ImageField).GetBitmap();
@@ -261,21 +258,21 @@ namespace ListApp {
 			bind.ConverterParameter = iti;
 			Type uiType = typeof(TextBlock);
 			switch (iti.Type) {
-				case ItemType.DATE:
-				case ItemType.BASIC:
+				case FieldType.DATE:
+				case FieldType.BASIC:
 					bind.Converter = new ListItemToValueConverter();
 					break;
-				case ItemType.ENUM:
+				case FieldType.ENUM:
 					bind.Converter = new ListItemToEnumConverter();
 					break;
-				case ItemType.IMAGE:
+				case FieldType.IMAGE:
 					uiType = typeof(CImage);
 					bind.Converter = new ListItemToImageConverter();
 					break;
-				case ItemType.NUMBER:
+				case FieldType.NUMBER:
 					bind.Converter = new ListItemToNumberConverter();
 					break;
-				case ItemType.DECIMAL:
+				case FieldType.DECIMAL:
 					bind.Converter = new ListItemToDecimalConverter();
 					break;
 				default:
@@ -288,7 +285,7 @@ namespace ListApp {
 			else if(uiType.Name.Equals("Image")) {
 				//TODO
 				fef.SetBinding(CImage.SourceProperty, bind);
-				fef.SetValue(CImage.MaxHeightProperty, iti.Metadata == null ? 50.0 : iti.Metadata);
+				fef.SetValue(CImage.MaxHeightProperty, (iti.Metadata as ImageMetadata).MaxHeight);
 			}
 			else {
 				throw new NotImplementedException();

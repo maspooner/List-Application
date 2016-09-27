@@ -5,15 +5,16 @@ using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 
 namespace ListApp {
-	enum ItemType {
-		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL
+	enum FieldType {
+		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL, RICH
 		//Metadata format:
-		//Basic: none
-		//Date: none
-		//Image: [maxHeight] (double)
-		//Enum: possibleEntries (string[])
-		//Number: [minVal] (int) [maxVal] (int)
+		//Basic:   none
+		//Date:    none
+		//Image:   [maxHeight] (double)
+		//Enum:    possibleEntries (string[])
+		//Number:  [minVal] (int) [maxVal] (int)
 		//Decimal: [decimalPlaces] (int) [minVal] (float) [maxVal] (float)
+		//Rich:    none
 	}
 	[Serializable]
 	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
@@ -159,11 +160,25 @@ namespace ListApp {
 		internal override object DeserializeValue(SerializationInfo info) {
 			return info.GetInt32("value");
 		}
-		public string GetSelectedValue(object metadata) {
-			return (metadata as string[])[(int)this.Value];
+		public string GetSelectedValue(EnumMetadata metadata) {
+			return metadata.Entries[(int)this.Value];
 		}
 		public override int CompareTo(ListItemField other) {
 			return other is EnumField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
+		}
+	}
+	[Serializable]
+	class RichField : ListItemField { //TODO implement
+		//members
+		//constructors
+		internal RichField(string fieldName) : base(fieldName) { }
+		public RichField(SerializationInfo info, StreamingContext context) : base(info, context) { }
+		//methods
+		internal override object DeserializeValue(SerializationInfo info) {
+			return info.GetString("value");
+		}
+		public override int CompareTo(ListItemField other) {
+			return other is RichField ? (this.Value as string).CompareTo(other.Value as string) : -1;
 		}
 	}
 }

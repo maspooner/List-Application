@@ -13,7 +13,7 @@ namespace ListApp {
 		//members
 		private List<ListItemField> fields;
 		//constructors
-		internal ListItem(List<ItemTemplateItem> template) {
+		internal ListItem(List<FieldTemplateItem> template) {
 			fields = new List<ListItemField>();
 			for (int i = 0; i < template.Count; i++) {
 				fields.Add(CreateField(template[i]));
@@ -23,14 +23,14 @@ namespace ListApp {
 		internal ListItemField this[int i] { get { return fields[i]; } }
 		internal int Count { get { return fields.Count; } }
 		//methods
-		private ListItemField CreateField(ItemTemplateItem item) {
+		private ListItemField CreateField(FieldTemplateItem item) {
 			switch (item.Type) {
-				case ItemType.BASIC: return new BasicField(item.Name);
-				case ItemType.DATE: return new DateField(item.Name);
-				case ItemType.IMAGE: return new ImageField(item.Name);
-				case ItemType.ENUM: return new EnumField(item.Name);
-				case ItemType.NUMBER: return new NumberField(item.Name);
-				case ItemType.DECIMAL: return new DecimalField(item.Name);
+				case FieldType.BASIC: return new BasicField(item.Name);
+				case FieldType.DATE: return new DateField(item.Name);
+				case FieldType.IMAGE: return new ImageField(item.Name);
+				case FieldType.ENUM: return new EnumField(item.Name);
+				case FieldType.NUMBER: return new NumberField(item.Name);
+				case FieldType.DECIMAL: return new DecimalField(item.Name);
 				default: return null;
 			}
 		}
@@ -46,7 +46,7 @@ namespace ListApp {
 				lif.Value = value;
 			}
 		}
-		internal void ChangeTemplate(List<ItemTemplateItem> template) {
+		internal void ChangeTemplate(List<FieldTemplateItem> template) {
 			List<ListItemField> newFields = new List<ListItemField>();
 			for (int i = 0; i < template.Count; i++) {
 				ListItemField match = FindField(template[i].Name);
@@ -79,7 +79,7 @@ namespace ListApp {
 		//members
 		private string id;
 		//constructors
-		internal SyncListItem(string id, List<ItemTemplateItem> template) : base(template) {
+		internal SyncListItem(string id, List<FieldTemplateItem> template) : base(template) {
 			this.id = id;
 		}
 		//methods

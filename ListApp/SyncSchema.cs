@@ -20,10 +20,10 @@ namespace ListApp {
 		//methods
 		protected abstract SchemaOption[] GenerateOptions();
 		internal abstract void PrepareRefresh();
-		internal abstract IEnumerable<SyncListItem> CreateNewItems(List<ItemTemplateItem> template);
+		internal abstract IEnumerable<SyncListItem> CreateNewItems(List<FieldTemplateItem> template);
 		internal abstract int GetItemCount();
         internal abstract IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list);
-		internal abstract void RefreshAll(List<ItemTemplateItem> template);
+		internal abstract void RefreshAll(List<FieldTemplateItem> template);
 		//internal abstract Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template);
 		
 	}
@@ -41,18 +41,18 @@ namespace ListApp {
 		//methods
 		protected override SchemaOption[] GenerateOptions() {
 			return new SchemaOption[] {
-				new SchemaOption("title", "series_title", ItemType.BASIC, null, true),
-				new SchemaOption("episodes", "series_episodes", ItemType.NUMBER, null, true),
-				new SchemaOption("start date", "my_start_date", ItemType.DATE, null, true),
-				new SchemaOption("end date", "my_finish_date", ItemType.DATE, null, true),
-				new SchemaOption("image", "series_image", ItemType.IMAGE, 50.0, true),
-				new SchemaOption("watch status", "my_status", ItemType.ENUM, new string[] {"ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch" }, true),
-				new SchemaOption("id", "series_animedb_id", ItemType.NUMBER, null, true),
-				new SchemaOption("synonyms", "series_synonyms", ItemType.BASIC, null, true),
-				new SchemaOption("watched #", "my_watched_episodes", ItemType.NUMBER, null, true),
-				new SchemaOption("score", "my_score", ItemType.ENUM, new string[] { "-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, true),
-				new SchemaOption("rating", "pub_rating", ItemType.DECIMAL, null, false),
-				new SchemaOption("rating count", "pub_rater_count", ItemType.NUMBER, null, false)
+				new SchemaOption("title", "series_title", FieldType.BASIC, null, true),
+				new SchemaOption("episodes", "series_episodes", FieldType.NUMBER, new NumberMetadata(), true),
+				new SchemaOption("start date", "my_start_date", FieldType.DATE, null, true),
+				new SchemaOption("end date", "my_finish_date", FieldType.DATE, null, true),
+				new SchemaOption("image", "series_image", FieldType.IMAGE, new ImageMetadata(50.0), true),
+				new SchemaOption("watch status", "my_status", FieldType.ENUM, new EnumMetadata("ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch"), true),
+				new SchemaOption("id", "series_animedb_id", FieldType.NUMBER, new NumberMetadata(), true),
+				new SchemaOption("synonyms", "series_synonyms", FieldType.BASIC, null, true),
+				new SchemaOption("watched #", "my_watched_episodes", FieldType.NUMBER, new NumberMetadata(), true),
+				new SchemaOption("score", "my_score", FieldType.ENUM, new EnumMetadata("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), true),
+				new SchemaOption("rating", "pub_rating", FieldType.DECIMAL, new DecimalMetadata(), false),
+				new SchemaOption("rating count", "pub_rater_count", FieldType.NUMBER, new NumberMetadata(), false)
 			};
 		}
 		internal override IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list) {
@@ -62,7 +62,7 @@ namespace ListApp {
 				}
 			}
 		}
-		internal override void RefreshAll(List<ItemTemplateItem> template) {
+		internal override void RefreshAll(List<FieldTemplateItem> template) {
 			
 		}
 		private int? ParseNullable(string s, string fail) {
@@ -76,9 +76,9 @@ namespace ListApp {
 		private object FindDataFromXML(SyncTemplateItem sti, XmlNode namedChild) {
 			string content = namedChild.InnerText;
 			switch (sti.Type) {
-				case ItemType.BASIC:
+				case FieldType.BASIC:
 					return content;
-				case ItemType.DATE:
+				case FieldType.DATE:
 					DateTime dateTime;
 					bool success = DateTime.TryParseExact(content, "yyyy-MM-dd",
 						System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dateTime);
@@ -91,20 +91,20 @@ namespace ListApp {
 						int? day = ParseNullable(content.Substring(8, 2), "00");
 						return new XDate(year, month, day, 0);
 					}
-				case ItemType.ENUM:
-					string[] choices = sti.Metadata as string[];
-                    for (int j = 0; j < choices.Length; j++) {
-						if (choices[j].Equals(content))
+				case FieldType.ENUM:
+					EnumMetadata data = sti.Metadata as EnumMetadata;
+                    for (int j = 0; j < data.Entries.Length; j++) {
+						if (data.Entries[j].Equals(content))
 							return j;
 					}
 					int Itry = 0;
 					success = int.TryParse(content, out Itry);
 					return success ? Itry : 0;
-				case ItemType.IMAGE:
+				case FieldType.IMAGE:
 					return new XImage(content, true);
-				case ItemType.NUMBER:
+				case FieldType.NUMBER:
 					return int.Parse(content);
-				case ItemType.DECIMAL:
+				case FieldType.DECIMAL:
 					return float.Parse(content);
 				default:
 					throw new NotImplementedException();
@@ -193,7 +193,7 @@ namespace ListApp {
 				this.animeNodes = xmlDoc.GetElementsByTagName("anime");
 			}
 		}
-		internal override IEnumerable<SyncListItem> CreateNewItems(List<ItemTemplateItem> template) {
+		internal override IEnumerable<SyncListItem> CreateNewItems(List<FieldTemplateItem> template) {
 			int xyz = 0; //TODO remove
 			foreach (XmlNode xmlNode in animeNodes) {
 				string id = xmlNode.FindChild("series_animedb_id").InnerText;
@@ -204,7 +204,7 @@ namespace ListApp {
 					System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
 					string htmlStr = client.DownloadString("http://myanimelist.net/anime/" + id + "/");
 					htmlDoc.LoadHtml(htmlStr);
-					foreach (ItemTemplateItem iti in template) {
+					foreach (FieldTemplateItem iti in template) {
 						if (iti is SyncTemplateItem) {
 							SyncTemplateItem sti = iti as SyncTemplateItem;
 							sli.FindField(sti.Name).Value = (bool)sti.SyncMeta ? 
@@ -228,12 +228,12 @@ namespace ListApp {
 		//members
 		private string name;
 		private string backName;
-		private ItemType type;
+		private FieldType type;
 		private object metadata;
 		private object syncMeta;
 		private bool enabled;
 		//constructors
-		internal SchemaOption(string name, string backName, ItemType type, object metadata, object syncMeta) {
+		internal SchemaOption(string name, string backName, FieldType type, object metadata, object syncMeta) {
 			this.name = name;
 			this.backName = backName;
 			this.type = type;
@@ -244,7 +244,7 @@ namespace ListApp {
 		//properties
 		internal string Name { get { return name; } }
 		internal string BackName { get { return backName; } }
-		internal ItemType Type { get { return type; } }
+		internal FieldType Type { get { return type; } }
 		internal object Metadata { get { return metadata; } }
 		internal object SyncMeta { get { return syncMeta; } }
 		internal bool Enabled { get { return enabled; } set { this.enabled = value; } }
