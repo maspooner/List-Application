@@ -13,35 +13,87 @@ using System.Xml;
 using MColor = System.Windows.Media.Color;
 
 namespace ListApp {
+	/// <summary>
+	/// Contains a list of constants for the program.
+	/// </summary>
 	static class C {
 		internal const int FIELD_GRID_WIDTH = 10; //TODO adjustable
 		internal const int SHOWN_AUTOSAVE_TEXT_TIME = 5000; //TODO adjust
 		internal const int MAX_CACHED_WIDTH = 500; //TODO adjustable
 		internal const int MAX_CACHED_HEIGHT = 500; //TODO adjustable
 		internal const int COLOR_SEED = 5003534; //TODO adjust 5003534
+		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT = 50.0;
 	}
+	/// <summary>
+	/// Models a rectangle in space with specified dimensions
+	/// </summary>
 	[Serializable]
-	class Location{
-		//members
-		private int x, y;
-		//constructors
-		internal Location() : this(0, 0) {	}
-		internal Location(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
+	class Space {
 		//properties
-		internal int X
-		{
-			get { return x; }
-			set { x = value; }
+		internal int X { get; set; }
+		internal int Y { get; set; }
+		internal int Width { get; set; }
+		internal int Height { get; set; }
+		//constructors
+		/// <summary>
+		/// Constructs a <seealso cref="Space"/> at a given x and y
+		/// position with a size of 1 by 1
+		/// </summary>
+		/// <param name="x">the x location</param>
+		/// <param name="y">the y location</param>
+		internal Space(int x, int y) : this(x, y, 1, 1) { }
+		/// <summary>
+		/// A copy constructor that constructs a <seealso cref="Space"/>
+		/// with the same properties as another <seealso cref="Space"/>
+		/// </summary>
+		/// <param name="space">the space to copy values from</param>
+		internal Space(Space space) : this(space.X, space.Y, space.Width, space.Height) { }
+		/// <summary>
+		/// Constructs a <seealso cref="Space"/> at a given x and y
+		/// with a given width and height
+		/// </summary>
+		/// <param name="x">the x location</param>
+		/// <param name="y">the y location</param>
+		/// <param name="width">the width of the space</param>
+		/// <param name="height">the height of the space</param>
+		internal Space(int x, int y, int width, int height) {
+			X = x;
+			Y = y;
+			Width = width;
+			Height = height;
 		}
-		internal int Y
-		{
-			get { return y; }
-			set { y = value; }
+		//methods
+		/// <summary>
+		/// Does this <seealso cref="Space"/> contain a point (p, q)?
+		/// </summary>
+		/// <param name="p">the x coordinate to test</param>
+		/// <param name="q">the y coordinate to test</param>
+		internal bool Contains(int p, int q) {
+			//must have both p and q be inside the dimensions of the rectangle
+			return (X <= p && p < X + Width) && (Y <= q && q < Y + Height);
+		}
+		/// <summary>
+		/// Does this <seealso cref="Space"/> overlap with another space?
+		/// </summary>
+		/// <param name="thatSpace">another space to test against</param>
+		internal bool Intersects(Space thatSpace) {
+			//for every coordinate in the other space
+			for(int p = thatSpace.X; p < thatSpace.X + thatSpace.Width; p++) {
+				for(int q = thatSpace.Y; q < thatSpace.Y + thatSpace.Height; q++) {
+					//if this space contains the point of the other space
+					if(Contains(p, q)) {
+						//they intersect
+						return true;
+					}
+				}
+			}
+			//no intersections
+			return false;
 		}
 	}
+	/// <summary>
+	/// Contains extension methods for classes
+	/// </summary>
 	static class Extensions {
 		internal static XmlNode FindChild(this XmlNode parent, string tagName) {
 			foreach (XmlNode n in parent.ChildNodes) {
@@ -102,15 +154,15 @@ namespace ListApp {
 		}
 	}
 	class Utils {
-		internal static void SetupContentGrid(Grid g, List<FieldTemplateItem> template) {
+		internal static void SetupContentGrid(Grid g, IEnumerable<Space> spaces) {
 			for (int i = 0; i < C.FIELD_GRID_WIDTH; i++) {
 				ColumnDefinition cd = new ColumnDefinition();
 				g.ColumnDefinitions.Add(cd);
 			}
 			int maxHeight = 0;
-			foreach (FieldTemplateItem iti in template) {
-				if (iti.Y + iti.Height > maxHeight) {
-					maxHeight = iti.Y + iti.Height;
+			foreach (Space sp in spaces) {
+				if (sp.Y + sp.Height > maxHeight) {
+					maxHeight = sp.Y + sp.Height;
 				}
 			}
 			maxHeight += 7;

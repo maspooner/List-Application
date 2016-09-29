@@ -47,10 +47,10 @@ namespace ListApp {
 		internal SchemaOption SchemaOptionAt(int i) { return schema.Options[i]; }
 		internal int GetSchemaLength() { return schema.Options.Length; }
 		internal void SaveSchemaOptions() {
-			//remove all old schema settings
-			Template.RemoveAll((iti) => iti is SyncTemplateItem);
-			//add all new schema settings
-			Template.AddRange(schema.GenerateTemplate(this));
+			IEnumerable<SyncTemplateItem> updatedValues = schema.GenerateTemplate(this);
+			foreach(SyncTemplateItem sti in updatedValues) {
+				Template[sti.Name] = sti;
+			}
 		}
 		internal void StartRefreshAllTask(MainWindow mainWindow, ProgressBar pb, Label l, Button b) {
 			if (!itemWorker.IsBusy) {

@@ -65,7 +65,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="FieldTemplateItem.cs" />
-    <Compile Include="ListItem.cs" />
+    <Compile Include="MItem.cs" />
     <Compile Include="ListItemToValueConverter.cs" />
     <Compile Include="Metadata.cs" />
     <Compile Include="SyncList.cs" />
@@ -96,8 +96,8 @@
     </Compile>
     <Compile Include="ListData.cs" />
     <Compile Include="Misc.cs" />
-    <Compile Include="List.cs" />
-    <Compile Include="ListItemField.cs" />
+    <Compile Include="MList.cs" />
+    <Compile Include="MField.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

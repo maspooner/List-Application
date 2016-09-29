@@ -20,7 +20,7 @@ namespace ListApp {
 		//methods
 		protected abstract SchemaOption[] GenerateOptions();
 		internal abstract void PrepareRefresh();
-		internal abstract IEnumerable<SyncListItem> CreateNewItems(List<FieldTemplateItem> template);
+		internal abstract IEnumerable<SyncListItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template);
 		internal abstract int GetItemCount();
         internal abstract IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list);
 		internal abstract void RefreshAll(List<FieldTemplateItem> template);
@@ -58,7 +58,7 @@ namespace ListApp {
 		internal override IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list) {
 			foreach (SchemaOption so in Options) {
 				if (so.Enabled) {
-					yield return new SyncTemplateItem(so.Name, so.Type, so.Metadata, list.FindOpenLocation(), so.BackName, so.SyncMeta);
+					yield return new SyncTemplateItem(so.Name, so.Type, so.Metadata, list.FindOpenSpace(1, 1), so.BackName, so.SyncMeta);
 				}
 			}
 		}
@@ -193,7 +193,7 @@ namespace ListApp {
 				this.animeNodes = xmlDoc.GetElementsByTagName("anime");
 			}
 		}
-		internal override IEnumerable<SyncListItem> CreateNewItems(List<FieldTemplateItem> template) {
+		internal override IEnumerable<SyncListItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template) {
 			int xyz = 0; //TODO remove
 			foreach (XmlNode xmlNode in animeNodes) {
 				string id = xmlNode.FindChild("series_animedb_id").InnerText;
@@ -204,10 +204,11 @@ namespace ListApp {
 					System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
 					string htmlStr = client.DownloadString("http://myanimelist.net/anime/" + id + "/");
 					htmlDoc.LoadHtml(htmlStr);
-					foreach (FieldTemplateItem iti in template) {
-						if (iti is SyncTemplateItem) {
-							SyncTemplateItem sti = iti as SyncTemplateItem;
-							sli.FindField(sti.Name).Value = (bool)sti.SyncMeta ? 
+					foreach (string fieldName in template.Keys) {
+						FieldTemplateItem fti = template[fieldName];
+						if (fti is SyncTemplateItem) {
+							SyncTemplateItem sti = fti as SyncTemplateItem;
+							sli[fti.Name].Value = (bool)sti.SyncMeta ? 
 								FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(htmlDoc, sti);
 						}
 					}
@@ -229,11 +230,11 @@ namespace ListApp {
 		private string name;
 		private string backName;
 		private FieldType type;
-		private object metadata;
+		private IMetadata metadata;
 		private object syncMeta;
 		private bool enabled;
 		//constructors
-		internal SchemaOption(string name, string backName, FieldType type, object metadata, object syncMeta) {
+		internal SchemaOption(string name, string backName, FieldType type, IMetadata metadata, object syncMeta) {
 			this.name = name;
 			this.backName = backName;
 			this.type = type;
@@ -245,7 +246,7 @@ namespace ListApp {
 		internal string Name { get { return name; } }
 		internal string BackName { get { return backName; } }
 		internal FieldType Type { get { return type; } }
-		internal object Metadata { get { return metadata; } }
+		internal IMetadata Metadata { get { return metadata; } }
 		internal object SyncMeta { get { return syncMeta; } }
 		internal bool Enabled { get { return enabled; } set { this.enabled = value; } }
 		//methods

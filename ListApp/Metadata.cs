@@ -5,8 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ListApp {
+	interface IMetadata {
+		bool Verify(object val);
+	}
 	[Serializable]
-	class NumberMetadata {
+	class NumberMetadata : IMetadata {
 		//properties
 		internal int MinValue { get; set; }
 		internal int MaxValue { get; set; }
@@ -20,9 +23,13 @@ namespace ListApp {
 			MinValue = min;
 			MaxValue = max;
 		}
+		public bool Verify(object val) {
+			int i = (int)val;
+			return i >= MinValue && i <= MaxValue;
+		}
 	}
 	[Serializable]
-	class DecimalMetadata {
+	class DecimalMetadata : IMetadata {
 		//properties
 		internal int MaxDecimals { get; set; }
 		internal float MinValue { get; set; }
@@ -40,26 +47,40 @@ namespace ListApp {
 			MinValue = min;
 			MaxValue = max;
 		}
+		public bool Verify(object val) {
+			float f = (float)val;
+			return f >= MinValue && f <= MaxValue && CountDecimals(f.ToString()) <= MaxDecimals;
+		}
+		private int CountDecimals(string s) {
+			int iPeriod = s.IndexOf('.');
+			return iPeriod == -1 ? 0 : s.Substring(iPeriod).Length - 1;
+		}
 	}
 	[Serializable]
-	class ImageMetadata {
+	class ImageMetadata : IMetadata {
 		//properties
 		internal double MaxHeight { get; set; }
 		//constructors
 		internal ImageMetadata() {
-			MaxHeight = 50.0; //TODO constantize
+			MaxHeight = C.DEFAULT_IMAGE_DISPLAY_HEIGHT;
 		}
 		internal ImageMetadata(double maxHeight) {
 			MaxHeight = maxHeight;
 		}
+		public bool Verify(object val) {
+			return true;
+		}
 	}
 	[Serializable]
-	class EnumMetadata {
+	class EnumMetadata : IMetadata {
 		//properties
 		internal string[] Entries { get; set; }
 		//constructors
 		internal EnumMetadata(params string[] entries) {
 			Entries = entries;
+		}
+		public bool Verify(object val) {
+			return (int)val < Entries.Length;
 		}
 	}
 }

@@ -7,26 +7,18 @@ using System.Windows.Media.Imaging;
 namespace ListApp {
 	enum FieldType {
 		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL, RICH
-		//Metadata format:
-		//Basic:   none
-		//Date:    none
-		//Image:   [maxHeight] (double)
-		//Enum:    possibleEntries (string[])
-		//Number:  [minVal] (int) [maxVal] (int)
-		//Decimal: [decimalPlaces] (int) [minVal] (float) [maxVal] (float)
-		//Rich:    none
 	}
 	[Serializable]
-	abstract class ListItemField : IComparable<ListItemField>, ISerializable {
+	abstract class MField : IComparable<MField>, ISerializable {
 		//members
 		private string fieldName;
 		private object value;
 		//constructors
-		internal ListItemField(string fieldName) {
+		internal MField(string fieldName) {
 			this.fieldName = fieldName;
 			value = StartingValue();
 		}
-		public ListItemField(SerializationInfo info, StreamingContext context) {
+		public MField(SerializationInfo info, StreamingContext context) {
 			fieldName = info.GetValue("fieldName", typeof(string)) as string;
 			value = DeserializeValue(info);
 		}
@@ -34,7 +26,7 @@ namespace ListApp {
 		internal string Name { get { return fieldName; } }
 		internal virtual object Value { get { return value; } set { this.value = value; } }
 		//methods
-		public abstract int CompareTo(ListItemField other);
+		public abstract int CompareTo(MField other);
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("fieldName", fieldName);
 			info.AddValue("value", value);
@@ -45,7 +37,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class BasicField : ListItemField {
+	class BasicField : MField {
 		//constructors
 		internal BasicField(string fieldName) : base(fieldName) { }
 		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) { }
@@ -53,17 +45,17 @@ namespace ListApp {
 		internal override object DeserializeValue(SerializationInfo info) {
 			return info.GetString("value");
 		}
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is BasicField ? (this.Value as string).CompareTo(other.Value as string) : -1;
 		}
 	}
 	[Serializable]
-	class NumberField : ListItemField {
+	class NumberField : MField {
 		//constructors
 		internal NumberField(string fieldName) : base(fieldName) { }
 		public NumberField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is NumberField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
 		}
 		internal override object DeserializeValue(SerializationInfo info) {
@@ -71,12 +63,12 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class DecimalField : ListItemField {
+	class DecimalField : MField {
 		//constructors
 		internal DecimalField(string fieldName) : base(fieldName) { }
 		public DecimalField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is DecimalField ? ((float)this.Value).CompareTo((float)other.Value) : -1;
 		}
 		internal override object DeserializeValue(SerializationInfo info) {
@@ -84,7 +76,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class DateField : ListItemField {
+	class DateField : MField {
 		//constructors
 		internal DateField(string fieldName) : base(fieldName) { }
 		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) { }
@@ -101,7 +93,7 @@ namespace ListApp {
 			}
 		}
 		//methods
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is DateField ? (this.Value as XDate).CompareTo(other.Value as XDate) : -1;
 		}
 		internal override object DeserializeValue(SerializationInfo info) {
@@ -109,7 +101,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class ImageField : ListItemField {
+	class ImageField : MField {
 		//members
 		[NonSerialized]
 		private BitmapImage bImg;
@@ -132,7 +124,7 @@ namespace ListApp {
 		internal BitmapImage GetBitmapImage() {
 			return bImg;
 		}
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return 0;
 		}
 		internal override object DeserializeValue(SerializationInfo info) {
@@ -149,7 +141,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class EnumField : ListItemField {
+	class EnumField : MField {
 		//constructors
 		internal EnumField(string fieldName) : base(fieldName) { }
 		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) { }
@@ -163,12 +155,12 @@ namespace ListApp {
 		public string GetSelectedValue(EnumMetadata metadata) {
 			return metadata.Entries[(int)this.Value];
 		}
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is EnumField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
 		}
 	}
 	[Serializable]
-	class RichField : ListItemField { //TODO implement
+	class RichField : MField { //TODO implement
 		//members
 		//constructors
 		internal RichField(string fieldName) : base(fieldName) { }
@@ -177,7 +169,7 @@ namespace ListApp {
 		internal override object DeserializeValue(SerializationInfo info) {
 			return info.GetString("value");
 		}
-		public override int CompareTo(ListItemField other) {
+		public override int CompareTo(MField other) {
 			return other is RichField ? (this.Value as string).CompareTo(other.Value as string) : -1;
 		}
 	}

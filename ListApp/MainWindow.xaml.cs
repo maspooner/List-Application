@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,8 +12,11 @@ using System.Windows.Input;
 using CImage = System.Windows.Controls.Image;
 
 namespace ListApp {
-	//TODO sorting messes up display panel
-	//TODO option to cancel mid-way through download
+	/*
+	 * TODO sorting messes up display panel
+	 * TODO option to cancel mid-way through download
+	 * FIXME major refactoring of every file
+	 */
 	public partial class MainWindow : Window {
 		//members
 		private GridLength lastHeight, lastWidth;
@@ -30,7 +34,7 @@ namespace ListApp {
 			shownList = -1;
 			done = false;
 
-			LoadTestLists();
+			data = ListData.LoadTestLists();
 			//data = ListData.Load();
 			for (int i = 0; i < data.Count; i++) {
 				leftPanel.Children.Add(CreateListLabel(data[i], i));
@@ -45,69 +49,6 @@ namespace ListApp {
 			data.Save();
 			autoSaveThread = new Thread(AutoSaveThreadStart);
 			autoSaveThread.Start();
-		}
-		//test methods
-		private void LoadTestLists() {
-			data = new ListData();
-			shownList = -1;
-			MList list1 = new MList("group a");
-			list1.AddToTemplate("notes", FieldType.BASIC, null);
-			list1.AddToTemplate("date", FieldType.DATE, null);
-			list1.AddToTemplate("dec", FieldType.DECIMAL, new DecimalMetadata(2, 3.14f, 10.26f));
-			list1.AddToTemplate("num", FieldType.NUMBER, new NumberMetadata(0, 10));
-			ListItem li1a = list1.Add(new object[] { "There are many things here", DateTime.Now, 50f, 6 });
-			ListItem li2a = list1.Add(new object[] { "More notes", DateTime.Today, 40f, 5 });
-			li2a.SetFieldData("notes", "More notes");
-			li2a.SetFieldData("date", DateTime.Today);
-			data.Lists.Add(list1);
-
-			MList list2 = new MList("group b");
-			list2.AddToTemplate("notes", FieldType.BASIC, null);
-			list2.AddToTemplate("date", FieldType.DATE, null);
-			list2.AddToTemplate("img", FieldType.IMAGE, new ImageMetadata(50.0));
-			ListItem li1b = list2.Add(new object[] { "There are many things here", DateTime.Now,
-				new XImage(@"F:\Documents\Visual Studio 2015\Projects\ListApp\a.jpg", false) });
-			ListItem li2b = list2.Add();
-			li2b.SetFieldData("notes", "More notes");
-			li2b.SetFieldData("date", DateTime.Today);
-			li2b.SetFieldData("img", new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true));
-			data.Lists.Add(list2);
-
-			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
-			list4.AddToTemplate("random tag", FieldType.ENUM, new EnumMetadata("one", "two", "three"));
-			for(int i = 0; i < list4.GetSchemaLength(); i++) {
-				list4.SchemaOptionAt(i).Enabled = true;
-			}
-			list4.SaveSchemaOptions();
-
-			data.Lists.Add(list4);
-
-			//PrintLists();
-			//list1.DeleteFromTemplate(0);
-			list1.AddToTemplate("status", FieldType.ENUM, new EnumMetadata("completed", "started", "on hold"));
-			list1.AddToTemplate("a", FieldType.BASIC, null);
-			list1.AddToTemplate("b", FieldType.BASIC, null);
-			list1.AddToTemplate("f", FieldType.BASIC, null);
-			list1.AddToTemplate("q", FieldType.IMAGE, new ImageMetadata(10.0));
-			list1.AddToTemplate("z", FieldType.DATE, null);
-			list1.AddToTemplate("adfsd", FieldType.DATE, null);
-			list1.AddToTemplate("ccccc", FieldType.DATE, null);
-			list1.AddToTemplate("a333", FieldType.DATE, null);
-			list1.AddToTemplate("a2334", FieldType.DATE, null);
-			list1.AddToTemplate("a3aaaa4", FieldType.DATE, null);
-			list1.AddToTemplate("a32aaaaaaaaa4", FieldType.DATE, null);
-			list1.AddToTemplate("a445fd", FieldType.DATE, null);
-			list1.AddToTemplate("zxd", FieldType.DATE, null);
-			list1.AddToTemplate("a32ddd", FieldType.DATE, null);
-			list1.AddToTemplate("hytrd", FieldType.DATE, null);
-			list1.AddToTemplate("a44ree", FieldType.DATE, null);
-			list1.AddToTemplate("aaaaaaaa", FieldType.DATE, null);
-			list1.SetMetadata("status", new EnumMetadata("a", "b", "c", "d"));
-			list1.ResolveFieldFields();
-			li1a.SetFieldData("status", 1);
-			//list2.ReorderTemplate(2, 0);
-			//list2.ResolveFieldFields();
-			//li2a.SetFieldData("status", 1);
 		}
 		//methods
 		private void AutoSaveThreadStart() {
@@ -184,11 +125,10 @@ namespace ListApp {
 			Refresh();
 		}
 		private void listOptionImg_MouseUp(object sender, MouseButtonEventArgs e) {
-			List<FieldTemplateItem> newTemplate = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
-			if (newTemplate != null) {
-				data[shownList].ClearTemplate();
-				foreach (FieldTemplateItem iti in newTemplate) {
-					data[shownList].AddToTemplate(iti);
+			Dictionary<string, Space> newSpaces = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
+			if (newSpaces != null) {
+				foreach(string fieldName in newSpaces.Keys) {
+					data[shownList].Template[fieldName].Space = newSpaces[fieldName];
 				}
 				DisplayItem(listItemGrid.SelectedIndex);
 			}
@@ -202,14 +142,14 @@ namespace ListApp {
 				contentPanel.Children.Add(q);
 			}
 			else {
-				ListItem li = l[i];
+				MItem li = l[i];
 				//add new
-				Utils.SetupContentGrid(contentPanel, l.Template);
+				Utils.SetupContentGrid(contentPanel, l.Template.Values.Select(fti => fti.Space));
 				//TODO
-				for (int k = 0; k < l.Template.Count; k++) {
-					ListItemField lif = li[k];
+				foreach (string fieldName in l.Template.Keys) {
+					MField lif = li[fieldName];
 					FrameworkElement fe = null;
-					FieldTemplateItem iti = l.Template[k];
+					FieldTemplateItem iti = l.Template[fieldName];
 					if (lif is ImageField) {
 						fe = new CImage();
 						(fe as CImage).Source = (lif as ImageField).GetBitmapImage();
@@ -240,8 +180,8 @@ namespace ListApp {
 			//foreach(ListItem li in list) {
 			//	listItemGrid.Items.Add(li);
 			//}
-			foreach (FieldTemplateItem iti in list.Template) {
-				listItemGrid.Columns.Add(DefineColumn(iti));
+			foreach (string fieldName in list.Template.Keys) {
+				listItemGrid.Columns.Add(DefineColumn(list.Template[fieldName]));
 			}
 			shownList = id;
 			DisplayItem(0);

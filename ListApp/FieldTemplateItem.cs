@@ -12,64 +12,25 @@ namespace ListApp {
 		//members
 		private string field;
 		private FieldType type;
-		private object metadata;
-		private Location loc;
-		private List<Location> occupiedCells;
-		private int width, height;
+		private int listPos; //FIXME implement
+		internal IMetadata Metadata { get; set; }
+		internal Space Space { get; set; }
 		//constructors
-		internal FieldTemplateItem(string field, FieldType type, Location loc, int width, int height, object metadata) {
+		internal FieldTemplateItem(string field, FieldType type, IMetadata metadata, Space space) {
 			this.field = field;
 			this.type = type;
-			this.metadata = metadata;
-			this.loc = loc;
-			this.width = width;
-			this.height = height;
-			occupiedCells = new List<Location>();
-			CalculateOccupied();
+			Metadata = metadata;
+			Space = space;
 		}
-		internal FieldTemplateItem(string field, FieldType type, object metadata, Location loc) : this(field, type, loc, 1, 1, metadata) { }
-		internal FieldTemplateItem(FieldTemplateItem iti) : this(iti.field.Clone() as string, iti.type, 
-				new Location(iti.X, iti.Y), iti.width, iti.height, iti.metadata) { }
 		//properties
 		internal string Name { get { return field; } }
 		internal FieldType Type { get { return type; } }
-		internal int X { get { return loc.X; } }
-		internal int Y { get { return loc.Y; } }
-		internal int Width { get { return width; } }
-		internal int Height { get { return height; } }
-		internal List<Location> Occupied { get { return occupiedCells; } }
-		internal object Metadata {
-			get { return metadata; }
-			set { metadata = value; }
-		}
+		internal int X { get { return Space.X; } }
+		internal int Y { get { return Space.Y; } }
+		internal int Width { get { return Space.Width; } }
+		internal int Height { get { return Space.Height; } }
 		//methods
-		//private object CreateMetadata(FieldType fieldType, object metadataParams) {
-		//	switch (fieldType) {
-		//		case FieldType.IMAGE:	return new ImageMetadata();
-		//		case FieldType.DECIMAL: return new DecimalMetadata();
-		//		case FieldType.ENUM:	return new EnumMetadata(metadataParams as string[]);
-		//		case FieldType.NUMBER:	return new NumberMetadata();
-		//		default:				return null;
-		//	}
-		//}
-		internal void Move(int x, int y) {
-			loc.X = x;
-			loc.Y = y;
-			CalculateOccupied();
-		}
-		internal void Resize(int width, int height) {
-			this.width = width;
-			this.height = height;
-			CalculateOccupied();
-		}
-		private void CalculateOccupied() {
-			occupiedCells.Clear();
-			for (int i = 0; i < height; i++) {
-				for (int j = 0; j < width; j++) {
-					occupiedCells.Add(new Location(loc.X + j, loc.Y + i));
-				}
-			}
-		}
+		internal bool Intersects(Space otherSpace) { return Space.Intersects(otherSpace); }
 	}
 	[Serializable]
 	class SyncTemplateItem : FieldTemplateItem {
@@ -77,14 +38,10 @@ namespace ListApp {
 		private string backName;
 		private object syncMeta;
 		//constructors
-		internal SyncTemplateItem(string field, FieldType type, object metadata, Location loc, string backName, object syncMeta) 
-			: base(field, type, metadata, loc) {
+		internal SyncTemplateItem(string field, FieldType type, IMetadata metadata, Space space, string backName, object syncMeta) 
+			: base(field, type, metadata, space) {
 			this.backName = backName;
 			this.syncMeta = syncMeta;
-		}
-		internal SyncTemplateItem(SyncTemplateItem sti) : base(sti) {
-			this.backName = sti.backName.Clone() as string;
-			this.syncMeta = sti.syncMeta;
 		}
 		//properties
 		internal string BackName { get { return backName; } }

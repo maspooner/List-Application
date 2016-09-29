@@ -7,7 +7,7 @@ using System.Windows.Controls;
 
 namespace ListApp {
 	/// <summary>
-	/// Models a dialog Window that can be shown to generate a new <seealso cref="ListItem"/>
+	/// Models a dialog Window that can be shown to generate a new <seealso cref="MItem"/>
 	/// </summary>
 	public partial class AddItemDialog : Window {
 		//constants
@@ -29,9 +29,9 @@ namespace ListApp {
 		}
 		//methods
 		/// <summary>
-		/// Shows this dialog, and adds or modifies a <seealso cref="ListItem"/>
+		/// Shows this dialog, and adds or modifies a <seealso cref="MItem"/>
 		/// from the given <seealso cref="MList"/>.
-		/// If a <seealso cref="ListItem"/> is given, the item will be modified,
+		/// If a <seealso cref="MItem"/> is given, the item will be modified,
 		/// otherwise, a new item will be created and added to the list.
 		/// </summary>
 		/// <param name="mainWindow">The main window</param>
@@ -39,9 +39,9 @@ namespace ListApp {
 		/// <param name="existingItem">(optional) an existing item to modify 
 		/// instead of creating a new item</param>
 		/// <returns>true if the element was modified or added, false if the dialog was canceled</returns>
-		internal bool ShowDialogForItem(MainWindow mainWindow, MList list, ListItem existingItem = null) {
+		internal bool ShowDialogForItem(MainWindow mainWindow, MList list, MItem existingItem = null) {
 			Owner = mainWindow;
-			List<FieldTemplateItem> template = list.Template;
+			Dictionary<string, FieldTemplateItem> template = list.Template;
 			//create the UI elements for editting fields
 			CreateUIElements(template, existingItem);
 			//show the dialog and wait for a close or ok
@@ -50,14 +50,13 @@ namespace ListApp {
 			//ok button pressed
 			if (DialogResult.Value) {
 				//modify a new item if there is no existing item available
-				ListItem toModifyItem = existingItem == null ? list.Add() : existingItem;
+				MItem toModifyItem = existingItem == null ? list.Add() : existingItem;
 				//for every field to add/modify
-				for (int i = 0; i < template.Count; i++) {
-					FieldTemplateItem iti = template[i];
+				foreach (string fieldName in template.Keys) {
 					//find the ui element in the register with the content to parse
-					FrameworkElement field = register[iti.Name + UI_ELEMENT_SUFFIX];
+					FrameworkElement field = register[fieldName + UI_ELEMENT_SUFFIX];
 					//set the field data to the parsed data from the ui element
-					toModifyItem.SetFieldData(template[i].Name, ParseFieldData(field, iti.Type));
+					toModifyItem[fieldName].Value = ParseFieldData(field, template[fieldName].Type);
 				}
 				return true; //success
 			}
@@ -82,23 +81,24 @@ namespace ListApp {
 		}
 		/// <summary>
 		/// Creates and adds ui elements for each field in a <seealso cref="List{FieldTemplateItem}"/>
-		/// (with possible starting values if a <seealso cref="ListItem"/> is given).
+		/// (with possible starting values if a <seealso cref="MItem"/> is given).
 		/// </summary>
 		/// <param name="template">a list of template items to use to create ui elements</param>
 		/// <param name="item">a possibly null value that will be used to fill in ui 
 		/// elements with previous values</param>
-		private void CreateUIElements(List<FieldTemplateItem> template, ListItem item) {
-			foreach (FieldTemplateItem fti in template) {
+		private void CreateUIElements(Dictionary<string, FieldTemplateItem> template, MItem item) {
+			foreach (string fieldName in template.Keys) {
+				FieldTemplateItem fti = template[fieldName];
 				//create the main ui element for each template item
 				//i.e. the ui element that holds the content of each field
 				FrameworkElement uiField = CreateMainUIElement(fti.Type, fti.Metadata);
 				//add this ui element to the register for access later, appending the suffix "_ui"
 				//to differentiate it as the main ui element
-				register.Add(fti.Name + UI_ELEMENT_SUFFIX, uiField);
+				register.Add(fieldName + UI_ELEMENT_SUFFIX, uiField);
 				//if using values from before
 				if (item != null) {
 					//fill in the ui element with the field's value
-					FillValueIn(uiField, item.FindField(fti.Name));
+					FillValueIn(uiField, item[fieldName]);
 				}
 				//wrap up the element for presentation and add it to the content panel
 				contentPanel.Children.Add(WrapUpElement(fti.Name, fti.Type, uiField, item));
@@ -133,7 +133,7 @@ namespace ListApp {
 		/// </summary>
 		/// <param name="uiField">the ui element to fill</param>
 		/// <param name="field">the field to get data from</param>
-		private void FillValueIn(FrameworkElement uiField, ListItemField field) {
+		private void FillValueIn(FrameworkElement uiField, MField field) {
 			if (uiField is TextBox) {
 				//includes TextBox, NumberTextBox, DecimalTextBox
 				(uiField as TextBox).Text = field.Value.ToString();
@@ -149,7 +149,8 @@ namespace ListApp {
 				(uiField as BackupImage).SetSourceAndBackup((field as ImageField).Value as XImage);
 			}
 		}
-		private FrameworkElement WrapUpElement(string fieldName, FieldType fieldType, FrameworkElement mainUI, ListItem item) {
+		//FIXME REFACTOR HERE
+		private FrameworkElement WrapUpElement(string fieldName, FieldType fieldType, FrameworkElement mainUI, MItem item) {
 			switch (fieldType) {
 				case FieldType.BASIC:
 				case FieldType.DATE:
@@ -169,7 +170,7 @@ namespace ListApp {
 				default: throw new NotImplementedException();
 			}
 		}
-		private Grid CreateImageUI(string fieldName, FrameworkElement mainUI, ListItem item) {
+		private Grid CreateImageUI(string fieldName, FrameworkElement mainUI, MItem item) {
 			Button browse = new Button();
 			browse.Content = "Browse...";
 			browse.Click += BrowseButton_Click;
