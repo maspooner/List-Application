@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	[Serializable]
-	class XImage : ISerializable {
+	class XImage : ISerializable, IDisposable, IComparable {
 		//members
 		[NonSerialized]
 		private Bitmap img;
@@ -88,9 +88,15 @@ namespace ListApp {
 		public override string ToString() {
 			return "XImage " + (isLoaded ? "" : "not ") + "loaded from " + (isWeb ? "Website" : "File") + ": " + filePath;
 		}
+		public void Dispose() {
+			img.Dispose();
+		}
+		public int CompareTo(object other) {
+			return 0;
+		}
 	}
 	[Serializable]
-	class XDate : IComparable<XDate> {
+	class XDate : IComparable<XDate>, IComparable {
 		//members
 		private int? year;
 		private int? month;
@@ -153,6 +159,9 @@ namespace ListApp {
 				s += " (" + id + ")";
 			}
 			return s;
+		}
+		public int CompareTo(object obj) {
+			return CompareTo(obj as XDate);
 		}
 	}
 }

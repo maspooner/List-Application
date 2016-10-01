@@ -48,7 +48,7 @@ namespace ListApp {
 				foreach (MItem li in m) {
 					s += "\n";
 					foreach(string fieldName in m.Template.Keys) {
-						s += "\t" + li[fieldName].Name + ": " + li[fieldName].Value + "\n";
+						s += "\t" + m.Template[fieldName].Name + ": " + li[fieldName].Value + "\n";
 					}
 				}
 			}
@@ -66,14 +66,9 @@ namespace ListApp {
 						tw.WriteLine("Item:");
 						foreach(string fieldName in ml.Template.Keys) {
 							MField lif = mi[fieldName];
-							FieldTemplateItem iti = ml.Template[fieldName];
-							tw.Write("\t" + lif.Name + ": ");
-							if(lif is EnumField) {
-								tw.WriteLine((lif as EnumField).GetSelectedValue(iti.Metadata as EnumMetadata));
-							}
-							else {
-								tw.WriteLine(lif.Value);
-							}
+							FieldTemplateItem fti = ml.Template[fieldName];
+							tw.Write("\t" + fti.Name + ": ");
+							tw.Write(lif.GetWritableValue(fti.Metadata));
 						}
 					}
 				}

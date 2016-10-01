@@ -8,33 +8,51 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ListApp {
+	/// <summary>
+	/// Represents an item in an <seealso cref="MList"/>
+	/// that contains a set of <seealso cref="MField"/>s
+	/// </summary>
 	[Serializable]
 	class MItem {
 		//members
 		private Dictionary<string, MField> fields;
 		//constructors
+		/// <summary>
+		/// Constructs an <seealso cref="MItem"/> against a template
+		/// of <seealso cref="FieldTemplateItem"/>s, creating a new
+		/// <seealso cref="MField"/> for each
+		/// </summary>
+		/// <param name="template">the template to base the field creation on</param>
 		internal MItem(Dictionary<string, FieldTemplateItem> template) {
 			fields = new Dictionary<string, MField>();
-			foreach(string key in template.Keys) {
-				fields.Add(key, CreateField(template[key]));
+			//for each fieldName in the template
+			foreach(string fieldName in template.Keys) {
+				//create a new field from each template item and add it to the fields
+				AddField(template[fieldName]);
 			}
 		}
 		//properties
+		/// <summary>
+		/// Indexer for accessing an <seealso cref="MField"/> by its fieldName
+		/// </summary>
+		/// <param name="fieldName">the name of the field to get</param>
+		/// <returns>the field with the given fieldName</returns>
 		internal MField this[string fieldName] { get { return fields[fieldName]; } }
 		//methods
-		private MField CreateField(FieldTemplateItem item) {
-			switch (item.Type) {
-				case FieldType.BASIC: return new BasicField(item.Name);
-				case FieldType.DATE: return new DateField(item.Name);
-				case FieldType.IMAGE: return new ImageField(item.Name);
-				case FieldType.ENUM: return new EnumField(item.Name);
-				case FieldType.NUMBER: return new NumberField(item.Name);
-				case FieldType.DECIMAL: return new DecimalField(item.Name);
+		private MField CreateField(FieldType fieldType) {
+			switch (fieldType) {
+				case FieldType.NUMBER:
+				case FieldType.BASIC:
+				case FieldType.DATE:
+				case FieldType.DECIMAL:
+					return new MField(fieldType);
+				case FieldType.IMAGE: return new ImageField();
+				case FieldType.ENUM: return new EnumField();
 				default: throw new NotImplementedException();
 			}
 		}
 		internal void AddField(FieldTemplateItem fti) {
-			fields.Add(fti.Name, CreateField(fti));
+			fields.Add(fti.Name, CreateField(fti.Type));
 		}
 		internal void RemoveField(string fieldName) {
 			fields.Remove(fieldName);
@@ -48,6 +66,15 @@ namespace ListApp {
 		//	this.fields = newFields;
 		//}
 	}
+	class SyncListItem : MItem {
+		//members
+		private string id;
+		//constructors
+		internal SyncListItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
+			this.id = id;
+		}
+		//methods
+	}
 	class ListItemComparer : IComparer {
 		private string name;
 		private ListSortDirection lsd;
@@ -59,14 +86,5 @@ namespace ListApp {
 			int comp = (x as MItem)[name].CompareTo((y as MItem)[name]);
 			return lsd.Equals(ListSortDirection.Ascending) ? comp : comp * -1;
 		}
-	}
-	class SyncListItem : MItem {
-		//members
-		private string id;
-		//constructors
-		internal SyncListItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
-			this.id = id;
-		}
-		//methods
 	}
 }

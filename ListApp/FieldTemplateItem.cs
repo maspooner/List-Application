@@ -10,21 +10,19 @@ namespace ListApp {
 	[Serializable]
 	class FieldTemplateItem {
 		//members
-		private string field;
-		private FieldType type;
-		private int listPos; //FIXME implement
+		internal string Name { get; private set; }
+		internal FieldType Type { get; private set; }
 		internal IMetadata Metadata { get; set; }
 		internal Space Space { get; set; }
+		private int listPos; //FIXME implement
 		//constructors
-		internal FieldTemplateItem(string field, FieldType type, IMetadata metadata, Space space) {
-			this.field = field;
-			this.type = type;
+		internal FieldTemplateItem(string name, FieldType type, IMetadata metadata, Space space) {
+			Name = name;
+			Type = type;
 			Metadata = metadata;
 			Space = space;
 		}
 		//properties
-		internal string Name { get { return field; } }
-		internal FieldType Type { get { return type; } }
 		internal int X { get { return Space.X; } }
 		internal int Y { get { return Space.Y; } }
 		internal int Width { get { return Space.Width; } }

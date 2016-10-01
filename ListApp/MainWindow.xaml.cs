@@ -149,23 +149,24 @@ namespace ListApp {
 				foreach (string fieldName in l.Template.Keys) {
 					MField lif = li[fieldName];
 					FrameworkElement fe = null;
-					FieldTemplateItem iti = l.Template[fieldName];
+					FieldTemplateItem fti = l.Template[fieldName];
 					if (lif is ImageField) {
 						fe = new CImage();
-						(fe as CImage).Source = (lif as ImageField).GetBitmapImage();
+						(fe as CImage).Source = (lif as ImageField).GetVisibleValue(fti.Metadata)
+							as System.Windows.Media.Imaging.BitmapImage;
 					}
-					else if (lif is EnumField) {
-						fe = new Label();
-						(fe as Label).Content = (lif as EnumField).GetSelectedValue(iti.Metadata as EnumMetadata);
-					}
+					//else if (lif is EnumField) {
+					//	fe = new Label();
+					//	(fe as Label).Content = (lif as EnumField).GetSelectedValue(fti.Metadata as EnumMetadata);
+					//}
 					else {
 						fe = new Label();
-						(fe as Label).Content = lif.Value == null ? "" : lif.Value.ToString();
+						(fe as Label).Content = lif.Value == null ? "" : lif.GetVisibleValue(fti.Metadata).ToString();
 					}
-					Grid.SetColumn(fe, iti.X);
-					Grid.SetRow(fe, iti.Y);
-					Grid.SetColumnSpan(fe, iti.Width);
-					Grid.SetRowSpan(fe, iti.Height);
+					Grid.SetColumn(fe, fti.X);
+					Grid.SetRow(fe, fti.Y);
+					Grid.SetColumnSpan(fe, fti.Width);
+					Grid.SetRowSpan(fe, fti.Height);
 					contentPanel.Children.Add(fe);
 				}
 			}

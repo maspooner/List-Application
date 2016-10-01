@@ -20,9 +20,10 @@ namespace ListApp {
 	class ListItemToEnumConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			MItem mi = value as MItem;
-			FieldTemplateItem iti = parameter as FieldTemplateItem;
-			EnumField ef = mi[iti.Name] as EnumField;
-			return ef.GetSelectedValue(iti.Metadata as EnumMetadata);
+			FieldTemplateItem fti = parameter as FieldTemplateItem;
+			return mi[fti.Name].GetVisibleValue(fti.Metadata);
+			//EnumField ef = mi[fti.Name] as EnumField;
+			//return ef.GetSelectedValue(fti.Metadata as EnumMetadata);
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
 			throw new NotImplementedException();
@@ -51,9 +52,9 @@ namespace ListApp {
 	class ListItemToImageConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			MItem mi = value as MItem;
-			FieldTemplateItem iti = parameter as FieldTemplateItem;
-			ImageField imgF = mi[iti.Name] as ImageField;
-			return imgF.GetBitmapImage();
+			FieldTemplateItem fti = parameter as FieldTemplateItem;
+			//ImageField imgF = mi[fti.Name] as ImageField;
+			return mi[fti.Name].GetVisibleValue(fti.Metadata);
 		}
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
 			throw new NotImplementedException();

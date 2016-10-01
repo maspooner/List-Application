@@ -68,10 +68,10 @@ namespace ListApp {
 		/// <param name="uiElement">The ui element to parse data from</param>
 		/// <param name="fieldType">The type of field</param>
 		/// <returns>the data parsed from the field</returns>
-		private object ParseFieldData(FrameworkElement uiElement, FieldType fieldType) {
+		private IComparable ParseFieldData(FrameworkElement uiElement, FieldType fieldType) {
 			switch (fieldType) {
 				case FieldType.BASIC:	return (uiElement as TextBox).Text;
-				case FieldType.DATE:	return (uiElement as DatePicker).SelectedDate;
+				case FieldType.DATE:	return new XDate((uiElement as DatePicker).SelectedDate.Value);
 				case FieldType.ENUM:	return (uiElement as ComboBox).SelectedIndex;
 				case FieldType.IMAGE:	return (uiElement as BackupImage).GetBackup();
 				case FieldType.NUMBER:	return (uiElement as NumberTextBox).ParseValue();

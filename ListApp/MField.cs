@@ -4,173 +4,226 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 
+/// <summary>
+/// DOCUMENTATION
+/// Update: 10/1/16
+/// </summary>
 namespace ListApp {
+	/// <summary>
+	/// Models the type of data an <seealso cref="MField"/>
+	/// can hold
+	/// </summary>
 	enum FieldType {
-		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL, RICH
+		BASIC, DATE, IMAGE, ENUM, NUMBER, DECIMAL
 	}
+
+
+	/// <summary>
+	/// Models a type of field that can be added to an <seealso cref="MItem"/>
+	/// that has an <seealso cref="IComparable{MField}"/> value an a specified <seealso cref="FieldType"/>
+	/// </summary>
 	[Serializable]
-	abstract class MField : IComparable<MField>, ISerializable {
+	class MField : IComparable<MField>, ISerializable {
 		//members
-		private string fieldName;
-		private object value;
+		/// <summary>
+		/// Provides access to the value field
+		/// </summary>
+		internal virtual IComparable Value { get; set; }
+		private FieldType fieldType;
 		//constructors
-		internal MField(string fieldName) {
-			this.fieldName = fieldName;
-			value = StartingValue();
+		/// <summary>
+		/// Constructs an <seealso cref="MField"/> with a 
+		/// specified <seealso cref="FieldType"/>. The value
+		/// is initialized to a starting value
+		/// </summary>
+		/// <param name="fieldType">the type of field this field is</param>
+		internal MField(FieldType fieldType) {
+			this.fieldType = fieldType;
+			Value = StartingValue(); //starting value depends on field type
 		}
+		/// <summary>
+		/// Special constructor for building an <seealso cref="MField"/>
+		/// by deserializing a stream of object data
+		/// </summary>
 		public MField(SerializationInfo info, StreamingContext context) {
-			fieldName = info.GetValue("fieldName", typeof(string)) as string;
-			value = DeserializeValue(info);
+			fieldType = (FieldType)info.GetValue("fieldType", typeof(FieldType));
+			//deserialize the value into the right type
+			Value = (IComparable)info.GetValue("value", GetValueType());
 		}
-		//properties
-		internal string Name { get { return fieldName; } }
-		internal virtual object Value { get { return value; } set { this.value = value; } }
 		//methods
-		public abstract int CompareTo(MField other);
+		/// <summary>
+		/// Compares the value of this field to another
+		/// </summary>
+		/// <param name="other">the other field to compare to</param>
+		/// <returns>and int representing the relative position of this field</returns>
+		public int CompareTo(MField other) {
+			return this.Value.CompareTo(other.Value);
+		}
+		/// <summary>
+		/// Prepares the field for serializaiton by adding its value and
+		/// <seealso cref="FieldType"/> to a specified <seealso cref="SerializationInfo"/>
+		/// </summary>
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("fieldName", fieldName);
-			info.AddValue("value", value);
+			info.AddValue("value", Value);
+			info.AddValue("fieldType", fieldType);
 		}
-		internal abstract object DeserializeValue(SerializationInfo info);
-		internal virtual object StartingValue() {
-			return null;
-		}
-	}
-	[Serializable]
-	class BasicField : MField {
-		//constructors
-		internal BasicField(string fieldName) : base(fieldName) { }
-		public BasicField(SerializationInfo info, StreamingContext context) : base(info, context) { }
-		//methods
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetString("value");
-		}
-		public override int CompareTo(MField other) {
-			return other is BasicField ? (this.Value as string).CompareTo(other.Value as string) : -1;
-		}
-	}
-	[Serializable]
-	class NumberField : MField {
-		//constructors
-		internal NumberField(string fieldName) : base(fieldName) { }
-		public NumberField(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-		public override int CompareTo(MField other) {
-			return other is NumberField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
-		}
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetInt32("value");
-		}
-	}
-	[Serializable]
-	class DecimalField : MField {
-		//constructors
-		internal DecimalField(string fieldName) : base(fieldName) { }
-		public DecimalField(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-		public override int CompareTo(MField other) {
-			return other is DecimalField ? ((float)this.Value).CompareTo((float)other.Value) : -1;
-		}
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetSingle("value");
-		}
-	}
-	[Serializable]
-	class DateField : MField {
-		//constructors
-		internal DateField(string fieldName) : base(fieldName) { }
-		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) { }
-		//properties
-		internal override object Value {
-			get { return base.Value; }
-			set {
-				if (value is DateTime) {
-					base.Value = new XDate((DateTime)value);
-				}
-				else {
-					base.Value = value;
-				}
+		/// <summary>
+		/// Finds a correct starting value for the field type of this <seealso cref="MField"/>
+		/// </summary>
+		/// <returns>the starting value of this field</returns>
+		internal virtual IComparable StartingValue() {
+			switch (fieldType) {
+				case FieldType.BASIC:	return null;
+				case FieldType.DATE:	return null;
+				case FieldType.DECIMAL: return 0f;
+				case FieldType.ENUM:	return 0;
+				case FieldType.IMAGE:	return null;
+				case FieldType.NUMBER:	return 0;
+				default:				throw new NotImplementedException();
 			}
 		}
-		//methods
-		public override int CompareTo(MField other) {
-			return other is DateField ? (this.Value as XDate).CompareTo(other.Value as XDate) : -1;
+		/// <summary>
+		/// Returns type information as to what <seealso cref="Type"/>
+		/// this field should hold based on its <seealso cref="FieldType"/>
+		/// </summary>
+		/// <returns>the type of this kind of field</returns>
+		private Type GetValueType() {
+			switch (fieldType) {
+				case FieldType.BASIC:	return typeof(string);
+				case FieldType.DATE:	return typeof(XDate);
+				case FieldType.DECIMAL: return typeof(float);
+				case FieldType.ENUM:	return typeof(int);
+				case FieldType.IMAGE:	return typeof(XImage);
+				case FieldType.NUMBER:	return typeof(int);
+				default:				throw new NotImplementedException();
+			}
 		}
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetValue("value", typeof(XDate)) as XDate;
+		/// <summary>
+		/// Gets the representation of this field's value in a visible
+		/// form, which for regular <seealso cref="MField"/>s means
+		/// just it's value
+		/// </summary>
+		/// <param name="metadata">metadata for the rendering of the 
+		/// visible form</param>
+		/// <returns>the visible form of the value</returns>
+		internal virtual object GetVisibleValue(IMetadata metadata) {
+			return Value;
+		}
+		/// <summary>
+		/// Gets the representation of this field's value in a writable
+		/// to file form, which for regular <seealso cref="MField"/>s means
+		/// just it's value
+		/// </summary>
+		/// <param name="metadata">metadata for converting to the 
+		/// writable form</param>
+		/// <returns>the writable form of this field</returns>
+		internal virtual object GetWritableValue(IMetadata metadata) {
+			return Value;
 		}
 	}
+
+
+
+
 	[Serializable]
 	class ImageField : MField {
 		//members
 		[NonSerialized]
-		private BitmapImage bImg;
-		//constructors
-		internal ImageField(string fieldName) : base(fieldName) {
-			bImg = null;
-		}
-		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
-			bImg = CreateBitmapImage();
-		}
-		//properties
-		internal override object Value {
+		private BitmapImage bImg; //holds the visible representation of an XImage
+		/// <summary>
+		/// Gets the <seealso cref="XImage"/> value,
+		/// but when set, sets the <seealso cref="XImage"/> and 
+		/// creates a <seealso cref="BitmapImage"/> to use for rendering the UI
+		/// </summary>
+		internal override IComparable Value {
 			get { return base.Value; }
 			set {
 				base.Value = value;
+				//create a bitmap image representation of the XImage
 				bImg = CreateBitmapImage();
 			}
 		}
+		//constructors
+		/// <summary>
+		/// Constructs an <seealso cref="ImageField"/> with the IMAGE <seealso cref="FieldType"/>
+		/// with the visible <seealso cref="BitmapImage"/> set to null
+		/// </summary>
+		internal ImageField() : base(FieldType.IMAGE) {
+			bImg = null;
+		}
+		/// <summary>
+		/// Constructs an <seealso cref="ImageField"/> from a serialization stream,
+		/// intializing the stored <seealso cref="BitmapImage"/>
+		/// </summary>
+		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
+			bImg = CreateBitmapImage();
+		}
 		//methods
-		internal BitmapImage GetBitmapImage() {
+		/// <summary>
+		/// The visible value for an <seealso cref="XImage"/>
+		/// is a <seealso cref="BitmapImage"/>
+		/// </summary>
+		/// <returns>the bitmap image stored to show</returns>
+		internal override object GetVisibleValue(IMetadata metadata) {
 			return bImg;
 		}
-		public override int CompareTo(MField other) {
-			return 0;
-		}
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetValue("value", typeof(XImage)) as XImage;
-		}
+		/// <summary>
+		/// Creates a <seealso cref="BitmapImage"/> representation
+		/// of this field's <seealso cref="XImage"/> value
+		/// </summary>
+		/// <returns>the bitmap image</returns>
 		private BitmapImage CreateBitmapImage() {
-			XImage xImg = Value as XImage; 
+			XImage xImg = Value as XImage;
+			//if there is an XImage to show and it's loaded
 			if (xImg != null && xImg.IsLoaded) {
+				//convert to a bitmap image
 				BitmapImage bi = xImg.Img.ConvertToBitmapImage();
+				//make it unmodifyable
 				bi.Freeze();
                 return bi;
 			}
+			//no valid image to show
 			return null;
 		}
 	}
+
+
+
+
+	/// <summary>
+	/// Models an <seealso cref="MField"/> that contains information
+	/// about an enumeration
+	/// </summary>
 	[Serializable]
 	class EnumField : MField {
 		//constructors
-		internal EnumField(string fieldName) : base(fieldName) { }
+		/// <summary>
+		/// Constructs an <seealso cref="EnumField"/> with the <seealso cref="FieldType"/>
+		/// of ENUM
+		/// </summary>
+		internal EnumField() : base(FieldType.ENUM) { }
+		/// <summary>
+		/// Constructs an <seealso cref="EnumField"/> from a serialization context
+		/// </summary>
 		public EnumField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 		//methods
-		internal override object StartingValue() {
-			return 0;
+		/// <summary>
+		/// Gets this value (int) represented as a string, using the
+		/// <seealso cref="EnumMetadata"/> provided
+		/// </summary>
+		/// <param name="metadata">the enum metadata containing the list of entries</param>
+		/// <returns>a string representation of the value</returns>
+		internal override object GetVisibleValue(IMetadata metadata) {
+			return (metadata as EnumMetadata).Entries[(int)Value];
 		}
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetInt32("value");
-		}
-		public string GetSelectedValue(EnumMetadata metadata) {
-			return metadata.Entries[(int)this.Value];
-		}
-		public override int CompareTo(MField other) {
-			return other is EnumField ? ((int)this.Value).CompareTo((int)other.Value) : -1;
-		}
-	}
-	[Serializable]
-	class RichField : MField { //TODO implement
-		//members
-		//constructors
-		internal RichField(string fieldName) : base(fieldName) { }
-		public RichField(SerializationInfo info, StreamingContext context) : base(info, context) { }
-		//methods
-		internal override object DeserializeValue(SerializationInfo info) {
-			return info.GetString("value");
-		}
-		public override int CompareTo(MField other) {
-			return other is RichField ? (this.Value as string).CompareTo(other.Value as string) : -1;
+		/// <summary>
+		/// Gets this value (int) represented as a string, using the
+		/// <seealso cref="EnumMetadata"/> provided
+		/// </summary>
+		/// <param name="metadata">the enum metadata containing the list of entries</param>
+		/// <returns>a string representation of the value</returns>
+		internal override object GetWritableValue(IMetadata metadata) {
+			return GetVisibleValue(metadata);
 		}
 	}
 }

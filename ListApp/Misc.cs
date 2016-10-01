@@ -17,12 +17,12 @@ namespace ListApp {
 	/// Contains a list of constants for the program.
 	/// </summary>
 	static class C {
-		internal const int FIELD_GRID_WIDTH = 10; //TODO adjustable
-		internal const int SHOWN_AUTOSAVE_TEXT_TIME = 5000; //TODO adjust
-		internal const int MAX_CACHED_WIDTH = 500; //TODO adjustable
-		internal const int MAX_CACHED_HEIGHT = 500; //TODO adjustable
-		internal const int COLOR_SEED = 5003534; //TODO adjust 5003534
-		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT = 50.0;
+		internal const int FIELD_GRID_WIDTH =					10; //TODO adjustable
+		internal const int SHOWN_AUTOSAVE_TEXT_TIME =			5000; //TODO adjust
+		internal const int MAX_CACHED_WIDTH =					500; //TODO adjustable
+		internal const int MAX_CACHED_HEIGHT =					500; //TODO adjustable
+		internal const int COLOR_SEED =							5003534; //TODO adjust 5003534
+		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT =	50.0;
 	}
 	/// <summary>
 	/// Models a rectangle in space with specified dimensions

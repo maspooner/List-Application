@@ -73,7 +73,7 @@ namespace ListApp {
 				return int.Parse(s);
 			}
 		}
-		private object FindDataFromXML(SyncTemplateItem sti, XmlNode namedChild) {
+		private IComparable FindDataFromXML(SyncTemplateItem sti, XmlNode namedChild) {
 			string content = namedChild.InnerText;
 			switch (sti.Type) {
 				case FieldType.BASIC:
@@ -83,7 +83,7 @@ namespace ListApp {
 					bool success = DateTime.TryParseExact(content, "yyyy-MM-dd",
 						System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dateTime);
 					if (success) {
-						return dateTime;
+						return new XDate(dateTime);
 					}
 					else {
 						int? year = ParseNullable(content.Substring(0, 4), "0000");
@@ -114,7 +114,7 @@ namespace ListApp {
 			return htmlDoc.DocumentNode.Descendants().Where(n => n.Attributes.Contains(attriName)
 				&& n.Attributes[attriName].Value.Equals(attriValue));
 		}
-		private object FindDataFromHTML(HtmlDocument htmlDoc, SyncTemplateItem sti) {
+		private IComparable FindDataFromHTML(HtmlDocument htmlDoc, SyncTemplateItem sti) {
 			//IEnumerable<HtmlNode> sideBarNodes = htmlDoc.DocumentNode.Descendants().
 			//	Where(n => n.Attributes.Contains("class") && n.Attributes["class"].Value.Contains("js-scrollfix-bottom"));
 			//foreach(HtmlNode n in sideBarNodes) {
