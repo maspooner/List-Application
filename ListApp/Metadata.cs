@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ListApp {
-	interface IMetadata {
+	interface IMetadata : IRecoverable {
 		bool Verify(object val);
 	}
 	[Serializable]
@@ -19,6 +19,10 @@ namespace ListApp {
 			MinValue = int.MinValue;
 			MaxValue = int.MaxValue;
 		}
+		internal NumberMetadata(Dictionary<string, string> decoded) {
+			MinValue = int.Parse(decoded[nameof(MinValue)]);
+			MaxValue = int.Parse(decoded[nameof(MaxValue)]);
+		}
 		internal NumberMetadata(int min, int max) {
 			MinValue = min;
 			MaxValue = max;
@@ -26,6 +30,12 @@ namespace ListApp {
 		public bool Verify(object val) {
 			int i = (int)val;
 			return i >= MinValue && i <= MaxValue;
+		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(MinValue), MinValue.ToString(),
+					nameof(MaxValue), MaxValue.ToString()
+				);
 		}
 	}
 	[Serializable]
@@ -41,6 +51,11 @@ namespace ListApp {
 			MinValue = float.MinValue;
 			MaxValue = float.MaxValue;
 		}
+		internal DecimalMetadata(Dictionary<string, string> decoded) {
+			MaxDecimals =	int.Parse(decoded[nameof(MaxDecimals)]);
+			MinValue =		float.Parse(decoded[nameof(MinValue)]);
+			MaxValue =		float.Parse(decoded[nameof(MaxValue)]);
+		}
 		internal DecimalMetadata(int maxDec, float min, float max) {
 			//unbounded by default
 			MaxDecimals = maxDec;
@@ -55,6 +70,13 @@ namespace ListApp {
 			int iPeriod = s.IndexOf('.');
 			return iPeriod == -1 ? 0 : s.Substring(iPeriod).Length - 1;
 		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(MaxDecimals), MaxDecimals.ToString(),
+					nameof(MinValue), MinValue.ToString(),
+					nameof(MaxValue), MaxValue.ToString()
+				);
+		}
 	}
 	[Serializable]
 	class ImageMetadata : IMetadata {
@@ -64,11 +86,20 @@ namespace ListApp {
 		internal ImageMetadata() {
 			MaxHeight = C.DEFAULT_IMAGE_DISPLAY_HEIGHT;
 		}
+		internal ImageMetadata(Dictionary<string, string> decoded) {
+			MaxHeight = double.Parse(decoded[nameof(MaxHeight)]);
+		}
 		internal ImageMetadata(double maxHeight) {
 			MaxHeight = maxHeight;
 		}
 		public bool Verify(object val) {
 			return true;
+		}
+
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(MaxHeight), MaxHeight.ToString()
+				);
 		}
 	}
 	[Serializable]
@@ -79,8 +110,17 @@ namespace ListApp {
 		internal EnumMetadata(params string[] entries) {
 			Entries = entries;
 		}
+		internal EnumMetadata(Dictionary<string, string> decoded) {
+			Entries = Utils.Base64DecodeArray(decoded[nameof(Entries)]);
+		}
 		public bool Verify(object val) {
 			return (int)val < Entries.Length;
+		}
+
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(Entries), Utils.Base64Encode(Entries)
+				);
 		}
 	}
 }

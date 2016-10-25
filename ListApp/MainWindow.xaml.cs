@@ -16,6 +16,8 @@ namespace ListApp {
 	 * TODO sorting messes up display panel
 	 * TODO option to cancel mid-way through download
 	 * FIXME major refactoring of every file
+	 * TODO export/import to CSV, export to readable txt
+	 * TODO number of backups to set
 	 */
 	public partial class MainWindow : Window {
 		//members
@@ -34,11 +36,10 @@ namespace ListApp {
 			shownList = -1;
 			done = false;
 
-			data = ListData.LoadTestLists();
+			//data = ListData.LoadTestLists();
 			//data = ListData.Load();
-			for (int i = 0; i < data.Count; i++) {
-				leftPanel.Children.Add(CreateListLabel(data[i], i));
-			}
+			data = ListData.RecoverLists();
+			ReloadMListList();
 			DisplayList(0);
 			itemsMenu = new ContextMenu();
 			itemsMenu.Items.Add("Edit");
@@ -70,12 +71,16 @@ namespace ListApp {
 		private void LoadImages() {
 			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
         }
-		private Label CreateListLabel(MList list, int i) {
+		private Label CreateListLabel(MList list) {
 			Label l = new Label();
-			l.Name = "list_" + i;
 			l.Content = list.Name;
-			l.MouseUp += ListNameLabel_MouseUp;
 			return l;
+		}
+		private void ReloadMListList() {
+			leftPanel.Items.Clear();
+			foreach (MList ml in data) {
+				leftPanel.Items.Add(CreateListLabel(ml));
+			}
 		}
 		internal void Refresh() {
 			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
@@ -152,7 +157,7 @@ namespace ListApp {
 					FieldTemplateItem fti = l.Template[fieldName];
 					if (lif is ImageField) {
 						fe = new CImage();
-						(fe as CImage).Source = (lif as ImageField).GetVisibleValue(fti.Metadata)
+						(fe as CImage).Source = (lif as ImageField).ToVisibleValue(fti.Metadata)
 							as System.Windows.Media.Imaging.BitmapImage;
 					}
 					//else if (lif is EnumField) {
@@ -161,7 +166,7 @@ namespace ListApp {
 					//}
 					else {
 						fe = new Label();
-						(fe as Label).Content = lif.Value == null ? "" : lif.GetVisibleValue(fti.Metadata).ToString();
+						(fe as Label).Content = lif.Value == null ? "" : lif.ToVisibleValue(fti.Metadata).ToString();
 					}
 					Grid.SetColumn(fe, fti.X);
 					Grid.SetRow(fe, fti.Y);
@@ -182,12 +187,12 @@ namespace ListApp {
 			//	listItemGrid.Items.Add(li);
 			//}
 			foreach (string fieldName in list.Template.Keys) {
-				listItemGrid.Columns.Add(DefineColumn(list.Template[fieldName]));
+				listItemGrid.Columns.Add(DefineColumn(fieldName, list.Template[fieldName]));
 			}
 			shownList = id;
 			DisplayItem(0);
 		}
-		private DataGridTemplateColumn DefineColumn(FieldTemplateItem iti) {
+		private DataGridTemplateColumn DefineColumn(string fieldName, FieldTemplateItem fti) {
 			//CImage img = new CImage();
 			//img.BeginInit();
 			//img.Source = (lif as ImageField).GetBitmap();
@@ -196,9 +201,9 @@ namespace ListApp {
 			DataGridTemplateColumn dgc = new DataGridTemplateColumn();
 			Binding bind = new Binding();
 			bind.Mode = BindingMode.OneWay;
-			bind.ConverterParameter = iti;
+			bind.ConverterParameter = new ConverterData() { Name = fieldName, Template = fti };
 			Type uiType = typeof(TextBlock);
-			switch (iti.Type) {
+			switch (fti.Type) {
 				case FieldType.DATE:
 				case FieldType.BASIC:
 					bind.Converter = new ListItemToValueConverter();
@@ -226,7 +231,7 @@ namespace ListApp {
 			else if(uiType.Name.Equals("Image")) {
 				//TODO
 				fef.SetBinding(CImage.SourceProperty, bind);
-				fef.SetValue(CImage.MaxHeightProperty, (iti.Metadata as ImageMetadata).MaxHeight);
+				fef.SetValue(CImage.MaxHeightProperty, (fti.Metadata as ImageMetadata).MaxHeight);
 			}
 			else {
 				throw new NotImplementedException();
@@ -235,19 +240,19 @@ namespace ListApp {
 			dataTemp.VisualTree = fef;
 			dataTemp.DataType = typeof(DataGridTemplateColumn);
 			dgc.CellTemplate = dataTemp;
-			dgc.Header = iti.Name;
+			dgc.Header = fieldName;
 			dgc.CanUserSort = true;
-			dgc.SortMemberPath = iti.Name;
+			dgc.SortMemberPath = fieldName;
 
 			return dgc;
 		}
-		private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
-			Label l = sender as Label;
-			int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
-            if (shownList != listID) {
-				DisplayList(listID);
-			}
-		}
+		//private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
+		//	Label l = sender as Label;
+		//	int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
+  //          if (shownList != listID) {
+		//		DisplayList(listID);
+		//	}
+		//}
 		private void GeneralOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO
 		}
@@ -298,6 +303,13 @@ namespace ListApp {
 		private void syncCancel_Click(object sender, RoutedEventArgs e) {
 			if(data[shownList] is SyncList) {
 				(data[shownList] as SyncList).CancelRefreshAllTask();
+			}
+		}
+
+		private void leftPanel_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			ListView lv = sender as ListView;
+            if (shownList != lv.SelectedIndex) {
+				DisplayList(lv.SelectedIndex);
 			}
 		}
 

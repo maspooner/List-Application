@@ -13,7 +13,7 @@ namespace ListApp {
 	/// that contains a set of <seealso cref="MField"/>s
 	/// </summary>
 	[Serializable]
-	class MItem {
+	class MItem : IRecoverable {
 		//members
 		private Dictionary<string, MField> fields;
 		//constructors
@@ -28,7 +28,13 @@ namespace ListApp {
 			//for each fieldName in the template
 			foreach(string fieldName in template.Keys) {
 				//create a new field from each template item and add it to the fields
-				AddField(template[fieldName]);
+				AddField(fieldName, template[fieldName]);
+			}
+		}
+		internal MItem(Dictionary<string, string> decoded) {
+			fields = new Dictionary<string, MField>();
+			foreach(string fieldName in decoded.Keys) {
+				fields.Add(fieldName, new MField(Utils.Base64DecodeDict(decoded[fieldName])));
 			}
 		}
 		//properties
@@ -39,21 +45,38 @@ namespace ListApp {
 		/// <returns>the field with the given fieldName</returns>
 		internal MField this[string fieldName] { get { return fields[fieldName]; } }
 		//methods
+		/// <summary>
+		/// Creates an <seealso cref="MField"/> of the specified field type
+		/// </summary>
+		/// <param name="fieldType">the type of field to create</param>
+		/// <returns>the newly created field</returns>
 		private MField CreateField(FieldType fieldType) {
 			switch (fieldType) {
+				//just create an MField of the specified type
 				case FieldType.NUMBER:
 				case FieldType.BASIC:
-				case FieldType.DATE:
 				case FieldType.DECIMAL:
 					return new MField(fieldType);
+				//special handling for enumerations, dates, and images
+				case FieldType.DATE: return new DateField();
 				case FieldType.IMAGE: return new ImageField();
 				case FieldType.ENUM: return new EnumField();
 				default: throw new NotImplementedException();
 			}
 		}
-		internal void AddField(FieldTemplateItem fti) {
-			fields.Add(fti.Name, CreateField(fti.Type));
+		/// <summary>
+		/// Adds a field to this item based on a template
+		/// </summary>
+		/// <param name="fieldName">The field name to use</param>
+		/// <param name="fti">the template to use to construct the item</param>
+		internal void AddField(string fieldName, FieldTemplateItem fti) {
+			//create and add a field based on the type of item
+			fields.Add(fieldName, CreateField(fti.Type));
 		}
+		/// <summary>
+		/// Removes a field from this item based on the fieldName
+		/// </summary>
+		/// <param name="fieldName">the name of the field to remove</param>
 		internal void RemoveField(string fieldName) {
 			fields.Remove(fieldName);
 		}
@@ -65,13 +88,27 @@ namespace ListApp {
 		//	}
 		//	this.fields = newFields;
 		//}
+		public string ToRecoverable() {
+			string[] eFields = new string[fields.Count * 2];
+			int i = 0;
+			foreach (string fieldName in fields.Keys) {
+				eFields[i++] = fieldName;
+				eFields[i++] = fields[fieldName].ToRecoverable();
+			}
+			return Utils.Base64Encode(eFields);
+		}
 	}
+
+
+	[Serializable]
 	class SyncListItem : MItem {
 		//members
 		private string id;
+		private bool userEdited;
 		//constructors
 		internal SyncListItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
 			this.id = id;
+			userEdited = false;
 		}
 		//methods
 	}

@@ -22,7 +22,7 @@ namespace ListApp {
 		internal abstract void PrepareRefresh();
 		internal abstract IEnumerable<SyncListItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template);
 		internal abstract int GetItemCount();
-        internal abstract IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list);
+        internal abstract Dictionary<string, SyncTemplateItem> GenerateTemplate(SyncList list);
 		internal abstract void RefreshAll(List<FieldTemplateItem> template);
 		//internal abstract Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template);
 		
@@ -55,12 +55,14 @@ namespace ListApp {
 				new SchemaOption("rating count", "pub_rater_count", FieldType.NUMBER, new NumberMetadata(), false)
 			};
 		}
-		internal override IEnumerable<SyncTemplateItem> GenerateTemplate(SyncList list) {
+		internal override Dictionary<string, SyncTemplateItem> GenerateTemplate(SyncList list) {
+			Dictionary<string, SyncTemplateItem> dict = new Dictionary<string, SyncTemplateItem>();
 			foreach (SchemaOption so in Options) {
 				if (so.Enabled) {
-					yield return new SyncTemplateItem(so.Name, so.Type, so.Metadata, list.FindOpenSpace(1, 1), so.BackName, so.SyncMeta);
+					 dict.Add(so.Name, new SyncTemplateItem(so.Type, so.Metadata, list.FindOpenSpace(1, 1), so.BackName, so.SyncMeta));
 				}
 			}
+			return dict;
 		}
 		internal override void RefreshAll(List<FieldTemplateItem> template) {
 			
@@ -208,7 +210,7 @@ namespace ListApp {
 						FieldTemplateItem fti = template[fieldName];
 						if (fti is SyncTemplateItem) {
 							SyncTemplateItem sti = fti as SyncTemplateItem;
-							sli[fti.Name].Value = (bool)sti.SyncMeta ? 
+							sli[fieldName].Value = (bool)sti.SyncMeta ? 
 								FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(htmlDoc, sti);
 						}
 					}

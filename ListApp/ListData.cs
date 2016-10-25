@@ -7,91 +7,105 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace ListApp {
+	/// <summary>
+	/// Holds List data and options for all <seealso cref="MList"/>s
+	/// </summary>
 	[Serializable]
-	class ListData : IEnumerable<MList>, ISerializable{
+	class ListData : IEnumerable<MList> {
 		//members
-		private List<MList> lists;
-		private bool txtBackup;
-		private int waitSaveTime;
 		[NonSerialized]
-		private string baseDir;
+		private static string baseDirectory = Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+
+		private List<MList> lists;
+		private int waitSaveTime;
 		//constructors
+		/// <summary>
+		/// Constructs new <seealso cref="ListData"/> with default
+		/// options and no <seealso cref="MList"/>s
+		/// </summary>
 		private ListData() {
 			lists = new List<MList>();
-			txtBackup = true;
 			waitSaveTime =  10 * 60 * 1000; //10 min //TODO adjustable
-			baseDir = GetBaseDir();
-		}
-		private ListData(SerializationInfo info, StreamingContext context) {
-			lists = info.GetValue("lists", typeof(List<MList>)) as List<MList>;
-			txtBackup = info.GetBoolean("txtBackup");
 		}
 		//properties
-		internal List<MList> Lists { get { return lists; } }
 		internal int Count { get { return lists.Count; } }
 		internal MList this[int i] { get { return lists[i]; } }
 		internal int WaitSaveTime { get { return waitSaveTime - C.SHOWN_AUTOSAVE_TEXT_TIME; } } //save time for showing text on same thread
 		//methods
+		internal void AddList(MList ml) { lists.Add(ml); }
+		internal void Recover(string name) {
+			string itemStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".csv");
+			string templateStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + "_tmpl.csv");
+            string[] csvItems = itemStr.Length == 0 ? null : itemStr.Split(',');
+			string[] csvTemplate = templateStr.Length == 0 ? null : templateStr.Split(',');
+			AddList(new MList(name, csvItems, csvTemplate));
+		}
 		internal void Save() {
-			Stream stream = File.Open(baseDir + "/lists.bin", FileMode.Create);
+			Stream stream = File.Open(baseDirectory + "/lists.bin", FileMode.Create);
 			BinaryFormatter bformatter = new BinaryFormatter();
 			bformatter.Serialize(stream, this);
 			stream.Close();
-			if (txtBackup) {
-				WriteToBackupTxt();
+
+			SaveReadable();
+			SaveToCSV();
+		}
+		private void SaveToCSV() {
+			//TODO save template and metadata too
+			DirectoryInfo backupsDir = new DirectoryInfo(baseDirectory + C.BACKUPS_FOLDER);
+			if (!backupsDir.Exists) {
+				Directory.CreateDirectory(backupsDir.FullName);
+			}
+			foreach (MList ml in lists) {
+				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".csv", ml.ItemsToCSV());
+				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + "_tmpl.csv", ml.TemplateToCSV());
 			}
 		}
-		public override string ToString() {
-			string s = "";
-			foreach (MList m in lists) {
-				s += m.Name + "\n";
-				foreach (MItem li in m) {
-					s += "\n";
-					foreach(string fieldName in m.Template.Keys) {
-						s += "\t" + m.Template[fieldName].Name + ": " + li[fieldName].Value + "\n";
-					}
-				}
+		private void WriteCSV(string fileName, string text) {
+			using (TextWriter tw = new StreamWriter(new FileInfo(fileName).Open(FileMode.Truncate))) {
+				tw.Write(string.Join(",", text));
 			}
-			return s;
 		}
-		public IEnumerator<MList> GetEnumerator() { return lists.GetEnumerator(); }
-		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-		private void WriteToBackupTxt() {
+		private void SaveReadable() {
 			//TODO
-			using(TextWriter tw = new StreamWriter(baseDir + "/backup.txt")) {
+			using (TextWriter tw = new StreamWriter(baseDirectory + "/backup.txt")) {
 				foreach (MList ml in lists) {
 					tw.WriteLine(ml.Name);
 					tw.WriteLine("=================");
-					foreach(MItem mi in ml) {
+					foreach (MItem mi in ml) {
 						tw.WriteLine("Item:");
-						foreach(string fieldName in ml.Template.Keys) {
+						foreach (string fieldName in ml.Template.Keys) {
 							MField lif = mi[fieldName];
 							FieldTemplateItem fti = ml.Template[fieldName];
-							tw.Write("\t" + fti.Name + ": ");
-							tw.Write(lif.GetWritableValue(fti.Metadata));
+							tw.Write("\t" + fieldName + ": ");
+							tw.Write(lif.ToReadable(fti.Metadata));
 						}
 					}
 				}
 			}
 		}
-		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("lists", lists);
-			info.AddValue("txtBackup", txtBackup);
-		}
+		public IEnumerator<MList> GetEnumerator() { return lists.GetEnumerator(); }
+		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 		//statics
-		private static string GetBaseDir() { return Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath); }
 		internal static ListData Load() {
-			string listsFile = GetBaseDir() + "/lists.bin";
+			string listsFile = baseDirectory + "/lists.bin";
 			if (new FileInfo(listsFile).Exists) {
-				Stream stream = File.Open(listsFile, FileMode.Open);
-				BinaryFormatter bformatter = new BinaryFormatter();
-				ListData ld = (ListData) bformatter.Deserialize(stream);
-				stream.Close();
+				ListData ld = null;
+				using(Stream stream = File.Open(listsFile, FileMode.Open)) {
+					BinaryFormatter bformatter = new BinaryFormatter();
+					ld = (ListData)bformatter.Deserialize(stream);
+				}
 				return ld;
 			}
 			else {
 				return new ListData();
 			}
+		}
+		internal static ListData RecoverLists() {
+			ListData data = new ListData();
+			data.Recover("group a");
+			data.Recover("group b");
+			data.Recover("AnimeSchema (Sync)");
+			return data;
 		}
 		internal static ListData LoadTestLists() {
 			ListData data = new ListData();
@@ -103,15 +117,15 @@ namespace ListApp {
 			list1.AddToTemplate("num", FieldType.NUMBER, new NumberMetadata(0, 10));
 			MItem li1a = list1.Add();
 			li1a["notes"].Value = "There are many things here";
-			li1a["date"].Value = DateTime.Now;
+			li1a["date"].Value = new XDate(DateTime.Today);
 			li1a["dec"].Value = 50f;
 			li1a["num"].Value = 6;
 			MItem li2a = list1.Add();
 			li2a["notes"].Value = "more notes";
-			li2a["date"].Value = DateTime.Today;
+			li2a["date"].Value = new XDate(DateTime.Today);
 			li2a["dec"].Value = 40f;
 			li2a["num"].Value = 5;
-			data.Lists.Add(list1);
+			data.AddList(list1);
 
 			MList list2 = new MList("group b");
 			list2.AddToTemplate("notes", FieldType.BASIC, null);
@@ -119,13 +133,13 @@ namespace ListApp {
 			list2.AddToTemplate("img", FieldType.IMAGE, new ImageMetadata(50.0));
 			MItem li1b = list2.Add();
 			li1b["notes"].Value = "More notes";
-			li1b["date"].Value = DateTime.Today;
+			li1b["date"].Value = new XDate(DateTime.Today);
 			li1b["img"].Value = new XImage("http://images2.fanpop.com/images/photos/8300000/Rin-Kagamine-Vocaloid-Wallpaper-vocaloids-8316875-1024-768.jpg", true);
             MItem li2b = list2.Add();
 			li2b["notes"].Value = "More notes";
-			li2b["date"].Value = DateTime.Today;
+			li2b["date"].Value = new XDate(DateTime.Today);
 			li2b["img"].Value = new XImage(@"F:\Documents\Visual Studio 2015\Projects\ListApp\a.jpg", false);
-			data.Lists.Add(list2);
+			data.AddList(list2);
 
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
 			list4.AddToTemplate("random tag", FieldType.ENUM, new EnumMetadata("one", "two", "three"));
@@ -134,7 +148,7 @@ namespace ListApp {
 			}
 			list4.SaveSchemaOptions();
 
-			data.Lists.Add(list4);
+			data.AddList(list4);
 
 			//PrintLists();
 			//list1.DeleteFromTemplate(0);

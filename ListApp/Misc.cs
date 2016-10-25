@@ -23,12 +23,14 @@ namespace ListApp {
 		internal const int MAX_CACHED_HEIGHT =					500; //TODO adjustable
 		internal const int COLOR_SEED =							5003534; //TODO adjust 5003534
 		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT =	50.0;
+
+		internal const string BACKUPS_FOLDER =					"/backups/";
 	}
 	/// <summary>
 	/// Models a rectangle in space with specified dimensions
 	/// </summary>
 	[Serializable]
-	class Space {
+	class Space : IRecoverable {
 		//properties
 		internal int X { get; set; }
 		internal int Y { get; set; }
@@ -62,6 +64,12 @@ namespace ListApp {
 			Width = width;
 			Height = height;
 		}
+		internal Space(Dictionary<string, string> decoded) {
+			X = int.Parse(decoded[nameof(X)]);
+			Y = int.Parse(decoded[nameof(Y)]);
+			Width = int.Parse(decoded[nameof(Width)]);
+			Height = int.Parse(decoded[nameof(Height)]);
+		}
 		//methods
 		/// <summary>
 		/// Does this <seealso cref="Space"/> contain a point (p, q)?
@@ -90,6 +98,17 @@ namespace ListApp {
 			//no intersections
 			return false;
 		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(X), X.ToString(),
+					nameof(Y), Y.ToString(),
+					nameof(Width), Width.ToString(),
+					nameof(Height), Height.ToString()
+				);
+		}
+	}
+	interface IRecoverable {
+		string ToRecoverable();
 	}
 	/// <summary>
 	/// Contains extension methods for classes
@@ -154,6 +173,31 @@ namespace ListApp {
 		}
 	}
 	class Utils {
+		internal static string Base64Encode(params string[] values) {
+			string[] encoded = new string[values.Length];
+			for(int i = 0; i < values.Length; i++) {
+				encoded[i] = Convert.ToBase64String(Encoding.UTF8.GetBytes(values[i]));
+			}
+			return string.Join(":", encoded);
+		}
+		internal static string Base64Decode(string encoded) {
+			return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+		}
+		internal static string[] Base64DecodeArray(string encoded) {
+			string[] decoded = encoded.Split(':');
+			for (int i = 0; i < decoded.Length; i++) {
+				decoded[i] = Base64Decode(decoded[i]);
+			}
+			return decoded;
+		}
+		internal static Dictionary<string, string> Base64DecodeDict(string encoded) {
+			string[] decoded = Base64DecodeArray(encoded);
+			Dictionary<string, string> values = new Dictionary<string, string>();
+			for(int i = 0; i < decoded.Length / 2; i++) {
+				values.Add(decoded[2 * i], decoded[2 * i + 1]);
+			}
+			return values;
+		}
 		internal static void SetupContentGrid(Grid g, IEnumerable<Space> spaces) {
 			for (int i = 0; i < C.FIELD_GRID_WIDTH; i++) {
 				ColumnDefinition cd = new ColumnDefinition();

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 
 namespace ListApp {
 	/// <summary>
@@ -26,6 +27,20 @@ namespace ListApp {
 			items = new List<MItem>();
 			template = new Dictionary<string, FieldTemplateItem>();
 		}
+		internal MList(string name, string[] csvItems, string[] csvTemplate) : this(name) {
+			//TODO implement import
+			if(csvItems != null) {
+				foreach (string item in csvItems) {
+					items.Add(new MItem(Utils.Base64DecodeDict(item)));
+				}
+			}
+			if(csvTemplate != null) {
+				for (int i = 0; i < csvTemplate.Length / 2; i++) {
+					template.Add(Utils.Base64Decode(csvTemplate[i * 2]),
+						new FieldTemplateItem(Utils.Base64DecodeDict(csvTemplate[2 * i + 1])));
+				}
+			}
+		}
 		//properties
 		internal string Name { get { return name; } }
 		internal int Count { get { return items.Count; } }
@@ -39,18 +54,19 @@ namespace ListApp {
 		/// and adds a new field based off of the <seealso cref="FieldTemplateItem"/>
 		/// to each item already in the list.
 		/// </summary>
+		/// <param name="fieldName">the name of the new field</param>
 		/// <param name="fti">the template item to add</param>
-		internal void AddToTemplate(FieldTemplateItem fti) {
+		internal void AddToTemplate(string fieldName, FieldTemplateItem fti) {
 			//can't add new field with same name
-			if (template.ContainsKey(fti.Name)) {
-				throw new NotSupportedException("There exists a field with name " + fti.Name + " already.");
+			if (template.ContainsKey(fieldName)) {
+				throw new NotSupportedException("There exists a field with name " + fieldName + " already.");
 			}
 			else {
 				//add the new template for the field
-				template.Add(fti.Name, fti);
+				template.Add(fieldName, fti);
 				//add the field to each item already in the list
 				foreach (MItem mi in items) {
-					mi.AddField(fti);
+					mi.AddField(fieldName, fti);
 				}
 			}
 		}
@@ -63,7 +79,7 @@ namespace ListApp {
 		/// <param name="type">the type of the new field</param>
 		/// <param name="metadata">any metadata associated with the new field</param>
 		internal void AddToTemplate(string fieldName, FieldType type, IMetadata metadata) {
-			AddToTemplate(new FieldTemplateItem(fieldName, type, metadata, FindOpenSpace(1, 1)));
+			AddToTemplate(fieldName, new FieldTemplateItem(type, metadata, FindOpenSpace(1, 1)));
 		}
 		/// <summary>
 		/// Removes the <seealso cref="FieldTemplateItem"/> from this list's template 
@@ -79,7 +95,6 @@ namespace ListApp {
 				mi.RemoveField(fieldName);
 			}
 		}
-		//FIXME REFACTOR HERE
 		/// <summary>
 		/// Finds an open space between all the template items
 		/// to place a new <seealso cref="Space"/> of a given size
@@ -135,6 +150,7 @@ namespace ListApp {
 		internal void Delete(int i) {
 			items.RemoveAt(i);
 		}
+		//FIXME REFACTOR HERE
 		internal bool VerifyFieldData(string fieldName, IMetadata metadata) {
 			foreach(MItem mi in items) {
 				if (!metadata.Verify(mi[fieldName].Value)) {
@@ -144,8 +160,7 @@ namespace ListApp {
 			return true;
 		}
 		internal void SetMetadata(string fieldName, IMetadata metadata) {
-			FieldTemplateItem fti = template[fieldName];
-			fti.Metadata = metadata;
+			template[fieldName].Metadata = metadata;
 			foreach(MItem mi in items) {
 				MField mf = mi[fieldName];
 				if (!metadata.Verify(mf.Value)) {
@@ -153,6 +168,17 @@ namespace ListApp {
 				}
 			}
 		}
+		internal string ItemsToCSV() {
+			return string.Join(",", items.Select(mi => mi.ToRecoverable()));
+		}
+		internal string TemplateToCSV() {
+			string csv = "";
+			foreach (string fieldName in template.Keys) {
+				csv += Utils.Base64Encode(fieldName) + "," + template[fieldName].ToRecoverable() + ",";
+			}
+			return csv.Substring(0, csv.Length - 1);
+		}
+		//Methods to allow enumeration through items
 		public IEnumerator<MItem> GetEnumerator() { return items.GetEnumerator(); }
 		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 	}

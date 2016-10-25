@@ -26,7 +26,7 @@
                     <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
                 </DockPanel>
                 <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Name="leftPanel" Background="{StaticResource darkerBrush}"/>
+                    <ListView Name="leftPanel" SelectionChanged="leftPanel_SelectionChanged" Background="{StaticResource darkerBrush}"/>
                 </ScrollViewer>
             </DockPanel>
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" Background="{StaticResource darkBrush}" />

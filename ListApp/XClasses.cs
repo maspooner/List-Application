@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 
 namespace ListApp {
 	[Serializable]
-	class XImage : ISerializable, IDisposable, IComparable {
+	class XImage : ISerializable, IDisposable, IComparable, IRecoverable {
 		//members
 		[NonSerialized]
 		private Bitmap img;
@@ -24,6 +24,11 @@ namespace ListApp {
 			this.isWeb = isWeb;
 			this.filePath = filePath;
 			this.isLoaded = LoadImage();
+		}
+		internal XImage(Dictionary<string, string> decoded) {
+			isWeb = bool.Parse(decoded[nameof(isWeb)]);
+			filePath = decoded[nameof(filePath)];
+			isLoaded = LoadImage();
 		}
 		public XImage(SerializationInfo info, StreamingContext context) {
 			byte[] imageBytes = (byte[])info.GetValue("imgBytes", typeof(byte[]));
@@ -85,8 +90,14 @@ namespace ListApp {
 			info.AddValue("filePath", filePath);
 			info.AddValue("imgBytes", img == null ? null : img.ToBytes());
 		}
-		public override string ToString() {
+		internal string ToReadable() {
 			return "XImage " + (isLoaded ? "" : "not ") + "loaded from " + (isWeb ? "Website" : "File") + ": " + filePath;
+		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+				nameof(isWeb),		isWeb.ToString(),
+				nameof(filePath),	filePath.ToString()
+			);
 		}
 		public void Dispose() {
 			img.Dispose();
@@ -96,7 +107,7 @@ namespace ListApp {
 		}
 	}
 	[Serializable]
-	class XDate : IComparable<XDate>, IComparable {
+	class XDate : IComparable<XDate>, IComparable, IRecoverable {
 		//members
 		private int? year;
 		private int? month;
@@ -110,6 +121,13 @@ namespace ListApp {
 			day = date.Day;
 			unknown = false;
 			id = -1;
+		}
+		internal XDate(Dictionary<string, string> decoded) {
+			year = StringToNullableInt(decoded[nameof(year)]);
+			month = StringToNullableInt(decoded[nameof(month)]);
+			day = StringToNullableInt(decoded[nameof(day)]);
+			unknown = bool.Parse(decoded[nameof(unknown)]);
+			id = int.Parse(decoded[nameof(id)]);
 		}
 		internal XDate(int? year, int? month, int? day, int id) {
 			this.year = year;
@@ -145,6 +163,9 @@ namespace ListApp {
 			return yearComp;
 		}
 		public override string ToString() {
+			return ToReadable();
+		}
+		public string ToReadable() {
 			if (month == null && day == null && year == null) return "";
 			string s = month == null ? "" : CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedMonthNames[month.Value - 1];
 			if(s.Length > 0 && day != null) {
@@ -159,6 +180,21 @@ namespace ListApp {
 				s += " (" + id + ")";
 			}
 			return s;
+		}
+		private string NullableIntToString(int? i) { return i == null ? "NULL" : i.ToString(); }
+		private int? StringToNullableInt(string s) {
+			if (s.Equals("NULL"))
+				return null;
+			return int.Parse(s);
+		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+				nameof(year),		NullableIntToString(year),
+				nameof(month),		NullableIntToString(month),
+				nameof(day),		NullableIntToString(day),
+				nameof(unknown),	unknown.ToString(),
+				nameof(id),			id.ToString()
+			);
 		}
 		public int CompareTo(object obj) {
 			return CompareTo(obj as XDate);

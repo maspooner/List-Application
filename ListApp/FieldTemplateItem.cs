@@ -8,19 +8,23 @@ using System.Xml;
 
 namespace ListApp {
 	[Serializable]
-	class FieldTemplateItem {
+	class FieldTemplateItem : IRecoverable {
 		//members
-		internal string Name { get; private set; }
 		internal FieldType Type { get; private set; }
 		internal IMetadata Metadata { get; set; }
 		internal Space Space { get; set; }
 		private int listPos; //FIXME implement
 		//constructors
-		internal FieldTemplateItem(string name, FieldType type, IMetadata metadata, Space space) {
-			Name = name;
+		internal FieldTemplateItem(FieldType type, IMetadata metadata, Space space) {
 			Type = type;
 			Metadata = metadata;
 			Space = space;
+		}
+		internal FieldTemplateItem(Dictionary<string, string> decoded) {
+			Console.WriteLine("PARSING FIELDTEMPLATEITEM");
+			Type = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(Type)]);
+			Metadata = ParseMetadata(Utils.Base64DecodeDict(decoded[nameof(Metadata)]));
+			Space = new Space(Utils.Base64DecodeDict(decoded[nameof(Space)]));
 		}
 		//properties
 		internal int X { get { return Space.X; } }
@@ -29,6 +33,25 @@ namespace ListApp {
 		internal int Height { get { return Space.Height; } }
 		//methods
 		internal bool Intersects(Space otherSpace) { return Space.Intersects(otherSpace); }
+		private IMetadata ParseMetadata(Dictionary<string, string> decoded) {
+			switch (Type) {
+				case FieldType.BASIC:
+				case FieldType.DATE:
+					return null;
+				case FieldType.DECIMAL:		return new DecimalMetadata(decoded);
+				case FieldType.ENUM:		return new EnumMetadata(decoded);
+				case FieldType.IMAGE:		return new ImageMetadata(decoded);
+				case FieldType.NUMBER:		return new NumberMetadata(decoded);
+				default:					throw new NotImplementedException();
+			}
+		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+					nameof(Type), ((int)Type).ToString(),
+					nameof(Metadata), Metadata == null ? "" : Metadata.ToRecoverable(),
+					nameof(Space), Space.ToRecoverable()
+				);
+		}
 	}
 	[Serializable]
 	class SyncTemplateItem : FieldTemplateItem {
@@ -36,8 +59,8 @@ namespace ListApp {
 		private string backName;
 		private object syncMeta;
 		//constructors
-		internal SyncTemplateItem(string field, FieldType type, IMetadata metadata, Space space, string backName, object syncMeta) 
-			: base(field, type, metadata, space) {
+		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string backName, object syncMeta) 
+			: base(type, metadata, space) {
 			this.backName = backName;
 			this.syncMeta = syncMeta;
 		}

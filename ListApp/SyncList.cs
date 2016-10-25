@@ -47,10 +47,16 @@ namespace ListApp {
 		internal SchemaOption SchemaOptionAt(int i) { return schema.Options[i]; }
 		internal int GetSchemaLength() { return schema.Options.Length; }
 		internal void SaveSchemaOptions() {
-			IEnumerable<SyncTemplateItem> updatedValues = schema.GenerateTemplate(this);
-			foreach(SyncTemplateItem sti in updatedValues) {
-				Template[sti.Name] = sti;
+			Dictionary<string, SyncTemplateItem> updatedValues = schema.GenerateTemplate(this);
+			foreach(string fieldName in updatedValues.Keys) {
+				Template[fieldName] = updatedValues[fieldName];
 			}
+			//TODO
+			//foreach (string fieldName in Template.Keys) {
+			//	if (!updatedValues.ContainsKey(fieldName)) {
+			//		DeleteFromTemplate(fieldName);
+			//	}
+			//}
 		}
 		internal void StartRefreshAllTask(MainWindow mainWindow, ProgressBar pb, Label l, Button b) {
 			if (!itemWorker.IsBusy) {

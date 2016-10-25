@@ -101,7 +101,7 @@ namespace ListApp {
 					FillValueIn(uiField, item[fieldName]);
 				}
 				//wrap up the element for presentation and add it to the content panel
-				contentPanel.Children.Add(WrapUpElement(fti.Name, fti.Type, uiField, item));
+				contentPanel.Children.Add(WrapUpElement(fieldName, fti.Type, uiField, item));
 			}
 		}
 		/// <summary>

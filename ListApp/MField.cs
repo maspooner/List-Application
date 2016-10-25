@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Runtime.Serialization;
@@ -23,7 +24,7 @@ namespace ListApp {
 	/// that has an <seealso cref="IComparable{MField}"/> value an a specified <seealso cref="FieldType"/>
 	/// </summary>
 	[Serializable]
-	class MField : IComparable<MField>, ISerializable {
+	class MField : IComparable<MField>, ISerializable, IRecoverable {
 		//members
 		/// <summary>
 		/// Provides access to the value field
@@ -40,6 +41,10 @@ namespace ListApp {
 		internal MField(FieldType fieldType) {
 			this.fieldType = fieldType;
 			Value = StartingValue(); //starting value depends on field type
+		}
+		internal MField(Dictionary<string, string> decoded) {
+			fieldType = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(fieldType)]);
+			Value = decoded[nameof(Value)].Length == 0 ? null : ParseValue(decoded[nameof(Value)]);
 		}
 		/// <summary>
 		/// Special constructor for building an <seealso cref="MField"/>
@@ -98,6 +103,17 @@ namespace ListApp {
 				default:				throw new NotImplementedException();
 			}
 		}
+		private IComparable ParseValue(string val) {
+			switch (fieldType) {
+				case FieldType.BASIC:	return val;
+				case FieldType.DATE:	return new XDate(Utils.Base64DecodeDict(val));
+				case FieldType.DECIMAL: return float.Parse(val);
+				case FieldType.ENUM:	return int.Parse(val);
+				case FieldType.IMAGE:	return new XImage(Utils.Base64DecodeDict(val));
+				case FieldType.NUMBER:	return int.Parse(val);
+				default:				throw new NotImplementedException();
+			}
+		}
 		/// <summary>
 		/// Gets the representation of this field's value in a visible
 		/// form, which for regular <seealso cref="MField"/>s means
@@ -106,7 +122,7 @@ namespace ListApp {
 		/// <param name="metadata">metadata for the rendering of the 
 		/// visible form</param>
 		/// <returns>the visible form of the value</returns>
-		internal virtual object GetVisibleValue(IMetadata metadata) {
+		internal virtual object ToVisibleValue(IMetadata metadata) {
 			return Value;
 		}
 		/// <summary>
@@ -117,8 +133,17 @@ namespace ListApp {
 		/// <param name="metadata">metadata for converting to the 
 		/// writable form</param>
 		/// <returns>the writable form of this field</returns>
-		internal virtual object GetWritableValue(IMetadata metadata) {
-			return Value;
+		internal virtual string ToReadable(IMetadata metadata) {
+			return GetRecoverableValue();
+		}
+		public string ToRecoverable() {
+			return Utils.Base64Encode(
+				nameof(fieldType),	((int)fieldType).ToString(),
+				nameof(Value),		GetRecoverableValue()
+			);
+		}
+		protected virtual string GetRecoverableValue() {
+			return Value == null ? "" : Value.ToString();
 		}
 	}
 
@@ -164,7 +189,7 @@ namespace ListApp {
 		/// is a <seealso cref="BitmapImage"/>
 		/// </summary>
 		/// <returns>the bitmap image stored to show</returns>
-		internal override object GetVisibleValue(IMetadata metadata) {
+		internal override object ToVisibleValue(IMetadata metadata) {
 			return bImg;
 		}
 		/// <summary>
@@ -184,6 +209,12 @@ namespace ListApp {
 			}
 			//no valid image to show
 			return null;
+		}
+		internal override string ToReadable(IMetadata metadata) {
+			return Value == null ? "" : (Value as XImage).ToReadable();
+		}
+		protected override string GetRecoverableValue() {
+			return Value == null ? "" : (Value as XImage).ToRecoverable();
 		}
 	}
 
@@ -213,7 +244,7 @@ namespace ListApp {
 		/// </summary>
 		/// <param name="metadata">the enum metadata containing the list of entries</param>
 		/// <returns>a string representation of the value</returns>
-		internal override object GetVisibleValue(IMetadata metadata) {
+		internal override object ToVisibleValue(IMetadata metadata) {
 			return (metadata as EnumMetadata).Entries[(int)Value];
 		}
 		/// <summary>
@@ -222,8 +253,38 @@ namespace ListApp {
 		/// </summary>
 		/// <param name="metadata">the enum metadata containing the list of entries</param>
 		/// <returns>a string representation of the value</returns>
-		internal override object GetWritableValue(IMetadata metadata) {
-			return GetVisibleValue(metadata);
+		internal override string ToReadable(IMetadata metadata) {
+			return ToVisibleValue(metadata).ToString();
+		}
+	}
+
+
+
+	/// <summary>
+	/// Models an <seealso cref="MField"/> that contains information
+	/// about an enumeration
+	/// </summary>
+	[Serializable]
+	class DateField : MField {
+		//constructors
+		/// <summary>
+		/// Constructs an <seealso cref="DateField"/> with the <seealso cref="FieldType"/>
+		/// of DATE
+		/// </summary>
+		internal DateField() : base(FieldType.DATE) { }
+		/// <summary>
+		/// Constructs an <seealso cref="DateField"/> from a serialization context
+		/// </summary>
+		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) { }
+		//methods
+		internal override object ToVisibleValue(IMetadata metadata) {
+			return ToReadable(metadata);
+		}
+		protected override string GetRecoverableValue() {
+			return Value == null ? "" : (Value as XDate).ToRecoverable();
+		}
+		internal override string ToReadable(IMetadata metadata) {
+			return Value == null ? "" : (Value as XDate).ToReadable();
 		}
 	}
 }
