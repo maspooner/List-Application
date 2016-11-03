@@ -69,6 +69,7 @@
     <Compile Include="ListItemToValueConverter.cs" />
     <Compile Include="Metadata.cs" />
     <Compile Include="SyncList.cs" />
+    <Compile Include="SyncManager.cs" />
     <Compile Include="SyncSchema.cs" />
     <Compile Include="UIElements.cs" />
     <Compile Include="XClasses.cs" />

@@ -168,11 +168,16 @@ namespace ListApp {
 				}
 			}
 		}
-		internal string ItemsToCSV() {
+		internal string ToCSV() {
+			return Utils.Base64Encode(GetTypeID()) + "," +
+				Utils.Base64Encode(ItemsToCSV()) + "," + 
+				Utils.Base64Encode(TemplateToCSV());
+		}
+		internal virtual string GetTypeID() { return "MList"; }
+		private string ItemsToCSV() {
 			return string.Join(",", items.Select(mi => mi.ToRecoverable()));
 		}
-		internal string GetTypeID() { return "MList"; }
-		internal string TemplateToCSV() {
+		private string TemplateToCSV() {
 			string csv = GetTypeID();
 			foreach (string fieldName in template.Keys) {
 				csv += Utils.Base64Encode(fieldName) + "," + template[fieldName].ToRecoverable() + ",";
