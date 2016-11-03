@@ -171,8 +171,9 @@ namespace ListApp {
 		internal string ItemsToCSV() {
 			return string.Join(",", items.Select(mi => mi.ToRecoverable()));
 		}
+		internal string GetTypeID() { return "MList"; }
 		internal string TemplateToCSV() {
-			string csv = "";
+			string csv = GetTypeID();
 			foreach (string fieldName in template.Keys) {
 				csv += Utils.Base64Encode(fieldName) + "," + template[fieldName].ToRecoverable() + ",";
 			}

@@ -45,7 +45,7 @@ namespace ListApp {
 				default:					throw new NotImplementedException();
 			}
 		}
-		public string ToRecoverable() {
+		public virtual string ToRecoverable() {
 			return Utils.Base64Encode(
 					nameof(Type), ((int)Type).ToString(),
 					nameof(Metadata), Metadata == null ? "" : Metadata.ToRecoverable(),
@@ -56,17 +56,26 @@ namespace ListApp {
 	[Serializable]
 	class SyncTemplateItem : FieldTemplateItem {
 		//members
-		private string backName;
-		private object syncMeta;
+		internal string BackName { get; private set; }
+		internal object SyncMeta { get; private set; }
 		//constructors
+		internal SyncTemplateItem(Dictionary<string, string> decoded) : base(Utils.Base64DecodeDict(decoded["base"])){
+			Console.WriteLine("PARSING FIELDTEMPLATEITEM");
+			BackName = decoded[nameof(BackName)];
+			SyncMeta = decoded[nameof(SyncMeta)];
+		}
 		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string backName, object syncMeta) 
 			: base(type, metadata, space) {
-			this.backName = backName;
-			this.syncMeta = syncMeta;
+			BackName = backName;
+			SyncMeta = syncMeta;
 		}
-		//properties
-		internal string BackName { get { return backName; } }
-		internal object SyncMeta { get { return syncMeta; } }
 		//methods
+		public override string ToRecoverable() {
+			return Utils.Base64Encode(
+				"base", base.ToRecoverable(),
+				nameof(BackName), BackName,
+				nameof(SyncMeta), SyncMeta.ToString()
+				);
+		}
 	}
 }

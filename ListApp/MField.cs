@@ -143,7 +143,8 @@ namespace ListApp {
 			);
 		}
 		protected virtual string GetRecoverableValue() {
-			return Value == null ? "" : Value.ToString();
+			return Value == null ? "" : (Value is IRecoverable) ? 
+				(Value as IRecoverable).ToRecoverable() : Value.ToString();
 		}
 	}
 

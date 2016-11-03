@@ -18,12 +18,14 @@ namespace ListApp {
 	 * FIXME major refactoring of every file
 	 * TODO export/import to CSV, export to readable txt
 	 * TODO number of backups to set
+	 * FIXME handle saving/loading syncLists
 	 */
 	public partial class MainWindow : Window {
 		//members
 		private GridLength lastHeight, lastWidth;
 		private ListData data;
 		private int shownList;
+		private SyncManager syncManager;
 		private Thread autoSaveThread;
 		private ContextMenu itemsMenu;
 		private bool done;
@@ -104,10 +106,11 @@ namespace ListApp {
 			Label title = new Label();
 			title.Content = name;
 			DockPanel.SetDock(title, Dock.Left);
+			listActionBar.Children.Add(title);
 
 			listActionBar.Children.Add(CreateActionImage(Properties.Resources.optionIcon.ConvertToBitmapImage(), listOptionImg_MouseUp));
 			listActionBar.Children.Add(CreateActionImage(Properties.Resources.addIcon.ConvertToBitmapImage(), addNewImg_MouseUp));
-
+			Console.WriteLine(isSync);
 			if (isSync) {
 				listActionBar.Children.Add(CreateActionImage(Properties.Resources.reloadIcon.ConvertToBitmapImage(), syncListImg_MouseUp));
 			}
@@ -123,7 +126,10 @@ namespace ListApp {
 		}
 		private void syncListImg_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO refreshments
-			(data[shownList] as SyncList).StartRefreshAllTask(this, syncBar, messageLabel, syncCancel);
+			if(syncManager == null) {
+				syncManager = new SyncManager(this, syncBar, messageLabel, syncCancel);
+			}
+			syncManager.StartRefreshAllTask(data[shownList] as SyncList);
 			//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
 			//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
 			DisplayList(shownList);
@@ -301,9 +307,7 @@ namespace ListApp {
 		}
 
 		private void syncCancel_Click(object sender, RoutedEventArgs e) {
-			if(data[shownList] is SyncList) {
-				(data[shownList] as SyncList).CancelRefreshAllTask();
-			}
+			syncManager.CancelRefreshAllTask();
 		}
 
 		private void leftPanel_SelectionChanged(object sender, SelectionChangedEventArgs e) {

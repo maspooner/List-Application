@@ -34,9 +34,11 @@ namespace ListApp {
 		//methods
 		internal void AddList(MList ml) { lists.Add(ml); }
 		internal void Recover(string name) {
-			string itemStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".csv");
-			string templateStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + "_tmpl.csv");
-            string[] csvItems = itemStr.Length == 0 ? null : itemStr.Split(',');
+			//string templateStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + "_tmpl.csv");
+			string[] contentParts = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".csv").Split(",");
+			string typeID = contentParts[0];
+			//TODO decode then pass
+            string[] csvItems = contentParts[1].Length == 0 ? null : Utils.Base64Decode(contentParts);
 			string[] csvTemplate = templateStr.Length == 0 ? null : templateStr.Split(',');
 			AddList(new MList(name, csvItems, csvTemplate));
 		}
@@ -50,18 +52,17 @@ namespace ListApp {
 			SaveToCSV();
 		}
 		private void SaveToCSV() {
-			//TODO save template and metadata too
 			DirectoryInfo backupsDir = new DirectoryInfo(baseDirectory + C.BACKUPS_FOLDER);
 			if (!backupsDir.Exists) {
 				Directory.CreateDirectory(backupsDir.FullName);
 			}
 			foreach (MList ml in lists) {
-				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".csv", ml.ItemsToCSV());
-				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + "_tmpl.csv", ml.TemplateToCSV());
+				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".csv", ml.ToCSV());
+				//WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + "_tmpl.csv", ml.TemplateToCSV());
 			}
 		}
 		private void WriteCSV(string fileName, string text) {
-			using (TextWriter tw = new StreamWriter(new FileInfo(fileName).Open(FileMode.Truncate))) {
+			using (TextWriter tw = new StreamWriter(new FileInfo(fileName).Open(FileMode.Create))) {
 				tw.Write(string.Join(",", text));
 			}
 		}
