@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Linq;
 
 namespace ListApp {
 	/// <summary>
@@ -35,12 +36,17 @@ namespace ListApp {
 		internal void AddList(MList ml) { lists.Add(ml); }
 		internal void Recover(string name) {
 			//string templateStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + "_tmpl.csv");
-			string[] contentParts = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".csv").Split(",");
-			string typeID = contentParts[0];
-			//TODO decode then pass
-            string[] csvItems = contentParts[1].Length == 0 ? null : Utils.Base64Decode(contentParts);
-			string[] csvTemplate = templateStr.Length == 0 ? null : templateStr.Split(',');
-			AddList(new MList(name, csvItems, csvTemplate));
+			string file = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".txt");
+			Dictionary<string, string> decoded = Utils.DecodeMultiple(file);
+			if (decoded[C.TYPE_ID_KEY].Equals(nameof(MList))) {
+				AddList(new MList(name, decoded));
+			}
+			else if (decoded[C.TYPE_ID_KEY].Equals(nameof(SyncList))) {
+				AddList(new SyncList(name, decoded));
+			}
+			else {
+				throw new InvalidDataException("List type not found!");
+			}
 		}
 		internal void Save() {
 			Stream stream = File.Open(baseDirectory + "/lists.bin", FileMode.Create);
@@ -49,22 +55,7 @@ namespace ListApp {
 			stream.Close();
 
 			SaveReadable();
-			SaveToCSV();
-		}
-		private void SaveToCSV() {
-			DirectoryInfo backupsDir = new DirectoryInfo(baseDirectory + C.BACKUPS_FOLDER);
-			if (!backupsDir.Exists) {
-				Directory.CreateDirectory(backupsDir.FullName);
-			}
-			foreach (MList ml in lists) {
-				WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".csv", ml.ToCSV());
-				//WriteCSV(baseDirectory + C.BACKUPS_FOLDER + ml.Name + "_tmpl.csv", ml.TemplateToCSV());
-			}
-		}
-		private void WriteCSV(string fileName, string text) {
-			using (TextWriter tw = new StreamWriter(new FileInfo(fileName).Open(FileMode.Create))) {
-				tw.Write(string.Join(",", text));
-			}
+			SaveAllRecovery();
 		}
 		private void SaveReadable() {
 			//TODO
@@ -82,6 +73,20 @@ namespace ListApp {
 						}
 					}
 				}
+			}
+		}
+		private void SaveAllRecovery() {
+			DirectoryInfo backupsDir = new DirectoryInfo(baseDirectory + C.BACKUPS_FOLDER);
+			if (!backupsDir.Exists) {
+				Directory.CreateDirectory(backupsDir.FullName);
+			}
+			foreach (MList ml in lists) {
+				SaveRecovery(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".txt", ml.ToRecoverable());
+			}
+		}
+		private void SaveRecovery(string fileName, string text) {
+			using (TextWriter tw = new StreamWriter(new FileInfo(fileName).Open(FileMode.Create))) {
+				tw.Write(text);
 			}
 		}
 		public IEnumerator<MList> GetEnumerator() { return lists.GetEnumerator(); }
@@ -144,10 +149,6 @@ namespace ListApp {
 
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
 			list4.AddToTemplate("random tag", FieldType.ENUM, new EnumMetadata("one", "two", "three"));
-			for (int i = 0; i < list4.GetSchemaLength(); i++) {
-				list4.SchemaOptionAt(i).Enabled = true;
-			}
-			list4.SaveSchemaOptions();
 
 			data.AddList(list4);
 

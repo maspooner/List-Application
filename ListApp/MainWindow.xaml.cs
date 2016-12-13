@@ -38,9 +38,9 @@ namespace ListApp {
 			shownList = -1;
 			done = false;
 
-			//data = ListData.LoadTestLists();
+			data = ListData.LoadTestLists();
 			//data = ListData.Load();
-			data = ListData.RecoverLists();
+			//data = ListData.RecoverLists();
 			ReloadMListList();
 			DisplayList(0);
 			itemsMenu = new ContextMenu();

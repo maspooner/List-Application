@@ -43,13 +43,13 @@ namespace ListApp {
 		private void ItemWorker_DoWork(object sender, DoWorkEventArgs e) {
 			BackgroundWorker bw = sender as BackgroundWorker;
 			bw.ReportProgress(0, "Setting up...");
-			workingList.Schema.PrepareRefresh();
-			IEnumerable<SyncListItem> itemEnum = workingList.Schema.CreateNewItems(workingList.Template);
+			workingList.PrepareRefresh();
+			IEnumerable<SyncItem> itemEnum = workingList.Schema.CreateNewItems(workingList.Template);
 			int done = 0;
 			int count = workingList.Schema.GetItemCount();
-			List<SyncListItem> list = new List<SyncListItem>();
+			List<SyncItem> list = new List<SyncItem>();
 			bw.ReportProgress(0, "Adding item #1 of " + count);
-			foreach (SyncListItem sli in itemEnum) {
+			foreach (SyncItem sli in itemEnum) {
 				if (bw.CancellationPending) {
 					e.Cancel = true;
 					break;
@@ -77,7 +77,7 @@ namespace ListApp {
 			else {
 				Console.WriteLine("Done");
 				workingList.Items.Clear();
-				workingList.Items.AddRange(e.Result as List<SyncListItem>);
+				workingList.Items.AddRange(e.Result as List<SyncItem>);
 				mainWindow.Dispatcher.Invoke(mainWindow.Refresh);
 			}
 		}

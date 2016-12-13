@@ -21,10 +21,9 @@ namespace ListApp {
 			Space = space;
 		}
 		internal FieldTemplateItem(Dictionary<string, string> decoded) {
-			Console.WriteLine("PARSING FIELDTEMPLATEITEM");
 			Type = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(Type)]);
-			Metadata = ParseMetadata(Utils.Base64DecodeDict(decoded[nameof(Metadata)]));
-			Space = new Space(Utils.Base64DecodeDict(decoded[nameof(Space)]));
+			Metadata = ParseMetadata(Utils.DecodeMultiple(decoded[nameof(Metadata)]));
+			Space = new Space(Utils.DecodeMultiple(decoded[nameof(Space)]));
 		}
 		//properties
 		internal int X { get { return Space.X; } }
@@ -45,37 +44,44 @@ namespace ListApp {
 				default:					throw new NotImplementedException();
 			}
 		}
-		public virtual string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(Type), ((int)Type).ToString(),
-					nameof(Metadata), Metadata == null ? "" : Metadata.ToRecoverable(),
-					nameof(Space), Space.ToRecoverable()
-				);
+		public virtual void AddData(Dictionary<string, string> rec) {
+			rec.Add(nameof(Type), ((int)Type).ToString());
+			rec.Add(nameof(Metadata), Metadata == null ? null : Metadata.ToRecoverable());
+			rec.Add(nameof(Space), Space.ToRecoverable());
+			rec.Add(C.TYPE_ID_KEY, nameof(FieldTemplateItem));
+		}
+		public string ToRecoverable() {
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			AddData(rec);
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 	[Serializable]
 	class SyncTemplateItem : FieldTemplateItem {
 		//members
+		internal string Name { get; private set; }
 		internal string BackName { get; private set; }
-		internal object SyncMeta { get; private set; }
+		internal bool SyncMeta { get; private set; }
 		//constructors
-		internal SyncTemplateItem(Dictionary<string, string> decoded) : base(Utils.Base64DecodeDict(decoded["base"])){
-			Console.WriteLine("PARSING FIELDTEMPLATEITEM");
+		internal SyncTemplateItem(Dictionary<string, string> decoded) : base(decoded){
+			Name = decoded[nameof(Name)];
 			BackName = decoded[nameof(BackName)];
-			SyncMeta = decoded[nameof(SyncMeta)];
+			SyncMeta = bool.Parse(decoded[nameof(SyncMeta)]);
 		}
-		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string backName, object syncMeta) 
+		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string name, string backName, bool syncMeta) 
 			: base(type, metadata, space) {
+			Name = name;
 			BackName = backName;
 			SyncMeta = syncMeta;
 		}
 		//methods
-		public override string ToRecoverable() {
-			return Utils.Base64Encode(
-				"base", base.ToRecoverable(),
-				nameof(BackName), BackName,
-				nameof(SyncMeta), SyncMeta.ToString()
-				);
+		public override void AddData(Dictionary<string, string> rec) {
+			//call base
+			base.AddData(rec);
+			rec.Add(nameof(Name), Name);
+			rec.Add(nameof(BackName), BackName);
+			rec.Add(nameof(SyncMeta), SyncMeta.ToString());
+			rec[C.TYPE_ID_KEY] = nameof(SyncTemplateItem); //change to this class' name
 		}
 	}
 }

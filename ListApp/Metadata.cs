@@ -32,10 +32,10 @@ namespace ListApp {
 			return i >= MinValue && i <= MaxValue;
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(MinValue), MinValue.ToString(),
-					nameof(MaxValue), MaxValue.ToString()
-				);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(MinValue), MinValue.ToString());
+			rec.Add(nameof(MaxValue), MaxValue.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 	[Serializable]
@@ -71,11 +71,11 @@ namespace ListApp {
 			return iPeriod == -1 ? 0 : s.Substring(iPeriod).Length - 1;
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(MaxDecimals), MaxDecimals.ToString(),
-					nameof(MinValue), MinValue.ToString(),
-					nameof(MaxValue), MaxValue.ToString()
-				);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(MaxDecimals), MaxDecimals.ToString());
+			rec.Add(nameof(MinValue), MinValue.ToString());
+			rec.Add(nameof(MaxValue), MaxValue.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 	[Serializable]
@@ -97,9 +97,9 @@ namespace ListApp {
 		}
 
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(MaxHeight), MaxHeight.ToString()
-				);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(MaxHeight), MaxHeight.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 	[Serializable]
@@ -111,16 +111,13 @@ namespace ListApp {
 			Entries = entries;
 		}
 		internal EnumMetadata(Dictionary<string, string> decoded) {
-			Entries = Utils.Base64DecodeArray(decoded[nameof(Entries)]);
+			Entries = Utils.DecodeSequence(decoded[nameof(Entries)]).ToArray();
 		}
 		public bool Verify(object val) {
 			return (int)val < Entries.Length;
 		}
-
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(Entries), Utils.Base64Encode(Entries)
-				);
+			return Utils.EncodeSequence(Entries);
 		}
 	}
 }

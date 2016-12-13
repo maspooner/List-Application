@@ -15,7 +15,8 @@ namespace ListApp {
 	/// fields in an <seealso cref="MItem"/>.
 	/// </summary>
 	[Serializable]
-	class MList : IEnumerable<MItem> {
+	class MList : IEnumerable<MItem>, IRecoverable {
+		
 		//members
 		private string name;
 		private List<MItem> items;
@@ -27,17 +28,31 @@ namespace ListApp {
 			items = new List<MItem>();
 			template = new Dictionary<string, FieldTemplateItem>();
 		}
-		internal MList(string name, string[] csvItems, string[] csvTemplate) : this(name) {
-			//TODO implement import
-			if(csvItems != null) {
-				foreach (string item in csvItems) {
-					items.Add(new MItem(Utils.Base64DecodeDict(item)));
+		internal MList(string name, Dictionary<string, string> decoded) : this(name) {
+			List<string> eItems = Utils.DecodeSequence(decoded[nameof(items)]);
+			foreach(string s in eItems) {
+				Dictionary<string, string> eItem = Utils.DecodeMultiple(s);
+				if (eItem[C.TYPE_ID_KEY].Equals(nameof(MItem))) {
+					items.Add(new MItem(eItem));
+				}
+				else if (eItem[C.TYPE_ID_KEY].Equals(nameof(SyncItem))) {
+					items.Add(new SyncItem(eItem));
+				}
+				else {
+					throw new InvalidDataException("Item type not defined!");
 				}
 			}
-			if(csvTemplate != null) {
-				for (int i = 0; i < csvTemplate.Length / 2; i++) {
-					template.Add(Utils.Base64Decode(csvTemplate[i * 2]),
-						new FieldTemplateItem(Utils.Base64DecodeDict(csvTemplate[2 * i + 1])));
+			Dictionary<string, string> eTemplate = new Dictionary<string, string>();
+			foreach (string fieldName in eTemplate.Keys) {
+				Dictionary<string, string> eTempItem = Utils.DecodeMultiple(eTemplate[fieldName]);
+				if (eTempItem[C.TYPE_ID_KEY].Equals(nameof(FieldTemplateItem))) {
+					template.Add(fieldName, new FieldTemplateItem(eTempItem));
+				}
+				else if (eTempItem[C.TYPE_ID_KEY].Equals(nameof(SyncTemplateItem))) {
+					template.Add(fieldName, new SyncTemplateItem(eTempItem));
+				}
+				else {
+					throw new InvalidDataException("Template type not defined!");
 				}
 			}
 		}
@@ -75,9 +90,6 @@ namespace ListApp {
 		/// to add to this list's template. Then, adds a new field based off of the
 		/// <seealso cref="FieldTemplateItem"/> to each item already in the list.
 		/// </summary>
-		/// <param name="fieldName">the name of the new field</param>
-		/// <param name="type">the type of the new field</param>
-		/// <param name="metadata">any metadata associated with the new field</param>
 		internal void AddToTemplate(string fieldName, FieldType type, IMetadata metadata) {
 			AddToTemplate(fieldName, new FieldTemplateItem(type, metadata, FindOpenSpace(1, 1)));
 		}
@@ -86,7 +98,6 @@ namespace ListApp {
 		/// with the specified name, and removes the field with that name from each item
 		/// already in the list
 		/// </summary>
-		/// <param name="fieldName"></param>
 		internal void DeleteFromTemplate(string fieldName) {
 			//remove the template item 
 			template.Remove(fieldName);
@@ -99,9 +110,6 @@ namespace ListApp {
 		/// Finds an open space between all the template items
 		/// to place a new <seealso cref="Space"/> of a given size
 		/// </summary>
-		/// <param name="width">the width of the new space</param>
-		/// <param name="height">the height of the new space</param>
-		/// <returns></returns>
 		internal Space FindOpenSpace(int width, int height) {
 			//construct a space to use as an iterator for moving between coordinates
 			//starting at (0, 0)
@@ -168,21 +176,22 @@ namespace ListApp {
 				}
 			}
 		}
-		internal string ToCSV() {
-			return Utils.Base64Encode(GetTypeID()) + "," +
-				Utils.Base64Encode(ItemsToCSV()) + "," + 
-				Utils.Base64Encode(TemplateToCSV());
+		public virtual void AddRecoveryData(Dictionary<string, string> rec) {
+			rec.Add(C.TYPE_ID_KEY, nameof(MList));
+			rec.Add(nameof(items), Utils.EncodeSequence(items.Select(i => i.ToRecoverable())));
+			rec.Add(nameof(template), TemplateToRecoverable());
 		}
-		internal virtual string GetTypeID() { return "MList"; }
-		private string ItemsToCSV() {
-			return string.Join(",", items.Select(mi => mi.ToRecoverable()));
+		public string ToRecoverable() {
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			AddRecoveryData(rec);
+			return Utils.EncodeMultiple(rec);
 		}
-		private string TemplateToCSV() {
-			string csv = GetTypeID();
+		private string TemplateToRecoverable() {
+			Dictionary<string, string> rec = new Dictionary<string, string>();
 			foreach (string fieldName in template.Keys) {
-				csv += Utils.Base64Encode(fieldName) + "," + template[fieldName].ToRecoverable() + ",";
+				rec.Add(fieldName, template[fieldName].ToRecoverable());
 			}
-			return csv.Substring(0, csv.Length - 1);
+			return Utils.EncodeMultiple(rec);
 		}
 		//Methods to allow enumeration through items
 		public IEnumerator<MItem> GetEnumerator() { return items.GetEnumerator(); }

@@ -7,39 +7,26 @@ using System.Xml;
 using HtmlAgilityPack;
 
 namespace ListApp {
-	[Serializable]
-	abstract class SyncSchema {
-		//members
-		private SchemaOption[] options;
-		//constructors
-		internal SyncSchema() {
-			this.options = GenerateOptions();
-		}
-		//properties
-		internal SchemaOption[] Options { get { return options; } }
+	interface ISyncSchema {
 		//methods
-		protected abstract SchemaOption[] GenerateOptions();
-		internal abstract void PrepareRefresh();
-		internal abstract IEnumerable<SyncListItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template);
-		internal abstract int GetItemCount();
-        internal abstract Dictionary<string, SyncTemplateItem> GenerateTemplate(SyncList list);
-		internal abstract void RefreshAll(List<FieldTemplateItem> template);
+		SchemaOption[] GenerateOptions();
+		void PrepareRefresh(object syncData);
+		IEnumerable<SyncItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template);
+		int GetItemCount();
+		void RefreshAll(List<FieldTemplateItem> template);
 		//internal abstract Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template);
 		
 	}
-	[Serializable]
-	class AnimeListSchema : SyncSchema {
+	class AnimeListSchema : ISyncSchema {
 		//members
-		private string username;
 		[NonSerialized]
 		private XmlNodeList animeNodes;
 		//constructors
-		internal AnimeListSchema(string username) {
-			this.username = username;
+		internal AnimeListSchema() {
 			this.animeNodes = null;
 		}
 		//methods
-		protected override SchemaOption[] GenerateOptions() {
+		public SchemaOption[] GenerateOptions() {
 			return new SchemaOption[] {
 				new SchemaOption("title", "series_title", FieldType.BASIC, null, true),
 				new SchemaOption("episodes", "series_episodes", FieldType.NUMBER, new NumberMetadata(), true),
@@ -55,16 +42,7 @@ namespace ListApp {
 				new SchemaOption("rating count", "pub_rater_count", FieldType.NUMBER, new NumberMetadata(), false)
 			};
 		}
-		internal override Dictionary<string, SyncTemplateItem> GenerateTemplate(SyncList list) {
-			Dictionary<string, SyncTemplateItem> dict = new Dictionary<string, SyncTemplateItem>();
-			foreach (SchemaOption so in Options) {
-				if (so.Enabled) {
-					 dict.Add(so.Name, new SyncTemplateItem(so.Type, so.Metadata, list.FindOpenSpace(1, 1), so.BackName, so.SyncMeta));
-				}
-			}
-			return dict;
-		}
-		internal override void RefreshAll(List<FieldTemplateItem> template) {
+		public void RefreshAll(List<FieldTemplateItem> template) {
 			
 		}
 		private int? ParseNullable(string s, string fail) {
@@ -186,21 +164,22 @@ namespace ListApp {
 		//	}
 		//	return null;
 		//}
-		internal override void PrepareRefresh() {
+		public void PrepareRefresh(object syncData) {
 			using (WebClient client = new WebClient()) {
 				client.Encoding = Encoding.UTF8;
+				string username = syncData as string;
 				string xmlStr = client.DownloadString("http://myanimelist.net/malappinfo.php?u=" + username + "&status=all&type=anime");
 				XmlDocument xmlDoc = new XmlDocument();
 				xmlDoc.LoadXml(xmlStr);
 				this.animeNodes = xmlDoc.GetElementsByTagName("anime");
 			}
 		}
-		internal override IEnumerable<SyncListItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template) {
+		public IEnumerable<SyncItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template) {
 			int xyz = 0; //TODO remove
 			foreach (XmlNode xmlNode in animeNodes) {
 				string id = xmlNode.FindChild("series_animedb_id").InnerText;
 				Console.WriteLine("anime node id: " + id);
-				SyncListItem sli = new SyncListItem(id, template);
+				SyncItem sli = new SyncItem(id, template);
 				HtmlDocument htmlDoc = new HtmlDocument();
 				using (WebClient client = new WebClient()) {
 					System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
@@ -222,35 +201,29 @@ namespace ListApp {
 				yield return sli;
 			}
 		}
-		internal override int GetItemCount() {
+		public int GetItemCount() {
 			return animeNodes.Count;
 		}
 	}
 	[Serializable]
 	class SchemaOption {
-		//members
-		private string name;
-		private string backName;
-		private FieldType type;
-		private IMetadata metadata;
-		private object syncMeta;
-		private bool enabled;
-		//constructors
-		internal SchemaOption(string name, string backName, FieldType type, IMetadata metadata, object syncMeta) {
-			this.name = name;
-			this.backName = backName;
-			this.type = type;
-			this.metadata = metadata;
-			this.syncMeta = syncMeta;
-			enabled = false;
-		}
 		//properties
-		internal string Name { get { return name; } }
-		internal string BackName { get { return backName; } }
-		internal FieldType Type { get { return type; } }
-		internal IMetadata Metadata { get { return metadata; } }
-		internal object SyncMeta { get { return syncMeta; } }
-		internal bool Enabled { get { return enabled; } set { this.enabled = value; } }
+		internal string Name { get; private set; }
+		internal string BackName { get; private set; }
+		internal FieldType Type { get; private set; }
+		internal IMetadata Metadata { get; set; }
+		internal bool SyncMeta { get; private set; }
+		//constructors
+		internal SchemaOption(string name, string backName, FieldType type, IMetadata metadata, bool syncMeta) {
+			Name = name;
+			BackName = backName;
+			Type = type;
+			Metadata = metadata;
+			SyncMeta = syncMeta;
+		}
 		//methods
+		public SyncTemplateItem ToTemplateItem(MList ml) {
+			return new SyncTemplateItem(Type, Metadata, ml.FindOpenSpace(1, 1), Name, BackName, SyncMeta);
+		}
 	}
 }

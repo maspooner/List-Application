@@ -31,18 +31,21 @@ namespace ListApp {
 				AddField(fieldName, template[fieldName]);
 			}
 		}
+		/// <summary>
+		/// Recovers an MItem from a decoded dictionary set
+		/// </summary>
 		internal MItem(Dictionary<string, string> decoded) {
 			fields = new Dictionary<string, MField>();
 			foreach(string fieldName in decoded.Keys) {
-				fields.Add(fieldName, new MField(Utils.Base64DecodeDict(decoded[fieldName])));
+				//decode the MField's data and add the field
+				MField mf = new MField(Utils.DecodeMultiple(decoded[fieldName]));
+                fields.Add(fieldName, mf);
 			}
 		}
 		//properties
 		/// <summary>
 		/// Indexer for accessing an <seealso cref="MField"/> by its fieldName
 		/// </summary>
-		/// <param name="fieldName">the name of the field to get</param>
-		/// <returns>the field with the given fieldName</returns>
 		internal MField this[string fieldName] { get { return fields[fieldName]; } }
 		//methods
 		/// <summary>
@@ -88,29 +91,40 @@ namespace ListApp {
 		//	}
 		//	this.fields = newFields;
 		//}
+		public virtual void AddRecoveryData(Dictionary<string, string> rec) {
+			rec.Add(C.TYPE_ID_KEY, nameof(MItem));
+		}
 		public string ToRecoverable() {
-			string[] eFields = new string[fields.Count * 2];
-			int i = 0;
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			AddRecoveryData(rec);
 			foreach (string fieldName in fields.Keys) {
-				eFields[i++] = fieldName;
-				eFields[i++] = fields[fieldName].ToRecoverable();
+				rec.Add(fieldName, fields[fieldName].ToRecoverable());
 			}
-			return Utils.Base64Encode(eFields);
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 
 
 	[Serializable]
-	class SyncListItem : MItem {
+	class SyncItem : MItem {
 		//members
 		private string id;
 		private bool userEdited;
 		//constructors
-		internal SyncListItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
+		internal SyncItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
 			this.id = id;
 			userEdited = false;
 		}
+		internal SyncItem(Dictionary<string, string> decoded) : base(decoded) {
+			id = decoded[nameof(id)];
+			userEdited = bool.Parse(decoded[nameof(userEdited)]);
+		}
 		//methods
+		public override void AddRecoveryData(Dictionary<string, string> rec) {
+			rec.Add(C.TYPE_ID_KEY, nameof(SyncItem));
+			rec.Add(nameof(id), id);
+			rec.Add(nameof(userEdited), userEdited.ToString());
+		}
 	}
 	class ListItemComparer : IComparer {
 		private string name;

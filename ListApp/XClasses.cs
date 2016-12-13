@@ -94,10 +94,10 @@ namespace ListApp {
 			return "XImage " + (isLoaded ? "" : "not ") + "loaded from " + (isWeb ? "Website" : "File") + ": " + filePath;
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-				nameof(isWeb),		isWeb.ToString(),
-				nameof(filePath),	filePath.ToString()
-			);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(isWeb), isWeb.ToString());
+			rec.Add(nameof(filePath), filePath.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 		public void Dispose() {
 			img.Dispose();
@@ -136,8 +136,6 @@ namespace ListApp {
 			unknown = true;
 			this.id = id;
 		}
-		//properties
-
 		//methods
 		private int CompareValue(int? val1, int? val2, int val2Id) {
 			if (val1 != null && val2 != null) {
@@ -181,20 +179,20 @@ namespace ListApp {
 			}
 			return s;
 		}
-		private string NullableIntToString(int? i) { return i == null ? "NULL" : i.ToString(); }
+		private string NullableIntToString(int? i) { return i == null ? null : i.ToString(); }
 		private int? StringToNullableInt(string s) {
-			if (s.Equals("NULL"))
+			if (s == null)
 				return null;
 			return int.Parse(s);
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-				nameof(year),		NullableIntToString(year),
-				nameof(month),		NullableIntToString(month),
-				nameof(day),		NullableIntToString(day),
-				nameof(unknown),	unknown.ToString(),
-				nameof(id),			id.ToString()
-			);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(year), NullableIntToString(year));
+			rec.Add(nameof(month), NullableIntToString(month));
+			rec.Add(nameof(day), NullableIntToString(day));
+			rec.Add(nameof(unknown), unknown.ToString());
+			rec.Add(nameof(id), id.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 		public int CompareTo(object obj) {
 			return CompareTo(obj as XDate);

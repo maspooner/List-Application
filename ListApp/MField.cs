@@ -26,9 +26,6 @@ namespace ListApp {
 	[Serializable]
 	class MField : IComparable<MField>, ISerializable, IRecoverable {
 		//members
-		/// <summary>
-		/// Provides access to the value field
-		/// </summary>
 		internal virtual IComparable Value { get; set; }
 		private FieldType fieldType;
 		//constructors
@@ -43,8 +40,9 @@ namespace ListApp {
 			Value = StartingValue(); //starting value depends on field type
 		}
 		internal MField(Dictionary<string, string> decoded) {
+			//Parse the field type by its string name
 			fieldType = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(fieldType)]);
-			Value = decoded[nameof(Value)].Length == 0 ? null : ParseValue(decoded[nameof(Value)]);
+			Value = ParseValue(decoded[nameof(Value)]); //TODO RAD handle nulls?
 		}
 		/// <summary>
 		/// Special constructor for building an <seealso cref="MField"/>
@@ -106,10 +104,10 @@ namespace ListApp {
 		private IComparable ParseValue(string val) {
 			switch (fieldType) {
 				case FieldType.BASIC:	return val;
-				case FieldType.DATE:	return new XDate(Utils.Base64DecodeDict(val));
+				case FieldType.DATE:	return new XDate(Utils.DecodeMultiple(val));
 				case FieldType.DECIMAL: return float.Parse(val);
 				case FieldType.ENUM:	return int.Parse(val);
-				case FieldType.IMAGE:	return new XImage(Utils.Base64DecodeDict(val));
+				case FieldType.IMAGE:	return new XImage(Utils.DecodeMultiple(val));
 				case FieldType.NUMBER:	return int.Parse(val);
 				default:				throw new NotImplementedException();
 			}
@@ -137,13 +135,13 @@ namespace ListApp {
 			return GetRecoverableValue();
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-				nameof(fieldType),	((int)fieldType).ToString(),
-				nameof(Value),		GetRecoverableValue()
-			);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(fieldType), ((int)fieldType).ToString());
+			rec.Add(nameof(Value), GetRecoverableValue());
+			return Utils.EncodeMultiple(rec);
 		}
 		protected virtual string GetRecoverableValue() {
-			return Value == null ? "" : (Value is IRecoverable) ? 
+			return Value == null ? null : (Value is IRecoverable) ? 
 				(Value as IRecoverable).ToRecoverable() : Value.ToString();
 		}
 	}

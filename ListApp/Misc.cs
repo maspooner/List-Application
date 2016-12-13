@@ -25,6 +25,7 @@ namespace ListApp {
 		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT =	50.0;
 
 		internal const string BACKUPS_FOLDER =					"/backups/";
+		internal const string TYPE_ID_KEY =						"TYPE_ID";
 	}
 	/// <summary>
 	/// Models a rectangle in space with specified dimensions
@@ -99,16 +100,19 @@ namespace ListApp {
 			return false;
 		}
 		public string ToRecoverable() {
-			return Utils.Base64Encode(
-					nameof(X), X.ToString(),
-					nameof(Y), Y.ToString(),
-					nameof(Width), Width.ToString(),
-					nameof(Height), Height.ToString()
-				);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(X), X.ToString());
+			rec.Add(nameof(Y), Y.ToString());
+			rec.Add(nameof(Width), Width.ToString());
+			rec.Add(nameof(Height), Height.ToString());
+			return Utils.EncodeMultiple(rec);
 		}
 	}
-	interface IRecoverable {
+	public interface IRecoverable {
 		string ToRecoverable();
+	}
+	public interface ISyncable {
+		void Sync();
 	}
 	/// <summary>
 	/// Contains extension methods for classes
@@ -172,32 +176,110 @@ namespace ListApp {
 			return ic.ConvertTo(b, typeof(byte[])) as byte[];
 		}
 	}
-	class Utils {
-		internal static string Base64Encode(params string[] values) {
-			string[] encoded = new string[values.Length];
-			for(int i = 0; i < values.Length; i++) {
-				encoded[i] = Convert.ToBase64String(Encoding.UTF8.GetBytes(values[i]));
+	public class Utils {
+		private const char ENCODING_DELIM = ':';
+		private const string NULL_VALUE = "&";
+		/// <summary>
+		/// Encodes an ordered sequence into a string
+		/// </summary>
+		public static string EncodeSequence(IEnumerable<string> ls) {
+			string s = "";
+			foreach (string e in ls) {
+				s += B64Encode(e) + ENCODING_DELIM;
 			}
-			return string.Join(":", encoded);
+			//remove final ":"
+			return s.Length == 0 ? "" : s.Substring(0, s.Length - 1);
 		}
-		internal static string Base64Decode(string encoded) {
-			return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-		}
-		internal static string[] Base64DecodeArray(string encoded) {
-			string[] decoded = encoded.Split(':');
-			for (int i = 0; i < decoded.Length; i++) {
-				decoded[i] = Base64Decode(decoded[i]);
+		/// <summary>
+		/// Decodes an ordered sequence
+		/// </summary>
+		public static List<string> DecodeSequence(string s) {
+			List<string> ls = new List<string>();
+			if (s.Length == 0) return ls;
+			string[] split = s.Split(ENCODING_DELIM);
+			foreach (string e in split) {
+				ls.Add(B64Decode(e));
 			}
-			return decoded;
+			return ls;
 		}
-		internal static Dictionary<string, string> Base64DecodeDict(string encoded) {
-			string[] decoded = Base64DecodeArray(encoded);
-			Dictionary<string, string> values = new Dictionary<string, string>();
-			for(int i = 0; i < decoded.Length / 2; i++) {
-				values.Add(decoded[2 * i], decoded[2 * i + 1]);
+		/// <summary>
+		/// Encodes multiple values into a single encoded string
+		/// </summary>
+		public static string EncodeMultiple(Dictionary<string, string> keyValues) {
+			string s = "";
+			foreach(string key in keyValues.Keys) {
+				//encode ":" generated from the EncodePair method, then add ":"
+				s += B64Encode(EncodePair(key, keyValues[key])) + ENCODING_DELIM;
 			}
-			return values;
+			//remove final ":"
+			return s.Length == 0 ? "" : s.Substring(0, s.Length - 1);
 		}
+		/// <summary>
+		/// Decodes a string into multiple key-value pairs
+		/// </summary>
+		public static Dictionary<string, string> DecodeMultiple(string s) {
+			Dictionary<string, string> keyValues = new Dictionary<string, string>();
+			if (s.Length == 0) return keyValues;
+			//split by ":"
+			string[] ePairs = s.Split(ENCODING_DELIM);
+			foreach (string e in ePairs) {
+				//first decode to bring back ":" of pair seperators, then decode the pair
+				KeyValuePair<string, string> pair = DecodePair(B64Decode(e));
+				keyValues.Add(pair.Key, pair.Value);
+			}
+			return keyValues;
+		}
+		/// <summary>
+		/// Encodes the specified pair into Base64. If the value is null, it is encoded
+		/// </summary>
+		public static string EncodePair(string key, string value) {
+			return B64Encode(key) + ENCODING_DELIM + (value == null ? NULL_VALUE : B64Encode(value));
+		}
+		/// <summary>
+		/// Decodes the encoded pair string into the key and value combos, with handling for null values
+		/// </summary>
+		public static KeyValuePair<string, string> DecodePair(string s) {
+			string[] parts = s.Split(ENCODING_DELIM);
+			return new KeyValuePair<string, string>(B64Decode(parts[0]), 
+				parts[1].Equals(NULL_VALUE) ? null : B64Decode(parts[1]));
+		}
+		/// <summary>
+		/// Encodes the bytes of a string in Base64
+		/// </summary>
+		private static string B64Encode(string s) {
+			return Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
+		}
+		/// <summary>
+		/// Decodes a string from Base64
+		/// </summary>
+		private static string B64Decode(string s) {
+			return Encoding.UTF8.GetString(Convert.FromBase64String(s));
+		}
+		//internal static string Base64Encode(params string[] values) {
+		//	string[] encoded = new string[values.Length];
+		//	for(int i = 0; i < values.Length; i++) {
+		//		encoded[i] = Convert.ToBase64String(Encoding.UTF8.GetBytes(values[i]));
+		//	}
+		//	return string.Join(":", encoded);
+		//}
+		//internal static string Base64Decode(string encoded) {
+		//	return 
+		//}
+		//internal static string[] Base64DecodeArray(string encoded) {
+		//	string[] decoded = encoded.Split(':');
+		//	for (int i = 0; i < decoded.Length; i++) {
+		//		decoded[i] = Base64Decode(decoded[i]);
+		//	}
+		//	return decoded;
+		//}
+		//internal static Dictionary<string, string> Base64DecodeDict(string encoded) {
+		//	string[] decoded = Base64DecodeArray(encoded);
+		//	Dictionary<string, string> values = new Dictionary<string, string>();
+		//	for(int i = 0; i < decoded.Length / 2; i++) {
+		//		values.Add(decoded[2 * i], decoded[2 * i + 1]);
+		//	}
+		//	return values;
+		//}
 		internal static void SetupContentGrid(Grid g, IEnumerable<Space> spaces) {
 			for (int i = 0; i < C.FIELD_GRID_WIDTH; i++) {
 				ColumnDefinition cd = new ColumnDefinition();

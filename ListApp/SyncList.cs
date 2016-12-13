@@ -15,37 +15,43 @@ namespace ListApp {
 		internal enum SchemaType { ANIME_LIST }
 		//members
 		private SchemaType schemaType;
-		private SyncSchema schema;
+		[NonSerialized]
+		private ISyncSchema schema;
+		private object schemaData;
 		//constructors
 		internal SyncList(string name, SchemaType schemaType, object schemaData) : base(name) {
 			this.schemaType = schemaType;
-			this.schema = FindSchema(schemaType, schemaData);
+			this.schemaData = schemaData;
+			this.schema = FindSchema(schemaType);
 		}
-		internal SyncSchema Schema { get { return schema; } }
+		internal SyncList(string name, Dictionary<string, string> decoded) : base(name, decoded) {
+			//TODO RAD
+			schemaType = (SchemaType)Enum.Parse(typeof(SchemaType), decoded[nameof(schemaType)]);
+			schemaData = ParseSyncData(schemaType, decoded[nameof(schemaData)]);
+			schema = FindSchema(schemaType);
+		}
+		internal ISyncSchema Schema { get { return schema; } }
 		//methods
-		private SyncSchema FindSchema(SchemaType type, object schemaData) {
+		public void PrepareRefresh() {
+			schema.PrepareRefresh(schemaData);
+		}
+		public override void AddRecoveryData(Dictionary<string, string> rec) {
+			//call base
+			base.AddRecoveryData(rec);
+			rec[C.TYPE_ID_KEY] = nameof(SyncList); //override with this class' name
+			rec.Add(nameof(schemaType), schemaType.ToString());
+		}
+		private ISyncSchema FindSchema(SchemaType type) {
 			switch (type) {
-				case SchemaType.ANIME_LIST: return new AnimeListSchema(schemaData as string);
+				case SchemaType.ANIME_LIST: return new AnimeListSchema();
 			}
 			return null;
 		}
-		internal SchemaOption SchemaOptionAt(int i) { return schema.Options[i]; }
-		internal int GetSchemaLength() { return schema.Options.Length; }
-		internal override string GetTypeID() {
-			return "SyncList";
-		}
-		internal void SaveSchemaOptions() {
-			Dictionary<string, SyncTemplateItem> updatedValues = schema.GenerateTemplate(this);
-			foreach(string fieldName in updatedValues.Keys) {
-				Template[fieldName] = updatedValues[fieldName];
+		private object ParseSyncData(SchemaType type, string eData) {
+			switch (type) {
+				case SchemaType.ANIME_LIST: return eData;
 			}
-			//TODO
-			//foreach (string fieldName in Template.Keys) {
-			//	if (!updatedValues.ContainsKey(fieldName)) {
-			//		DeleteFromTemplate(fieldName);
-			//	}
-			//}
+			return null;
 		}
-		
 	}
 }
