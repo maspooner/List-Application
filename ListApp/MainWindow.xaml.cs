@@ -16,9 +16,10 @@ namespace ListApp {
 	 * TODO sorting messes up display panel
 	 * TODO option to cancel mid-way through download
 	 * FIXME major refactoring of every file
-	 * TODO export/import to CSV, export to readable txt
+	 * TODO export/import to encoded form, export to readable txt
 	 * TODO number of backups to set
-	 * FIXME handle saving/loading syncLists
+	 * FIXME handle recovery
+	 * TODO disable edits when updating lists
 	 */
 	public partial class MainWindow : Window {
 		//members
@@ -54,6 +55,9 @@ namespace ListApp {
 			autoSaveThread.Start();
 		}
 		//methods
+		private void LoadImages() {
+			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
+		}
 		private void AutoSaveThreadStart() {
 			while (!done) {
 				try {
@@ -70,9 +74,7 @@ namespace ListApp {
 				}
 			}
 		}
-		private void LoadImages() {
-			generalOptionsImage.Source = Properties.Resources.optionIcon.ConvertToBitmapImage();
-        }
+		
 		private Label CreateListLabel(MList list) {
 			Label l = new Label();
 			l.Content = list.Name;
@@ -84,14 +86,7 @@ namespace ListApp {
 				leftPanel.Items.Add(CreateListLabel(ml));
 			}
 		}
-		internal void Refresh() {
-			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
-			lcv.CustomSort = null;
-			foreach (DataGridColumn dgc in listItemGrid.Columns) {
-				dgc.SortDirection = null;
-			}
-			listItemGrid.Items.Refresh();
-		}
+		
 		private CImage CreateActionImage(System.Windows.Media.ImageSource source, MouseButtonEventHandler handler) {
 			CImage ci = new CImage();
 			ci.Source = source;
@@ -101,66 +96,86 @@ namespace ListApp {
 			DockPanel.SetDock(ci, Dock.Right);
 			return ci;
 		}
-		private void ReloadActionBar(string name, bool isSync) {
-			listActionBar.Children.Clear();
-			Label title = new Label();
-			title.Content = name;
-			DockPanel.SetDock(title, Dock.Left);
-			listActionBar.Children.Add(title);
 
-			listActionBar.Children.Add(CreateActionImage(Properties.Resources.optionIcon.ConvertToBitmapImage(), listOptionImg_MouseUp));
-			listActionBar.Children.Add(CreateActionImage(Properties.Resources.addIcon.ConvertToBitmapImage(), addNewImg_MouseUp));
-			Console.WriteLine(isSync);
-			if (isSync) {
-				listActionBar.Children.Add(CreateActionImage(Properties.Resources.reloadIcon.ConvertToBitmapImage(), syncListImg_MouseUp));
-			}
-		}
-
-		//WPF
 		private void addNewImg_MouseUp(object sender, MouseButtonEventArgs e) {
 			MList l = data[shownList];
-			bool wasModification = new AddItemDialog().ShowDialogForItem(this, l);
-			if (wasModification) {
-				Refresh();
-			}
-		}
-		private void syncListImg_MouseUp(object sender, MouseButtonEventArgs e) {
-			//TODO refreshments
-			if(syncManager == null) {
-				syncManager = new SyncManager(this, syncBar, messageLabel, syncCancel);
-			}
-			syncManager.StartRefreshAllTask(data[shownList] as SyncList);
-			//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
-			//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
-			DisplayList(shownList);
-			Refresh();
-		}
-		private void listOptionImg_MouseUp(object sender, MouseButtonEventArgs e) {
-			Dictionary<string, Space> newSpaces = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
-			if (newSpaces != null) {
-				foreach(string fieldName in newSpaces.Keys) {
-					data[shownList].Template[fieldName].Space = newSpaces[fieldName];
+			if (l.CanObserve()) {
+				bool wasModification = new AddItemDialog().ShowDialogForItem(this, l);
+				if (wasModification) {
+					Refresh();
 				}
-				DisplayItem(listItemGrid.SelectedIndex);
+			}
+		}
+		
+		private void listOptionImg_MouseUp(object sender, MouseButtonEventArgs e) {
+			if (data[shownList].CanObserve()) {
+				Dictionary<string, Space> newSpaces = new EditLayoutDialog(this).ShowAndGetTemplate(data[shownList].Template);
+				if (newSpaces != null) {
+					foreach (string fieldName in newSpaces.Keys) {
+						data[shownList].Template[fieldName].Space = newSpaces[fieldName];
+					}
+					DisplayItem(listItemGrid.SelectedIndex);
+				}
+			}
+		}
+		
+		/// <summary>
+		/// Displays the list with the specified ID into the listItemGrid
+		/// If the list is not obvervable, a screen specifying so is displayed
+		/// </summary>
+		private void DisplayList(int id) {
+			
+			//FIXME RAD itemssource changes while syncing
+			Console.WriteLine("Can observe" + id + "  " + data[id].CanObserve());
+			if (data.Count > 0 && data[id].CanObserve()) {
+				listItemGrid.Visibility = Visibility.Visible;
+				noListsLabel.Visibility = Visibility.Collapsed;
+				MList list = data[id];
+				//change the action bar's actions to match the current list
+				// (and remove it if the list is not observable)
+				ReloadActionBar(list);
+				//load the items from this list
+				listItemGrid.ItemsSource = list.Items;
+				//setup columns
+				listItemGrid.Columns.Clear();
+				foreach (string fieldName in list.Template.Keys) {
+					listItemGrid.Columns.Add(DefineColumn(fieldName, list.Template[fieldName]));
+				}
+			}
+			else {
+				listItemGrid.Visibility = Visibility.Collapsed;
+				noListsLabel.Visibility = Visibility.Visible;
+				ReloadActionBar(null);
+				//clear the items there
+				listItemGrid.ItemsSource = null;
+				//display the list is currently inaccessable
+				noListsLabel.Content = data.Count > 0 ? "Currently Syncing" : "No lists!";
+			}
+			if(data.Count > 0) {
+				//update shown list
+				shownList = id;
+				//try to display the first item
+				DisplayItem(0);
 			}
 		}
 		private void DisplayItem(int i) {
-			contentPanel.ClearGrid();
-			MList l = data[shownList];
-			if(l.Count == 0 || i == -1) {
-				Label q = new Label();
-				q.Content = "No Item Selected";
-				contentPanel.Children.Add(q);
+			itemContentPanel.ClearGrid();
+			MList ml = data[shownList];
+			if(ml.Count == 0 || i == -1) {
+				itemContentPanel.Visibility = Visibility.Collapsed;
+				noItemsLabel.Visibility = Visibility.Visible;
+				noItemsLabel.Content = i == -1 ? "No Item Selected" : "No Items!";
 			}
 			else {
-				MItem li = l[i];
-				//add new
-				Utils.SetupContentGrid(contentPanel, l.Template.Values.Select(fti => fti.Space));
+				itemContentPanel.Visibility = Visibility.Visible;
+				noItemsLabel.Visibility = Visibility.Collapsed;
+				MItem item = ml[i];
+				Utils.SetupContentGrid(itemContentPanel, ml.Template.Values.Select(fti => fti.Space));
 				//TODO
-				foreach (string fieldName in l.Template.Keys) {
-					MField lif = li[fieldName];
+				foreach (string fieldName in ml.Template.Keys) {
+					MField lif = item[fieldName];
 					FrameworkElement fe = null;
-					FieldTemplateItem fti = l.Template[fieldName];
+					FieldTemplateItem fti = ml.Template[fieldName];
 					if (lif is ImageField) {
 						fe = new CImage();
 						(fe as CImage).Source = (lif as ImageField).ToVisibleValue(fti.Metadata)
@@ -178,25 +193,33 @@ namespace ListApp {
 					Grid.SetRow(fe, fti.Y);
 					Grid.SetColumnSpan(fe, fti.Width);
 					Grid.SetRowSpan(fe, fti.Height);
-					contentPanel.Children.Add(fe);
+					itemContentPanel.Children.Add(fe);
 				}
 			}
 		}
-		private void DisplayList(int id) {
-			MList list = data[id];
-			ReloadActionBar(list.Name, list is SyncList);
+		private void ReloadActionBar(MList list) {
+			listActionBar.Children.Clear();
+			if (list != null && list.CanObserve()) {
+				Label title = new Label();
+				title.Content = list.Name;
+				DockPanel.SetDock(title, Dock.Left);
+				listActionBar.Children.Add(title);
 
-			listItemGrid.Columns.Clear();
-			listItemGrid.ItemsSource = list.Items;
-			//listItemGrid.Items.Clear();
-			//foreach(ListItem li in list) {
-			//	listItemGrid.Items.Add(li);
-			//}
-			foreach (string fieldName in list.Template.Keys) {
-				listItemGrid.Columns.Add(DefineColumn(fieldName, list.Template[fieldName]));
+				listActionBar.Children.Add(CreateActionImage(Properties.Resources.optionIcon.ConvertToBitmapImage(), listOptionImg_MouseUp));
+				listActionBar.Children.Add(CreateActionImage(Properties.Resources.addIcon.ConvertToBitmapImage(), addNewImg_MouseUp));
+				Console.WriteLine(list is SyncList);
+				if (list is SyncList) {
+					listActionBar.Children.Add(CreateActionImage(Properties.Resources.reloadIcon.ConvertToBitmapImage(), SyncActionButton_OnClick));
+				}
 			}
-			shownList = id;
-			DisplayItem(0);
+		}
+		private void Refresh() {
+			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
+			lcv.CustomSort = null;
+			foreach (DataGridColumn dgc in listItemGrid.Columns) {
+				dgc.SortDirection = null;
+			}
+			listItemGrid.Items.Refresh();
 		}
 		private DataGridTemplateColumn DefineColumn(string fieldName, FieldTemplateItem fti) {
 			//CImage img = new CImage();
@@ -252,13 +275,6 @@ namespace ListApp {
 
 			return dgc;
 		}
-		//private void ListNameLabel_MouseUp(object sender, MouseButtonEventArgs e) {
-		//	Label l = sender as Label;
-		//	int listID = int.Parse(l.Name.Substring(l.Name.Length - 1));
-  //          if (shownList != listID) {
-		//		DisplayList(listID);
-		//	}
-		//}
 		private void GeneralOptionImage_MouseUp(object sender, MouseButtonEventArgs e) {
 			//TODO
 		}
@@ -297,29 +313,70 @@ namespace ListApp {
 			DisplayItem(listItemGrid.SelectedIndex);
 		}
 
-		private void listItemGrid_Sorting(object sender, DataGridSortingEventArgs e) {
-            e.Handled = true;
+
+
+
+		//handlers
+		private void MItemGrid_OnSort(object sender, DataGridSortingEventArgs e) {
+			//don't pass the event to other handlers, we want to handle all the sorting
+			e.Handled = true;
+			//set the sorting direction to either Ascending or Descending
 			ListSortDirection dir = e.Column.SortDirection != ListSortDirection.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending;
-            e.Column.SortDirection = dir;
+			e.Column.SortDirection = dir;
+
 			Console.WriteLine(CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource));
 			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
 			lcv.CustomSort = new ListItemComparer(e.Column.Header as string, dir);
 		}
+		private void SyncActionButton_OnClick(object sender, MouseButtonEventArgs e) {
+			//TODO refreshments
+			//start up the sync manager if not already up
+			if (syncManager == null) {
+				syncManager = new SyncManager(this, syncBar, messageLabel, syncCancel);
+			}
 
-		private void syncCancel_Click(object sender, RoutedEventArgs e) {
-			syncManager.CancelRefreshAllTask();
-		}
+			//syncManager.StartRefreshAllTask(data[shownList] as SyncList);
+			bool started = syncManager.StartRefreshNewTask(data[shownList] as SyncList, shownList);
 
-		private void leftPanel_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-			ListView lv = sender as ListView;
-            if (shownList != lv.SelectedIndex) {
-				DisplayList(lv.SelectedIndex);
+			//(l as XMLList).LoadValues("http://myanimelist.net/malappinfo.php?u=progressivespoon&status=all&type=anime", true);
+			//(l as XmlList).LoadValues(@"F:\Documents\Visual Studio 2015\Projects\ListApp\al.xml");
+
+			//clear the shown list
+			if (started) {
+				DisplayList(shownList);
 			}
 		}
-
+		internal void SyncCompleted_Callback(int id) {
+			if(id == shownList) {
+				DisplayList(id);
+			}
+		}
+		/// <summary>
+		/// Called when user opts to cancel a scheduled task
+		/// </summary>
+		private void SyncCancelButton_OnClick(object sender, RoutedEventArgs e) {
+			syncManager.CancelTask();
+		}
+		/// <summary>
+		/// Called when the user changes the selected list
+		/// </summary>
+		private void ListNameListPanel_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			ListView lv = sender as ListView;
+			int selected = lv.SelectedIndex;
+			Console.WriteLine("selected" + selected);
+			Console.WriteLine("shown" + shownList);
+			//only work to display if not changing to the same list
+            if (shownList != selected) {
+				DisplayList(selected);
+			}
+		}
+		/// <summary>
+		/// Called when the window is closed
+		/// </summary>
 		protected override void OnClosed(EventArgs e) {
 			base.OnClosed(e);
 			done = true;
+			//gracefully close the autosave thread and join it with this one
 			autoSaveThread.Interrupt();
 			autoSaveThread.Join();
 		}

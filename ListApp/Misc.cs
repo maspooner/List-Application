@@ -27,6 +27,8 @@ namespace ListApp {
 		internal const string BACKUPS_FOLDER =					"/backups/";
 		internal const string TYPE_ID_KEY =						"TYPE_ID";
 	}
+
+
 	/// <summary>
 	/// Models a rectangle in space with specified dimensions
 	/// </summary>
@@ -111,9 +113,6 @@ namespace ListApp {
 	public interface IRecoverable {
 		string ToRecoverable();
 	}
-	public interface ISyncable {
-		void Sync();
-	}
 	/// <summary>
 	/// Contains extension methods for classes
 	/// </summary>
@@ -176,6 +175,11 @@ namespace ListApp {
 			return ic.ConvertTo(b, typeof(byte[])) as byte[];
 		}
 	}
+
+
+	/// <summary>
+	/// A static class to provide various utility methods
+	/// </summary>
 	public class Utils {
 		private const char ENCODING_DELIM = ':';
 		private const string NULL_VALUE = "&";

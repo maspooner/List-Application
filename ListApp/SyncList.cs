@@ -16,32 +16,62 @@ namespace ListApp {
 		//members
 		private SchemaType schemaType;
 		[NonSerialized]
-		private ISyncSchema schema;
+		private ISchema schema;
 		private object schemaData;
+		private string[] schemaParams;
+		[NonSerialized]
+		private bool observable;
 		//constructors
 		internal SyncList(string name, SchemaType schemaType, object schemaData) : base(name) {
 			this.schemaType = schemaType;
 			this.schemaData = schemaData;
 			this.schema = FindSchema(schemaType);
+			schemaParams = new string[] { "progressivespoon" }; //TODO RAD generics yo
+			observable = true;
 		}
 		internal SyncList(string name, Dictionary<string, string> decoded) : base(name, decoded) {
-			//TODO RAD
 			schemaType = (SchemaType)Enum.Parse(typeof(SchemaType), decoded[nameof(schemaType)]);
 			schemaData = ParseSyncData(schemaType, decoded[nameof(schemaData)]);
 			schema = FindSchema(schemaType);
+			schemaParams = Utils.DecodeSequence(decoded[nameof(schemaParams)]).ToArray();
+			observable = true;
 		}
-		internal ISyncSchema Schema { get { return schema; } }
+		internal ISchema Schema { get { return schema; } }
+		internal string[] SchemaParams { get { return schemaParams; } }
 		//methods
-		public void PrepareRefresh() {
-			schema.PrepareRefresh(schemaData);
+		internal void SetObservable(bool observable) {
+			this.observable = observable;
+		}
+		internal override bool CanObserve() {
+			return observable;
+		}
+		public SyncItem FindWithId(string id) {
+			foreach(MItem mi in Items) {
+				if(mi is SyncItem) {
+					SyncItem si = mi as SyncItem;
+					if (si.Id.Equals(id)) {
+						return si;
+					}
+				}
+			}
+			return null;
+		}
+		public void AddToTemplate(SchemaOption so) {
+			AddToTemplate(so.DefaultName, so.ToTemplateItem(this));
+		}
+		public SyncItem AddSync(string id) {
+			SyncItem si = new SyncItem(id, Template);
+			Items.Add(si);
+			return si;
 		}
 		public override void AddRecoveryData(Dictionary<string, string> rec) {
 			//call base
 			base.AddRecoveryData(rec);
 			rec[C.TYPE_ID_KEY] = nameof(SyncList); //override with this class' name
 			rec.Add(nameof(schemaType), schemaType.ToString());
+			rec.Add(nameof(schemaParams), Utils.EncodeSequence(schemaParams));
 		}
-		private ISyncSchema FindSchema(SchemaType type) {
+		private ISchema FindSchema(SchemaType type) {
 			switch (type) {
 				case SchemaType.ANIME_LIST: return new AnimeListSchema();
 			}

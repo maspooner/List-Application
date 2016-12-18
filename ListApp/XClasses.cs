@@ -86,7 +86,7 @@ namespace ListApp {
 			}
 		}
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
-			info.AddValue("isWeb", isWeb);
+			info.AddValue(nameof(isWeb), isWeb);
 			info.AddValue("filePath", filePath);
 			info.AddValue("imgBytes", img == null ? null : img.ToBytes());
 		}

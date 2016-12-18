@@ -10,7 +10,7 @@
 
     <DockPanel Name="rootPanel">
         <DockPanel DockPanel.Dock="Bottom" Height="30">
-            <Button Name="syncCancel" DockPanel.Dock="Right" Content="Cancel" Click="syncCancel_Click" Visibility="Collapsed"/>
+            <Button Name="syncCancel" DockPanel.Dock="Right" Content="Cancel" Click="SyncCancelButton_OnClick" Visibility="Collapsed"/>
             <ProgressBar Name="syncBar" DockPanel.Dock="Right" Minimum="0" Maximum="100" Width="170" Visibility="Collapsed"/>
             <Label Name="messageLabel" DockPanel.Dock="Left" Background="{StaticResource lighterBrush}"/>
         </DockPanel>
@@ -26,7 +26,7 @@
                     <Image Name="generalOptionsImage" Height="20" DockPanel.Dock="Right" MouseUp="GeneralOptionImage_MouseUp"/>
                 </DockPanel>
                 <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
-                    <ListView Name="leftPanel" SelectionChanged="leftPanel_SelectionChanged" Background="{StaticResource darkerBrush}"/>
+                    <ListView Name="leftPanel" SelectionChanged="ListNameListPanel_SelectionChanged" Background="{StaticResource darkerBrush}"/>
                 </ScrollViewer>
             </DockPanel>
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseLeft_MouseDoubleClick" Background="{StaticResource darkBrush}" />
@@ -36,16 +36,20 @@
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="3*" MinHeight="100"/>
                 </Grid.RowDefinitions>
-                <DockPanel Grid.Row="0">
-                    <DockPanel DockPanel.Dock="Top" Name="listActionBar" Background="{StaticResource darkBrush}" LastChildFill="False"/>
+                <DockPanel Grid.Row="0" Background="{StaticResource darkestBrush}">
+                    <DockPanel DockPanel.Dock="Top" Name="listActionBar"  LastChildFill="False"/>
+                    <Label Name="noListsLabel" Visibility="Collapsed" Background="{StaticResource darkestBrush}"/>
                     <DataGrid VerticalScrollBarVisibility="Auto" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True" GridLinesVisibility="None" CanUserResizeRows="False"
-						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="listItemGrid_Sorting" Background="{StaticResource darkestBrush}"
+						Name="listItemGrid" SelectionChanged="listItemGrid_SelectionChanged" Sorting="MItemGrid_OnSort" Background="{StaticResource darkestBrush}"
 						SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column" MinColumnWidth="30">
                     </DataGrid>
                 </DockPanel>
                 <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" MouseDoubleClick="CollapseBottom_MouseDoubleClick" Background="{StaticResource darkBrush}" />
                 <ScrollViewer Grid.Row="2">
-                    <Grid Name="contentPanel" Background="{StaticResource darkestBrush}"/>
+                    <DockPanel Background="{StaticResource darkestBrush}">
+                        <Label Name="noItemsLabel" Visibility="Collapsed" Background="{StaticResource darkestBrush}"/>
+                        <Grid Name="itemContentPanel" Background="{StaticResource darkestBrush}"/>
+                    </DockPanel>
                 </ScrollViewer>
             </Grid>
         </Grid>

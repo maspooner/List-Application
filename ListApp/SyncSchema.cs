@@ -7,44 +7,146 @@ using System.Xml;
 using HtmlAgilityPack;
 
 namespace ListApp {
-	interface ISyncSchema {
-		//methods
-		SchemaOption[] GenerateOptions();
-		void PrepareRefresh(object syncData);
-		IEnumerable<SyncItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template);
-		int GetItemCount();
-		void RefreshAll(List<FieldTemplateItem> template);
-		//internal abstract Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template);
-		
+	interface ISchema {
+		//TODO RAD
+		int GetProgress();
+		int GetTotalProgress();
+		List<SchemaOption> GenerateOptions(); //gives user option to choose from preloaded SyncTemplate items
+		void PrepareRefresh(SyncTask type, SyncList sl, string[] paramList); //initialize all web/xml components
+		void RefreshOne(SyncList l, SyncItem i); //refreshes a single item
+		void FindNew(SyncList l);	 //finds new items
+		void RefreshAll(SyncList l); //finds new items and refreshes current ones
+		void RefreshCurrent(SyncList l); //refreshes current items
+		void FinishRefresh();         //dispose of all components
 	}
-	class AnimeListSchema : ISyncSchema {
+	class AnimeListSchema : ISchema {
+		//constants
+		private const string WEBSITE_PARAM = "WEB";
+		private const string XML_PARAM = "XML";
+		private const int WEBSITE_HUH_INDEX = 0;
 		//members
-		[NonSerialized]
 		private XmlNodeList animeNodes;
+		private WebClient webClient;
+		private int prog;
+		private int totalProg;
+		private int i;
 		//constructors
 		internal AnimeListSchema() {
-			this.animeNodes = null;
+			animeNodes = null;
+			webClient = null;
+			prog = 1;
+			totalProg = 0;
+			i = 0;
 		}
 		//methods
-		public SchemaOption[] GenerateOptions() {
-			return new SchemaOption[] {
-				new SchemaOption("title", "series_title", FieldType.BASIC, null, true),
-				new SchemaOption("episodes", "series_episodes", FieldType.NUMBER, new NumberMetadata(), true),
-				new SchemaOption("start date", "my_start_date", FieldType.DATE, null, true),
-				new SchemaOption("end date", "my_finish_date", FieldType.DATE, null, true),
-				new SchemaOption("image", "series_image", FieldType.IMAGE, new ImageMetadata(50.0), true),
-				new SchemaOption("watch status", "my_status", FieldType.ENUM, new EnumMetadata("ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch"), true),
-				new SchemaOption("id", "series_animedb_id", FieldType.NUMBER, new NumberMetadata(), true),
-				new SchemaOption("synonyms", "series_synonyms", FieldType.BASIC, null, true),
-				new SchemaOption("watched #", "my_watched_episodes", FieldType.NUMBER, new NumberMetadata(), true),
-				new SchemaOption("score", "my_score", FieldType.ENUM, new EnumMetadata("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), true),
-				new SchemaOption("rating", "pub_rating", FieldType.DECIMAL, new DecimalMetadata(), false),
-				new SchemaOption("rating count", "pub_rater_count", FieldType.NUMBER, new NumberMetadata(), false)
-			};
+		public int GetProgress() {
+			return prog;
 		}
-		public void RefreshAll(List<FieldTemplateItem> template) {
+		public int GetTotalProgress() {
+			return totalProg;
+		}
+		public List<SchemaOption> GenerateOptions() {
+			List<SchemaOption> opts = new List<SchemaOption>();
+			opts.Add(new SchemaOption("series_title", "title", FieldType.BASIC, null, new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("series_episodes", "episodes", FieldType.NUMBER, new NumberMetadata(), new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("my_start_date", "start date", FieldType.DATE, null, new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("series_image", "image", FieldType.IMAGE, new ImageMetadata(C.DEFAULT_IMAGE_DISPLAY_HEIGHT), new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("my_finish_date", "end date", FieldType.DATE, null, new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("my_status", "watch status", FieldType.ENUM, new EnumMetadata("ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch"), new string[] { XML_PARAM }));
+
+
+			opts.Add(new SchemaOption("pub_rater_count", "rating count", FieldType.NUMBER, new NumberMetadata(), new string[] { WEBSITE_PARAM }));
+
+
+			opts.Sort();
+			return opts;
+			//TODO RAD add all
+			//return new SchemaOption2[] {
+			//	new SchemaOption2("id", "series_animedb_id", FieldType.NUMBER, new NumberMetadata(), true),
+			//	new SchemaOption2("synonyms", "series_synonyms", FieldType.BASIC, null, true),
+			//	new SchemaOption2("watched #", "my_watched_episodes", FieldType.NUMBER, new NumberMetadata(), true),
+			//	new SchemaOption2("score", "my_score", FieldType.ENUM, new EnumMetadata("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), true),
+			//	new SchemaOption2("rating", "pub_rating", FieldType.DECIMAL, new DecimalMetadata(), false),
+			//};
+		}
+		public void PrepareRefresh(SyncTask type, SyncList sl, string[] paramList) {
+			webClient = new WebClient();
+			webClient.Encoding = Encoding.UTF8;
+			string username = paramList[0];
+			string xmlStr = webClient.DownloadString("http://myanimelist.net/malappinfo.php?u=" + username + "&status=all&type=anime");
+			XmlDocument xmlDoc = new XmlDocument();
+			xmlDoc.LoadXml(xmlStr);
+			this.animeNodes = xmlDoc.GetElementsByTagName("anime");
+
+			switch (type) {
+				case SyncTask.ALL: totalProg = animeNodes.Count; break;
+				case SyncTask.NEW: totalProg = animeNodes.Count; break;
+				case SyncTask.ONE: totalProg = 1; break;
+				case SyncTask.UPDATE: totalProg = animeNodes.Count; break;
+			}
+
+			i = 0;
+			prog = 1;
 			
 		}
+		public void RefreshOne(SyncList l, SyncItem si) {
+			//TODO implement
+			prog++;
+		}
+		public void RefreshAll(SyncList l) {
+			XmlNode xmlNode = animeNodes.Item(i++); //TODO BUG check upper limits
+			string id = xmlNode.FindChild("series_animedb_id").InnerText;
+			SyncItem si = l.FindWithId(id);
+			if (si == null) {
+				si = l.AddSync(id);
+			}
+			FillItem(si, l.Template, xmlNode);
+			prog++;
+		}
+		public void FindNew(SyncList l) {
+			XmlNode xmlNode = animeNodes.Item(i++); //TODO BUG check upper limits
+			string id = xmlNode.FindChild("series_animedb_id").InnerText;
+			SyncItem si = l.FindWithId(id);
+			if (si == null) {
+				si = l.AddSync(id);
+				FillItem(si, l.Template, xmlNode);
+			}
+			prog++;
+		}
+
+		public void RefreshCurrent(SyncList l) {
+			XmlNode xmlNode = animeNodes.Item(i++); //TODO BUG check upper limits
+			string id = xmlNode.FindChild("series_animedb_id").InnerText;
+			SyncItem si = l.FindWithId(id);
+			if (si != null) {
+				FillItem(si, l.Template, xmlNode);
+			}
+			prog++;
+		}
+		private void FillItem(SyncItem si, Dictionary<string, FieldTemplateItem> template, XmlNode animeNode) {
+			//Console.WriteLine("anime node id: " + si.Id);
+			HtmlDocument htmlDoc = new HtmlDocument();
+			System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
+			string htmlStr = webClient.DownloadString("http://myanimelist.net/anime/" + si.Id + "/");
+			htmlDoc.LoadHtml(htmlStr);
+			foreach (string fieldName in template.Keys) {
+				FieldTemplateItem fti = template[fieldName];
+				if (fti is SyncTemplateItem) {
+					SyncTemplateItem sti = fti as SyncTemplateItem;
+					si[fieldName].Value = sti.ParamList[0].Equals("XML") ?
+						FindDataFromXML(sti, animeNode.FindChild(sti.Id)) : FindDataFromHTML(htmlDoc, sti);
+				}
+			}
+			//Console.WriteLine("time: " + s.ElapsedMilliseconds);
+		}
+
+		public void FinishRefresh() {
+			webClient.Dispose();
+		}
+
+
+
+
 		private int? ParseNullable(string s, string fail) {
 			if (s.Equals(fail)) {
 				return null;
@@ -73,7 +175,7 @@ namespace ListApp {
 					}
 				case FieldType.ENUM:
 					EnumMetadata data = sti.Metadata as EnumMetadata;
-                    for (int j = 0; j < data.Entries.Length; j++) {
+					for (int j = 0; j < data.Entries.Length; j++) {
 						if (data.Entries[j].Equals(content))
 							return j;
 					}
@@ -100,130 +202,38 @@ namespace ListApp {
 			//foreach(HtmlNode n in sideBarNodes) {
 			//	Console.WriteLine(n.InnerText);
 			//}
-			if (sti.BackName.Equals("pub_rating")) {
+			if (sti.Id.Equals("pub_rating")) {
 				return float.Parse(FindNodesWithAttribute(htmlDoc, "itemprop", "ratingValue").FirstOrDefault().InnerHtml);
-            }
-			else if (sti.BackName.Equals("pub_rater_count")) {
+			}
+			else if (sti.Id.Equals("pub_rater_count")) {
 				return int.Parse(FindNodesWithAttribute(htmlDoc, "itemprop", "ratingCount").FirstOrDefault().InnerHtml,
 					System.Globalization.NumberStyles.AllowThousands);
 			}
 			throw new InvalidOperationException();
 			//TODO
 		}
-
-  //      internal override Task<List<SyncListItem>> CreateItems(List<ItemTemplateItem> template) {
-		//	List<SyncListItem> items = new List<SyncListItem>();
-		//	using (WebClient client = new WebClient()) {
-		//		string xmlStr = client.DownloadString("http://myanimelist.net/malappinfo.php?u=" + username + "&status=all&type=anime");
-		//		XmlDocument xmlDoc = new XmlDocument();
-		//		xmlDoc.LoadXml(xmlStr);
-		//		XmlNodeList animeNodes = xmlDoc.GetElementsByTagName("anime");
-		//		//foreach (XmlNode xmlNode in animeNodes) {
-		//		//	Console.WriteLine("Creating task");
-		//		//	await CreateItemAsync(xmlNode, template);
-		//		//}
-		//		Task[] tasks = new Task[animeNodes.Count];
-		//		for (int i = 0; i < tasks.Length; i++) {
-		//			tasks[i] = CreateItemAsync(animeNodes[i], template);
-		//			Console.WriteLine("Creating task");
-		//		}
-		//		Console.WriteLine("Awaiting all tasks");
-		//		Parallel.ForEach(animeNodes.Cast<XmlNode>(), new ParallelOptions { MaxDegreeOfParallelism = 1 }, async (xmlNode) => {
-		//			Task<SyncListItem> result = CreateItemAsync(xmlNode, template);
-		//			items.Add(await result);
-		//		});
-				
-		//		//Parallel.Invoke(new ParallelOptions() { MaxDegreeOfParallelism = 3 }, )
-		//		//new Task(, TaskCreationOptions.)
-		//		//await Task.Factory.StartNew(()=>Task.WaitAll(tasks));
-		//		Console.WriteLine("Done with all tasks");
-		//	}
-		//	return items;
-		//}
-		//private SyncListItem CreateItemAsync(XmlNode xmlNode, List<ItemTemplateItem> template) {
-		//	try {
-		//		string id = xmlNode.FindChild("series_animedb_id").InnerText;
-		//		Console.WriteLine("anime node id: " + id);
-		//		SyncListItem sli = new SyncListItem(id, template);
-		//		HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
-		//		WebClient client = new WebClient();
-		//		string htmlStr = client.DownloadString("http://myanimelist.net/anime/" + id + "/");
-		//		htmlDoc.LoadHtml(htmlStr);
-		//		//htmlDoc.DocumentNode.
-		//		foreach (ItemTemplateItem iti in template) {
-		//			if (iti is SyncTemplateItem) {
-		//				SyncTemplateItem sti = iti as SyncTemplateItem;
-		//				sli.FindField(sti.Name).Value = (bool)sti.SyncMeta ? FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(sti);
-		//			}
-		//		}
-		//		client.Dispose();
-		//		return sli;
-		//	}
-		//	catch (Exception e) {
-		//		Console.WriteLine(e);
-		//	}
-		//	return null;
-		//}
-		public void PrepareRefresh(object syncData) {
-			using (WebClient client = new WebClient()) {
-				client.Encoding = Encoding.UTF8;
-				string username = syncData as string;
-				string xmlStr = client.DownloadString("http://myanimelist.net/malappinfo.php?u=" + username + "&status=all&type=anime");
-				XmlDocument xmlDoc = new XmlDocument();
-				xmlDoc.LoadXml(xmlStr);
-				this.animeNodes = xmlDoc.GetElementsByTagName("anime");
-			}
-		}
-		public IEnumerable<SyncItem> CreateNewItems(Dictionary<string, FieldTemplateItem> template) {
-			int xyz = 0; //TODO remove
-			foreach (XmlNode xmlNode in animeNodes) {
-				string id = xmlNode.FindChild("series_animedb_id").InnerText;
-				Console.WriteLine("anime node id: " + id);
-				SyncItem sli = new SyncItem(id, template);
-				HtmlDocument htmlDoc = new HtmlDocument();
-				using (WebClient client = new WebClient()) {
-					System.Diagnostics.Stopwatch s = System.Diagnostics.Stopwatch.StartNew();
-					string htmlStr = client.DownloadString("http://myanimelist.net/anime/" + id + "/");
-					htmlDoc.LoadHtml(htmlStr);
-					foreach (string fieldName in template.Keys) {
-						FieldTemplateItem fti = template[fieldName];
-						if (fti is SyncTemplateItem) {
-							SyncTemplateItem sti = fti as SyncTemplateItem;
-							sli[fieldName].Value = (bool)sti.SyncMeta ? 
-								FindDataFromXML(sti, xmlNode.FindChild(sti.BackName)) : FindDataFromHTML(htmlDoc, sti);
-						}
-					}
-					Console.WriteLine("time: " + s.ElapsedMilliseconds);
-					if(xyz++ > 10) {
-						yield break;
-					}
-				}
-				yield return sli;
-			}
-		}
-		public int GetItemCount() {
-			return animeNodes.Count;
-		}
 	}
-	[Serializable]
-	class SchemaOption {
+	class SchemaOption : IComparable<SchemaOption> {
 		//properties
-		internal string Name { get; private set; }
-		internal string BackName { get; private set; }
+		internal string DefaultName { get; private set; }
+		internal string Id { get; private set; }
 		internal FieldType Type { get; private set; }
 		internal IMetadata Metadata { get; set; }
-		internal bool SyncMeta { get; private set; }
+		internal string[] ParamList { get; private set; }
 		//constructors
-		internal SchemaOption(string name, string backName, FieldType type, IMetadata metadata, bool syncMeta) {
-			Name = name;
-			BackName = backName;
+		internal SchemaOption(string id, string name, FieldType type, IMetadata metadata, string[] paramList) {
+			DefaultName = name;
+			Id = id;
 			Type = type;
 			Metadata = metadata;
-			SyncMeta = syncMeta;
+			ParamList = paramList;
 		}
 		//methods
 		public SyncTemplateItem ToTemplateItem(MList ml) {
-			return new SyncTemplateItem(Type, Metadata, ml.FindOpenSpace(1, 1), Name, BackName, SyncMeta);
+			return new SyncTemplateItem(Type, Metadata, ml.FindOpenSpace(1, 1), DefaultName, Id, ParamList);
+		}
+		public int CompareTo(SchemaOption other) {
+			return Id.CompareTo(other.Id);
 		}
 	}
 }

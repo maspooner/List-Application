@@ -60,27 +60,27 @@ namespace ListApp {
 	class SyncTemplateItem : FieldTemplateItem {
 		//members
 		internal string Name { get; private set; }
-		internal string BackName { get; private set; }
-		internal bool SyncMeta { get; private set; }
+		internal string Id { get; private set; }
+		internal string[] ParamList { get; private set; }
 		//constructors
-		internal SyncTemplateItem(Dictionary<string, string> decoded) : base(decoded){
+		internal SyncTemplateItem(Dictionary<string, string> decoded) : base(decoded) {
 			Name = decoded[nameof(Name)];
-			BackName = decoded[nameof(BackName)];
-			SyncMeta = bool.Parse(decoded[nameof(SyncMeta)]);
+			Id = decoded[nameof(Id)];
+			ParamList = Utils.DecodeSequence(decoded[nameof(ParamList)]).ToArray();
 		}
-		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string name, string backName, bool syncMeta) 
+		internal SyncTemplateItem(FieldType type, IMetadata metadata, Space space, string name, string backName, string[] paramList)
 			: base(type, metadata, space) {
 			Name = name;
-			BackName = backName;
-			SyncMeta = syncMeta;
+			Id = backName;
+			ParamList = paramList;
 		}
 		//methods
 		public override void AddData(Dictionary<string, string> rec) {
 			//call base
 			base.AddData(rec);
 			rec.Add(nameof(Name), Name);
-			rec.Add(nameof(BackName), BackName);
-			rec.Add(nameof(SyncMeta), SyncMeta.ToString());
+			rec.Add(nameof(Id), Id);
+			rec.Add(nameof(ParamList), Utils.EncodeSequence(ParamList));
 			rec[C.TYPE_ID_KEY] = nameof(SyncTemplateItem); //change to this class' name
 		}
 	}

@@ -85,6 +85,8 @@ namespace ListApp {
 				}
 			}
 		}
+
+		internal virtual bool CanObserve() { return true; }
 		/// <summary>
 		/// Takes the passed in parameters to contstruct a new <seealso cref="FieldTemplateItem"/>
 		/// to add to this list's template. Then, adds a new field based off of the

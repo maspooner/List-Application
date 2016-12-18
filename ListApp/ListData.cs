@@ -148,6 +148,10 @@ namespace ListApp {
 			data.AddList(list2);
 
 			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
+			List<SchemaOption> opts = list4.Schema.GenerateOptions();
+			foreach(SchemaOption so in opts) {
+				list4.AddToTemplate(so);
+			}
 			list4.AddToTemplate("random tag", FieldType.ENUM, new EnumMetadata("one", "two", "three"));
 
 			data.AddList(list4);

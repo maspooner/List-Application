@@ -42,7 +42,7 @@ namespace ListApp {
 		internal MField(Dictionary<string, string> decoded) {
 			//Parse the field type by its string name
 			fieldType = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(fieldType)]);
-			Value = ParseValue(decoded[nameof(Value)]); //TODO RAD handle nulls?
+			Value = ParseValue(decoded[nameof(Value)]);
 		}
 		/// <summary>
 		/// Special constructor for building an <seealso cref="MField"/>
@@ -107,7 +107,7 @@ namespace ListApp {
 				case FieldType.DATE:	return new XDate(Utils.DecodeMultiple(val));
 				case FieldType.DECIMAL: return float.Parse(val);
 				case FieldType.ENUM:	return int.Parse(val);
-				case FieldType.IMAGE:	return new XImage(Utils.DecodeMultiple(val));
+				case FieldType.IMAGE:	return new XImage(Utils.DecodeMultiple(val)); //FIXME RAD empty string?
 				case FieldType.NUMBER:	return int.Parse(val);
 				default:				throw new NotImplementedException();
 			}

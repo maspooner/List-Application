@@ -37,9 +37,11 @@ namespace ListApp {
 		internal MItem(Dictionary<string, string> decoded) {
 			fields = new Dictionary<string, MField>();
 			foreach(string fieldName in decoded.Keys) {
-				//decode the MField's data and add the field
-				MField mf = new MField(Utils.DecodeMultiple(decoded[fieldName]));
-                fields.Add(fieldName, mf);
+				if (!fieldName.Equals(C.TYPE_ID_KEY)) {
+					//decode the MField's data and add the field
+					MField mf = new MField(Utils.DecodeMultiple(decoded[fieldName]));
+					fields.Add(fieldName, mf);
+				}
 			}
 		}
 		//properties
@@ -108,21 +110,21 @@ namespace ListApp {
 	[Serializable]
 	class SyncItem : MItem {
 		//members
-		private string id;
+		internal string Id { get; private set; }
 		private bool userEdited;
 		//constructors
 		internal SyncItem(string id, Dictionary<string, FieldTemplateItem> template) : base(template) {
-			this.id = id;
+			Id = id;
 			userEdited = false;
 		}
 		internal SyncItem(Dictionary<string, string> decoded) : base(decoded) {
-			id = decoded[nameof(id)];
+			Id = decoded[nameof(Id)];
 			userEdited = bool.Parse(decoded[nameof(userEdited)]);
 		}
 		//methods
 		public override void AddRecoveryData(Dictionary<string, string> rec) {
 			rec.Add(C.TYPE_ID_KEY, nameof(SyncItem));
-			rec.Add(nameof(id), id);
+			rec.Add(nameof(Id), Id);
 			rec.Add(nameof(userEdited), userEdited.ToString());
 		}
 	}
