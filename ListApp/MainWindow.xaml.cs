@@ -14,10 +14,9 @@ using CImage = System.Windows.Controls.Image;
 namespace ListApp {
 	/*
 	 * TODO sorting messes up display panel
-	 * TODO option to cancel mid-way through download
 	 * FIXME major refactoring of every file
 	 * TODO export/import to encoded form, export to readable txt
-	 * TODO number of backups to set
+	 * TODO number of backups to set after every major sync operation
 	 * FIXME handle recovery
 	 * TODO disable edits when updating lists
 	 */
@@ -346,9 +345,10 @@ namespace ListApp {
 				DisplayList(shownList);
 			}
 		}
-		internal void SyncCompleted_Callback(int id) {
-			if(id == shownList) {
-				DisplayList(id);
+		internal void SyncOver_Callback() {
+			//refresh the list if it is the current one
+			if(syncManager.SyncingList == shownList) {
+				DisplayList(shownList);
 			}
 		}
 		/// <summary>

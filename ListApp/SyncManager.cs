@@ -16,7 +16,7 @@ namespace ListApp {
 		private MainWindow mainWindow;
 		private BackgroundWorker itemWorker;
 		private SyncList workingList;
-		private int listId;
+		internal int SyncingList { get; private set; }
 		private SyncTask taskType;
 		//constructors
 		internal SyncManager(MainWindow mw, ProgressBar pb, Label ml, Button sc) {
@@ -32,7 +32,7 @@ namespace ListApp {
 			itemWorker.ProgressChanged += ItemWorker_ProgressChanged;
 			itemWorker.RunWorkerCompleted += ItemWorker_RunWorkerCompleted;
 			taskType = SyncTask.NEW;
-			listId = -1;
+			SyncingList = -1;
 		}
 		//properties
 		internal bool HasJob { get { return itemWorker.IsBusy; } }
@@ -52,7 +52,7 @@ namespace ListApp {
 		private bool StartTask(SyncList sl, SyncTask type, object argument, int shownList) {
 			if (!itemWorker.IsBusy) {
 				this.workingList = sl;
-				listId = shownList;
+				SyncingList = shownList;
 				sl.SetObservable(false);
 				taskType = type;
 				syncBar.Visibility = syncCancel.Visibility = System.Windows.Visibility.Visible;
@@ -100,15 +100,14 @@ namespace ListApp {
 			messagesLabel.Content = "";
 			if (e.Cancelled) {
 				Console.WriteLine("Canceled");
+				mainWindow.Dispatcher.Invoke(mainWindow.SyncOver_Callback);
 			}
 			else if (e.Error != null) {
 				throw e.Error; //TODO handle gracefully
 			}
 			else {
 				Console.WriteLine("Done");
-				mainWindow.Dispatcher.Invoke(delegate {
-					mainWindow.SyncCompleted_Callback(listId);
-				});
+				mainWindow.Dispatcher.Invoke(mainWindow.SyncOver_Callback);
 			}
 		}
 	}
