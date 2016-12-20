@@ -7,8 +7,10 @@ using System.Xml;
 using HtmlAgilityPack;
 
 namespace ListApp {
+	/// <summary>
+	/// An interface to model the operations done to sync a list
+	/// </summary>
 	interface ISchema {
-		//TODO RAD
 		int GetProgress();
 		int GetTotalProgress();
 		List<SchemaOption> GenerateOptions(); //gives user option to choose from preloaded SyncTemplate items
@@ -19,6 +21,7 @@ namespace ListApp {
 		void RefreshCurrent(SyncList l); //refreshes current items
 		void FinishRefresh();         //dispose of all components
 	}
+
 	class AnimeListSchema : ISchema {
 		//constants
 		private const string WEBSITE_PARAM = "WEB";
@@ -46,6 +49,7 @@ namespace ListApp {
 			return totalProg;
 		}
 		public List<SchemaOption> GenerateOptions() {
+			//TODO add more
 			List<SchemaOption> opts = new List<SchemaOption>();
 			opts.Add(new SchemaOption("series_title", "title", FieldType.BASIC, null, new string[] { XML_PARAM }));
 			opts.Add(new SchemaOption("series_episodes", "episodes", FieldType.NUMBER, new NumberMetadata(), new string[] { XML_PARAM }));
@@ -53,21 +57,16 @@ namespace ListApp {
 			opts.Add(new SchemaOption("series_image", "image", FieldType.IMAGE, new ImageMetadata(C.DEFAULT_IMAGE_DISPLAY_HEIGHT), new string[] { XML_PARAM }));
 			opts.Add(new SchemaOption("my_finish_date", "end date", FieldType.DATE, null, new string[] { XML_PARAM }));
 			opts.Add(new SchemaOption("my_status", "watch status", FieldType.ENUM, new EnumMetadata("ERROR", "Watching", "Completed", "On Hold", "Dropped", "ERROR", "Plan to Watch"), new string[] { XML_PARAM }));
-
+			opts.Add(new SchemaOption("series_animedb_id", "id", FieldType.NUMBER, new NumberMetadata(), new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("series_synonyms", "synonyms", FieldType.BASIC, null, new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("my_watched_episodes", "watched #", FieldType.NUMBER, new NumberMetadata(), new string[] { XML_PARAM }));
+			opts.Add(new SchemaOption("my_score", "score", FieldType.ENUM, new EnumMetadata("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), new string[] { XML_PARAM }));
 
 			opts.Add(new SchemaOption("pub_rater_count", "rating count", FieldType.NUMBER, new NumberMetadata(), new string[] { WEBSITE_PARAM }));
-
+			opts.Add(new SchemaOption("pub_rating", "rating", FieldType.DECIMAL, new DecimalMetadata(), new string[] { WEBSITE_PARAM }));
 
 			opts.Sort();
 			return opts;
-			//TODO RAD add all
-			//return new SchemaOption2[] {
-			//	new SchemaOption2("id", "series_animedb_id", FieldType.NUMBER, new NumberMetadata(), true),
-			//	new SchemaOption2("synonyms", "series_synonyms", FieldType.BASIC, null, true),
-			//	new SchemaOption2("watched #", "my_watched_episodes", FieldType.NUMBER, new NumberMetadata(), true),
-			//	new SchemaOption2("score", "my_score", FieldType.ENUM, new EnumMetadata("-", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), true),
-			//	new SchemaOption2("rating", "pub_rating", FieldType.DECIMAL, new DecimalMetadata(), false),
-			//};
 		}
 		public void PrepareRefresh(SyncTask type, SyncList sl, string[] paramList) {
 			webClient = new WebClient();

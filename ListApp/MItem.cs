@@ -39,7 +39,7 @@ namespace ListApp {
 			foreach(string fieldName in decoded.Keys) {
 				if (!fieldName.Equals(C.TYPE_ID_KEY)) {
 					//decode the MField's data and add the field
-					MField mf = new MField(Utils.DecodeMultiple(decoded[fieldName]));
+					MField mf = CreateField(Utils.DecodeMultiple(decoded[fieldName]));
 					fields.Add(fieldName, mf);
 				}
 			}
@@ -66,6 +66,21 @@ namespace ListApp {
 				case FieldType.DATE: return new DateField();
 				case FieldType.IMAGE: return new ImageField();
 				case FieldType.ENUM: return new EnumField();
+				default: throw new NotImplementedException();
+			}
+		}
+		private MField CreateField(Dictionary<string, string> decoded) {
+			FieldType ft = (FieldType)Enum.Parse(typeof(FieldType), decoded[nameof(FieldType)]);
+            switch (ft) {
+				//just create an MField of the specified type
+				case FieldType.NUMBER:
+				case FieldType.BASIC:
+				case FieldType.DECIMAL:
+					return new MField(ft, decoded);
+				//special handling for enumerations, dates, and images
+				case FieldType.DATE: return new DateField(decoded);
+				case FieldType.IMAGE: return new ImageField(decoded);
+				case FieldType.ENUM: return new EnumField(decoded);
 				default: throw new NotImplementedException();
 			}
 		}

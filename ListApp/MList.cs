@@ -42,7 +42,7 @@ namespace ListApp {
 					throw new InvalidDataException("Item type not defined!");
 				}
 			}
-			Dictionary<string, string> eTemplate = new Dictionary<string, string>();
+			Dictionary<string, string> eTemplate = Utils.DecodeMultiple(decoded[nameof(template)]);
 			foreach (string fieldName in eTemplate.Keys) {
 				Dictionary<string, string> eTempItem = Utils.DecodeMultiple(eTemplate[fieldName]);
 				if (eTempItem[C.TYPE_ID_KEY].Equals(nameof(FieldTemplateItem))) {

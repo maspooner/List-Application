@@ -117,7 +117,9 @@ namespace ListApp {
 			return (int)val < Entries.Length;
 		}
 		public string ToRecoverable() {
-			return Utils.EncodeSequence(Entries);
+			Dictionary<string, string> rec = new Dictionary<string, string>();
+			rec.Add(nameof(Entries), Utils.EncodeSequence(Entries));
+			return Utils.EncodeMultiple(rec);
 		}
 	}
 }

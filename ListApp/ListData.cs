@@ -14,9 +14,6 @@ namespace ListApp {
 	[Serializable]
 	class ListData : IEnumerable<MList> {
 		//members
-		[NonSerialized]
-		private static string baseDirectory = Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-
 		private List<MList> lists;
 		private int waitSaveTime;
 		//constructors
@@ -33,10 +30,13 @@ namespace ListApp {
 		internal MList this[int i] { get { return lists[i]; } }
 		internal int WaitSaveTime { get { return waitSaveTime - C.SHOWN_AUTOSAVE_TEXT_TIME; } } //save time for showing text on same thread
 		//methods
+		/// <summary>
+		/// Appends a list to the end of this data
+		/// </summary>
 		internal void AddList(MList ml) { lists.Add(ml); }
 		internal void Recover(string name) {
 			//string templateStr = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + "_tmpl.csv");
-			string file = File.ReadAllText(baseDirectory + C.BACKUPS_FOLDER + name + ".txt");
+			string file = File.ReadAllText(C.BACKUPS_FOLDER + name + ".txt");
 			Dictionary<string, string> decoded = Utils.DecodeMultiple(file);
 			if (decoded[C.TYPE_ID_KEY].Equals(nameof(MList))) {
 				AddList(new MList(name, decoded));
@@ -49,7 +49,7 @@ namespace ListApp {
 			}
 		}
 		internal void Save() {
-			Stream stream = File.Open(baseDirectory + "/lists.bin", FileMode.Create);
+			Stream stream = File.Open(C.DATA_FILE_NAME, FileMode.Create);
 			BinaryFormatter bformatter = new BinaryFormatter();
 			bformatter.Serialize(stream, this);
 			stream.Close();
@@ -59,7 +59,7 @@ namespace ListApp {
 		}
 		private void SaveReadable() {
 			//TODO
-			using (TextWriter tw = new StreamWriter(baseDirectory + "/backup.txt")) {
+			using (TextWriter tw = new StreamWriter(C.READABLE_BACKUP_FILE)) {
 				foreach (MList ml in lists) {
 					tw.WriteLine(ml.Name);
 					tw.WriteLine("=================");
@@ -76,12 +76,12 @@ namespace ListApp {
 			}
 		}
 		private void SaveAllRecovery() {
-			DirectoryInfo backupsDir = new DirectoryInfo(baseDirectory + C.BACKUPS_FOLDER);
+			DirectoryInfo backupsDir = new DirectoryInfo(C.BACKUPS_FOLDER);
 			if (!backupsDir.Exists) {
 				Directory.CreateDirectory(backupsDir.FullName);
 			}
 			foreach (MList ml in lists) {
-				SaveRecovery(baseDirectory + C.BACKUPS_FOLDER + ml.Name + ".txt", ml.ToRecoverable());
+				SaveRecovery(C.BACKUPS_FOLDER + ml.Name + ".txt", ml.ToRecoverable());
 			}
 		}
 		private void SaveRecovery(string fileName, string text) {
@@ -93,10 +93,10 @@ namespace ListApp {
 		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 		//statics
 		internal static ListData Load() {
-			string listsFile = baseDirectory + "/lists.bin";
-			if (new FileInfo(listsFile).Exists) {
+			FileInfo info = new FileInfo(C.DATA_FILE_NAME);
+			if (info.Exists) {
 				ListData ld = null;
-				using(Stream stream = File.Open(listsFile, FileMode.Open)) {
+				using(Stream stream = info.Open(FileMode.Open)) {
 					BinaryFormatter bformatter = new BinaryFormatter();
 					ld = (ListData)bformatter.Deserialize(stream);
 				}
@@ -147,7 +147,7 @@ namespace ListApp {
 			li2b["img"].Value = new XImage(@"F:\Documents\Visual Studio 2015\Projects\ListApp\a.jpg", false);
 			data.AddList(list2);
 
-			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, "progressivespoon");
+			SyncList list4 = new SyncList("AnimeSchema (Sync)", SyncList.SchemaType.ANIME_LIST, new string[] { "progressivespoon" });
 			List<SchemaOption> opts = list4.Schema.GenerateOptions();
 			foreach(SchemaOption so in opts) {
 				list4.AddToTemplate(so);
@@ -157,7 +157,7 @@ namespace ListApp {
 			data.AddList(list4);
 
 			//PrintLists();
-			//list1.DeleteFromTemplate(0);
+			/* TEST FOR LOTS OF COLUMNS
 			list1.AddToTemplate("status", FieldType.ENUM, new EnumMetadata("completed", "started", "on hold"));
 			list1.AddToTemplate("a", FieldType.BASIC, null);
 			list1.AddToTemplate("b", FieldType.BASIC, null);
@@ -178,6 +178,7 @@ namespace ListApp {
 			list1.AddToTemplate("aaaaaaaa", FieldType.DATE, null);
 			list1.SetMetadata("status", new EnumMetadata("a", "b", "c", "d"));
 			li1a["status"].Value = 1;
+			*/
 			//list2.ReorderTemplate(2, 0);
 			//list2.ResolveFieldFields();
 			//li2a.SetFieldData("status", 1);

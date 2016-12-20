@@ -22,7 +22,8 @@ namespace ListApp {
 		}
 		internal FieldTemplateItem(Dictionary<string, string> decoded) {
 			Type = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(Type)]);
-			Metadata = ParseMetadata(Utils.DecodeMultiple(decoded[nameof(Metadata)]));
+			Metadata = decoded[nameof(Metadata)] == null ? null : 
+				ParseMetadata(Utils.DecodeMultiple(decoded[nameof(Metadata)]));
 			Space = new Space(Utils.DecodeMultiple(decoded[nameof(Space)]));
 		}
 		//properties

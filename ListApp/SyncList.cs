@@ -17,21 +17,18 @@ namespace ListApp {
 		private SchemaType schemaType;
 		[NonSerialized]
 		private ISchema schema;
-		private object schemaData;
 		private string[] schemaParams;
 		[NonSerialized]
 		private bool observable;
 		//constructors
-		internal SyncList(string name, SchemaType schemaType, object schemaData) : base(name) {
+		internal SyncList(string name, SchemaType schemaType, string[] schemaParams) : base(name) {
 			this.schemaType = schemaType;
-			this.schemaData = schemaData;
 			this.schema = FindSchema(schemaType);
-			schemaParams = new string[] { "progressivespoon" }; //TODO RAD generics yo
+			this.schemaParams = schemaParams;
 			observable = true;
 		}
 		internal SyncList(string name, Dictionary<string, string> decoded) : base(name, decoded) {
 			schemaType = (SchemaType)Enum.Parse(typeof(SchemaType), decoded[nameof(schemaType)]);
-			schemaData = ParseSyncData(schemaType, decoded[nameof(schemaData)]);
 			schema = FindSchema(schemaType);
 			schemaParams = Utils.DecodeSequence(decoded[nameof(schemaParams)]).ToArray();
 			observable = true;

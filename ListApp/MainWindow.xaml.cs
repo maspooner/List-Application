@@ -15,9 +15,7 @@ namespace ListApp {
 	/*
 	 * TODO sorting messes up display panel
 	 * FIXME major refactoring of every file
-	 * TODO export/import to encoded form, export to readable txt
 	 * TODO number of backups to set after every major sync operation
-	 * FIXME handle recovery
 	 * TODO disable edits when updating lists
 	 */
 	public partial class MainWindow : Window {
@@ -38,14 +36,15 @@ namespace ListApp {
 			shownList = -1;
 			done = false;
 
-			data = ListData.LoadTestLists();
+			//data = ListData.LoadTestLists();
 			//data = ListData.Load();
-			//data = ListData.RecoverLists();
+			data = ListData.RecoverLists();
 			ReloadMListList();
 			DisplayList(0);
 			itemsMenu = new ContextMenu();
 			itemsMenu.Items.Add("Edit");
 			itemsMenu.Items.Add("Reorder");
+			itemsMenu.Items.Add("Refresh");
 			itemsMenu.Items.Add("Delete");
 			//TODO commands
 			Console.WriteLine(data);
@@ -123,9 +122,6 @@ namespace ListApp {
 		/// If the list is not obvervable, a screen specifying so is displayed
 		/// </summary>
 		private void DisplayList(int id) {
-			
-			//FIXME RAD itemssource changes while syncing
-			Console.WriteLine("Can observe" + id + "  " + data[id].CanObserve());
 			if (data.Count > 0 && data[id].CanObserve()) {
 				listItemGrid.Visibility = Visibility.Visible;
 				noListsLabel.Visibility = Visibility.Collapsed;
@@ -175,7 +171,7 @@ namespace ListApp {
 					MField lif = item[fieldName];
 					FrameworkElement fe = null;
 					FieldTemplateItem fti = ml.Template[fieldName];
-					if (lif is ImageField) {
+					if (lif.FieldType.Equals(FieldType.IMAGE)) {
 						fe = new CImage();
 						(fe as CImage).Source = (lif as ImageField).ToVisibleValue(fti.Metadata)
 							as System.Windows.Media.Imaging.BitmapImage;
@@ -206,7 +202,6 @@ namespace ListApp {
 
 				listActionBar.Children.Add(CreateActionImage(Properties.Resources.optionIcon.ConvertToBitmapImage(), listOptionImg_MouseUp));
 				listActionBar.Children.Add(CreateActionImage(Properties.Resources.addIcon.ConvertToBitmapImage(), addNewImg_MouseUp));
-				Console.WriteLine(list is SyncList);
 				if (list is SyncList) {
 					listActionBar.Children.Add(CreateActionImage(Properties.Resources.reloadIcon.ConvertToBitmapImage(), SyncActionButton_OnClick));
 				}
@@ -323,7 +318,6 @@ namespace ListApp {
 			ListSortDirection dir = e.Column.SortDirection != ListSortDirection.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending;
 			e.Column.SortDirection = dir;
 
-			Console.WriteLine(CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource));
 			ListCollectionView lcv = CollectionViewSource.GetDefaultView(listItemGrid.ItemsSource) as ListCollectionView;
 			lcv.CustomSort = new ListItemComparer(e.Column.Header as string, dir);
 		}
@@ -363,8 +357,6 @@ namespace ListApp {
 		private void ListNameListPanel_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 			ListView lv = sender as ListView;
 			int selected = lv.SelectedIndex;
-			Console.WriteLine("selected" + selected);
-			Console.WriteLine("shown" + shownList);
 			//only work to display if not changing to the same list
             if (shownList != selected) {
 				DisplayList(selected);

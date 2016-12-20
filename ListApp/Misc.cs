@@ -24,7 +24,11 @@ namespace ListApp {
 		internal const int COLOR_SEED =							5003534; //TODO adjust 5003534
 		internal const double DEFAULT_IMAGE_DISPLAY_HEIGHT =	50.0;
 
-		internal const string BACKUPS_FOLDER =					"/backups/";
+		private static string BASE_DIR = Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+		internal static string BACKUPS_FOLDER =					BASE_DIR + "/backups/";
+		internal static string DATA_FILE_NAME =					BASE_DIR + "/lists.bin";
+		internal static string READABLE_BACKUP_FILE =           BASE_DIR + "/readable.txt";
+
 		internal const string TYPE_ID_KEY =						"TYPE_ID";
 	}
 

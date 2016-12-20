@@ -27,7 +27,7 @@ namespace ListApp {
 	class MField : IComparable<MField>, ISerializable, IRecoverable {
 		//members
 		internal virtual IComparable Value { get; set; }
-		private FieldType fieldType;
+		internal FieldType FieldType { get; private set; }
 		//constructors
 		/// <summary>
 		/// Constructs an <seealso cref="MField"/> with a 
@@ -36,12 +36,12 @@ namespace ListApp {
 		/// </summary>
 		/// <param name="fieldType">the type of field this field is</param>
 		internal MField(FieldType fieldType) {
-			this.fieldType = fieldType;
+			FieldType = fieldType;
 			Value = StartingValue(); //starting value depends on field type
 		}
-		internal MField(Dictionary<string, string> decoded) {
+		internal MField(FieldType fieldType, Dictionary<string, string> decoded) {
 			//Parse the field type by its string name
-			fieldType = (FieldType) Enum.Parse(typeof(FieldType), decoded[nameof(fieldType)]);
+			FieldType = fieldType;
 			Value = ParseValue(decoded[nameof(Value)]);
 		}
 		/// <summary>
@@ -49,7 +49,7 @@ namespace ListApp {
 		/// by deserializing a stream of object data
 		/// </summary>
 		public MField(SerializationInfo info, StreamingContext context) {
-			fieldType = (FieldType)info.GetValue("fieldType", typeof(FieldType));
+			FieldType = (FieldType)info.GetValue("fieldType", typeof(FieldType));
 			//deserialize the value into the right type
 			Value = (IComparable)info.GetValue("value", GetValueType());
 		}
@@ -68,14 +68,14 @@ namespace ListApp {
 		/// </summary>
 		public void GetObjectData(SerializationInfo info, StreamingContext context) {
 			info.AddValue("value", Value);
-			info.AddValue("fieldType", fieldType);
+			info.AddValue("fieldType", FieldType);
 		}
 		/// <summary>
 		/// Finds a correct starting value for the field type of this <seealso cref="MField"/>
 		/// </summary>
 		/// <returns>the starting value of this field</returns>
 		internal virtual IComparable StartingValue() {
-			switch (fieldType) {
+			switch (FieldType) {
 				case FieldType.BASIC:	return null;
 				case FieldType.DATE:	return null;
 				case FieldType.DECIMAL: return 0f;
@@ -91,7 +91,7 @@ namespace ListApp {
 		/// </summary>
 		/// <returns>the type of this kind of field</returns>
 		private Type GetValueType() {
-			switch (fieldType) {
+			switch (FieldType) {
 				case FieldType.BASIC:	return typeof(string);
 				case FieldType.DATE:	return typeof(XDate);
 				case FieldType.DECIMAL: return typeof(float);
@@ -102,12 +102,12 @@ namespace ListApp {
 			}
 		}
 		private IComparable ParseValue(string val) {
-			switch (fieldType) {
+			switch (FieldType) {
 				case FieldType.BASIC:	return val;
 				case FieldType.DATE:	return new XDate(Utils.DecodeMultiple(val));
 				case FieldType.DECIMAL: return float.Parse(val);
 				case FieldType.ENUM:	return int.Parse(val);
-				case FieldType.IMAGE:	return new XImage(Utils.DecodeMultiple(val)); //FIXME RAD empty string?
+				case FieldType.IMAGE:	return new XImage(Utils.DecodeMultiple(val));
 				case FieldType.NUMBER:	return int.Parse(val);
 				default:				throw new NotImplementedException();
 			}
@@ -136,7 +136,7 @@ namespace ListApp {
 		}
 		public string ToRecoverable() {
 			Dictionary<string, string> rec = new Dictionary<string, string>();
-			rec.Add(nameof(fieldType), ((int)fieldType).ToString());
+			rec.Add(nameof(FieldType), ((int)FieldType).ToString());
 			rec.Add(nameof(Value), GetRecoverableValue());
 			return Utils.EncodeMultiple(rec);
 		}
@@ -175,10 +175,9 @@ namespace ListApp {
 		internal ImageField() : base(FieldType.IMAGE) {
 			bImg = null;
 		}
-		/// <summary>
-		/// Constructs an <seealso cref="ImageField"/> from a serialization stream,
-		/// intializing the stored <seealso cref="BitmapImage"/>
-		/// </summary>
+		internal ImageField(Dictionary<string, string> decoded) : base(FieldType.IMAGE, decoded) {
+			bImg = CreateBitmapImage();
+		}
 		public ImageField(SerializationInfo info, StreamingContext context) : base(info, context) {
 			bImg = CreateBitmapImage();
 		}
@@ -187,7 +186,6 @@ namespace ListApp {
 		/// The visible value for an <seealso cref="XImage"/>
 		/// is a <seealso cref="BitmapImage"/>
 		/// </summary>
-		/// <returns>the bitmap image stored to show</returns>
 		internal override object ToVisibleValue(IMetadata metadata) {
 			return bImg;
 		}
@@ -195,7 +193,6 @@ namespace ListApp {
 		/// Creates a <seealso cref="BitmapImage"/> representation
 		/// of this field's <seealso cref="XImage"/> value
 		/// </summary>
-		/// <returns>the bitmap image</returns>
 		private BitmapImage CreateBitmapImage() {
 			XImage xImg = Value as XImage;
 			//if there is an XImage to show and it's loaded
@@ -213,7 +210,7 @@ namespace ListApp {
 			return Value == null ? "" : (Value as XImage).ToReadable();
 		}
 		protected override string GetRecoverableValue() {
-			return Value == null ? "" : (Value as XImage).ToRecoverable();
+			return Value == null ? null : (Value as XImage).ToRecoverable();
 		}
 	}
 
@@ -232,6 +229,7 @@ namespace ListApp {
 		/// of ENUM
 		/// </summary>
 		internal EnumField() : base(FieldType.ENUM) { }
+		internal EnumField(Dictionary<string, string> decoded) : base(FieldType.ENUM, decoded) { }
 		/// <summary>
 		/// Constructs an <seealso cref="EnumField"/> from a serialization context
 		/// </summary>
@@ -251,7 +249,6 @@ namespace ListApp {
 		/// <seealso cref="EnumMetadata"/> provided
 		/// </summary>
 		/// <param name="metadata">the enum metadata containing the list of entries</param>
-		/// <returns>a string representation of the value</returns>
 		internal override string ToReadable(IMetadata metadata) {
 			return ToVisibleValue(metadata).ToString();
 		}
@@ -266,21 +263,15 @@ namespace ListApp {
 	[Serializable]
 	class DateField : MField {
 		//constructors
-		/// <summary>
-		/// Constructs an <seealso cref="DateField"/> with the <seealso cref="FieldType"/>
-		/// of DATE
-		/// </summary>
 		internal DateField() : base(FieldType.DATE) { }
-		/// <summary>
-		/// Constructs an <seealso cref="DateField"/> from a serialization context
-		/// </summary>
+		internal DateField(Dictionary<string, string> decoded) : base(FieldType.DATE, decoded) { }
 		public DateField(SerializationInfo info, StreamingContext context) : base(info, context) { }
 		//methods
 		internal override object ToVisibleValue(IMetadata metadata) {
 			return ToReadable(metadata);
 		}
 		protected override string GetRecoverableValue() {
-			return Value == null ? "" : (Value as XDate).ToRecoverable();
+			return Value == null ? null : (Value as XDate).ToRecoverable();
 		}
 		internal override string ToReadable(IMetadata metadata) {
 			return Value == null ? "" : (Value as XDate).ToReadable();
